@@ -100,6 +100,10 @@ export default {
         'slide-in-down': {
           'from': { transform: 'translateY(-10px)', opacity: '0' },
           'to': { transform: 'translateY(0)', opacity: '1' },
+        },
+        'pulse-subtle': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '.7' },
         }
       },
       animation: {
@@ -108,6 +112,7 @@ export default {
         'fade-in': 'fade-in 0.5s ease-out',
         'slide-in-up': 'slide-in-up 0.5s ease-out forwards',
         'slide-in-down': 'slide-in-down 0.3s ease-out',
+        'pulse-subtle': 'pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },

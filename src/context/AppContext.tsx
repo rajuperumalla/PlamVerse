@@ -17,10 +17,11 @@ export interface ReportPalmInputDetails {
 
 export interface ReportData {
   id: string;
-  content: string;
-  status: 'pending_review' | 'approved';
+  content: string; // Holds AI content or error messages for generation_failed
+  status: 'submitted_for_generation' | 'generation_failed' | 'pending_review' | 'approved';
   userName: string | null; // User who submitted
-  submissionDate: string;
+  submissionDate: string; // Date of initial submission
+  lastUpdateDate: string; // Tracks last status change
   category: string;
   inputDetails: ReportPalmInputDetails; // Store original input details for context
 }
@@ -37,7 +38,9 @@ interface AppState {
 interface AppContextType extends AppState {
   login: (name: string) => void;
   logout: () => void;
-  generateNewReport: (aiContent: string, inputData: ReportPalmInputDetails) => void;
+  createInitialReportPlaceholder: (inputData: ReportPalmInputDetails) => string; // Returns the new report ID
+  updateReportWithGeneratedContent: (reportId: string, aiContent: string) => void;
+  markReportAsGenerationFailed: (reportId: string, errorMessage?: string) => void;
   approveReport: (reportId: string, newContent?: string) => void;
   getReportById: (reportId: string) => ReportData | undefined;
   getCurrentUserReport: () => ReportData | undefined;
@@ -54,30 +57,32 @@ const AppContext = createContext<AppContextType | null>(null);
 const REPORTS_STORAGE_KEY = 'palmverse_reports_array';
 
 // Sample reports generator
-const createSampleReport = (id: number, category: string, userName: string, status: 'pending_review' | 'approved' = 'pending_review'): ReportData => {
+const createSampleReport = (idSuffix: number, category: string, userName: string, status: ReportData['status']): ReportData => {
   const date = new Date();
-  date.setDate(date.getDate() - id); // Make submission dates vary
-  let content = `This is a sample AI-generated report for ${category}. It discusses various aspects related to the user's potential future, personality traits derived from palm lines, and general well-being. Report includes analysis of heart line, head line, and life line. Specific focus on ${category.toLowerCase()}. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`;
-  if (status === 'pending_review') {
-    content += " This report is currently pending expert review.";
-  } else {
-    content += " This report has been reviewed and approved by an expert.";
+  date.setDate(date.getDate() - idSuffix); 
+  let content = `Sample content for ${category}.`;
+  switch(status) {
+    case 'submitted_for_generation': content = "Report generation in progress for this sample."; break;
+    case 'generation_failed': content = "Sample report generation failed."; break;
+    case 'pending_review': content = `This is a sample AI-generated report for ${category}, pending expert review. Lorem ipsum dolor sit amet.`; break;
+    case 'approved': content = `This is a sample APPROVED AI-generated report for ${category}. Lorem ipsum dolor sit amet, consectetur adipiscing elit.`; break;
   }
 
   return {
-    id: `sample-${id}-${Date.now()}`,
+    id: `sample-${idSuffix}-${Date.now()}`,
     content: content,
     status: status,
     userName: userName,
     submissionDate: date.toISOString(),
+    lastUpdateDate: new Date().toISOString(),
     category: category,
     inputDetails: {
-      leftPalmDataUri: `https://placehold.co/300x200.png?text=L+Palm+${id}`,
-      rightPalmDataUri: `https://placehold.co/300x200.png?text=R+Palm+${id}`,
+      leftPalmDataUri: `https://placehold.co/300x200.png?text=L+Palm+${idSuffix}`,
+      rightPalmDataUri: `https://placehold.co/300x200.png?text=R+Palm+${idSuffix}`,
       dateOfBirth: '1990-01-01',
-      placeOfBirth: `City ${id}, Country ${id}`,
+      placeOfBirth: `City ${idSuffix}, Country ${idSuffix}`,
       timeOfBirth: '12:00',
-      dominantHand: id % 2 === 0 ? 'Right' : 'Left',
+      dominantHand: idSuffix % 2 === 0 ? 'Right' : 'Left',
       category: category,
     }
   };
@@ -103,11 +108,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       createSampleReport(1, 'Career and Finances', 'user_alpha@example.com', 'pending_review'),
       createSampleReport(2, 'Love and Relationships', 'user_beta@example.com', 'pending_review'),
       createSampleReport(3, 'Health and Wellness', 'user_gamma@example.com', 'approved'),
-      createSampleReport(4, 'General Personality', 'user_delta@example.com', 'pending_review'),
-      createSampleReport(5, 'Career and Finances', 'user_epsilon@example.com', 'approved'),
+      createSampleReport(4, 'General Personality', 'user_delta@example.com', 'submitted_for_generation'),
+      createSampleReport(5, 'Career and Finances', 'user_epsilon@example.com', 'generation_failed'),
+      createSampleReport(6, 'Love and Relationships', 'user_zeta@example.com', 'approved'),
     ];
     persistReports(samples);
-  }, []); // Empty dependency array means this function's identity is stable
+  }, []); 
 
   useEffect(() => {
     const storedAuth = sessionStorage.getItem('palmverse_isAuthenticated');
@@ -132,15 +138,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (Array.isArray(parsedReports) && parsedReports.length > 0) {
             setReports(parsedReports);
         } else {
-            loadSampleReports(); // Load samples if stored reports are empty or invalid
+            loadSampleReports(); 
         }
       } catch (e) {
         console.error("Failed to parse stored reports array", e);
         localStorage.removeItem(REPORTS_STORAGE_KEY);
-        loadSampleReports(); // Load samples if parsing fails
+        loadSampleReports(); 
       }
     } else {
-       loadSampleReports(); // Load samples if no reports in localStorage
+       loadSampleReports(); 
     }
   }, [loadSampleReports]);
 
@@ -170,25 +176,56 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.removeItem('palmverse_userName');
     sessionStorage.removeItem('palmverse_hasPaid');
     sessionStorage.removeItem('palmverse_isAdmin');
-    
-    // Keep all reports on logout, as admin might need to see them.
-    // If a user logs out, their specific report access is handled by getCurrentUserReport.
-    // Sample reports will persist for admin.
-    
+        
     router.push('/');
   };
   
-  const generateNewReport = (aiContent: string, inputData: ReportPalmInputDetails) => {
+  const createInitialReportPlaceholder = (inputData: ReportPalmInputDetails): string => {
+    const newReportId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const newReport: ReportData = {
-      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-      content: aiContent,
-      status: 'pending_review',
+      id: newReportId,
+      content: "Report generation initiated...", // Placeholder content
+      status: 'submitted_for_generation',
       userName: userName, 
       submissionDate: new Date().toISOString(),
+      lastUpdateDate: new Date().toISOString(),
       category: inputData.category,
       inputDetails: inputData,
     };
-    const updatedReports = [...reports, newReport];
+    // Remove any previous 'submitted_for_generation' or 'generation_failed' report for this user.
+    const filteredReports = reports.filter(r => !(r.userName === userName && (r.status === 'submitted_for_generation' || r.status === 'generation_failed')));
+    const updatedReports = [...filteredReports, newReport];
+    persistReports(updatedReports);
+    return newReportId;
+  };
+
+  const updateReportWithGeneratedContent = (reportId: string, aiContent: string) => {
+    const updatedReports = reports.map(report => {
+      if (report.id === reportId) {
+        return {
+          ...report,
+          content: aiContent,
+          status: 'pending_review' as 'pending_review',
+          lastUpdateDate: new Date().toISOString(),
+        };
+      }
+      return report;
+    });
+    persistReports(updatedReports);
+  };
+  
+  const markReportAsGenerationFailed = (reportId: string, errorMessage: string = "Report generation failed. Please try again.") => {
+    const updatedReports = reports.map(report => {
+      if (report.id === reportId) {
+        return {
+          ...report,
+          content: errorMessage, // Store error message in content
+          status: 'generation_failed' as 'generation_failed',
+          lastUpdateDate: new Date().toISOString(),
+        };
+      }
+      return report;
+    });
     persistReports(updatedReports);
   };
 
@@ -199,6 +236,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           ...report,
           content: newContent || report.content,
           status: 'approved' as 'approved',
+          lastUpdateDate: new Date().toISOString(),
         };
       }
       return report;
@@ -209,7 +247,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const updateReportContent = (reportId: string, newContent: string) => {
     const updatedReports = reports.map(report => {
       if (report.id === reportId) {
-        return { ...report, content: newContent };
+        return { ...report, content: newContent, lastUpdateDate: new Date().toISOString() };
       }
       return report;
     });
@@ -222,18 +260,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const getCurrentUserReport = useCallback((): ReportData | undefined => {
     if (!userName) return undefined;
-    return [...reports] 
-      .filter(report => report.userName === userName)
-      .sort((a, b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime())[0];
+    // Prioritize active states, then approved, then older ones.
+    const userReports = reports.filter(report => report.userName === userName);
+    if (userReports.length === 0) return undefined;
+
+    const priorityStatus: ReportData['status'][] = ['submitted_for_generation', 'generation_failed', 'pending_review', 'approved'];
+    
+    for (const status of priorityStatus) {
+        const reportsWithStatus = userReports
+            .filter(r => r.status === status)
+            .sort((a, b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime());
+        if (reportsWithStatus.length > 0) {
+            return reportsWithStatus[0];
+        }
+    }
+    // Fallback to most recently updated if no priority status found (should not happen with current statuses)
+    return userReports.sort((a,b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime())[0];
   }, [reports, userName]);
 
 
   const clearCurrentUserReportStorage = () => {
+    // This function might need adjustment if we want to clear only specific statuses or keep history.
+    // For now, it's geared towards clearing a specific 'current' actionable report before a new submission.
     const userReport = getCurrentUserReport();
-    if (userReport) {
+    if (userReport && (userReport.status === 'generation_failed' || userReport.status === 'submitted_for_generation')) {
         const updatedReports = reports.filter(r => r.id !== userReport.id);
         persistReports(updatedReports);
     }
+    // Retain 'pending_review' and 'approved' reports unless explicitly handled elsewhere.
   };
 
   const startLoading = () => setIsLoading(true);
@@ -250,7 +304,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       login, 
       logout, 
       reports, 
-      generateNewReport,
+      createInitialReportPlaceholder,
+      updateReportWithGeneratedContent,
+      markReportAsGenerationFailed,
       approveReport, 
       getReportById,
       getCurrentUserReport,
