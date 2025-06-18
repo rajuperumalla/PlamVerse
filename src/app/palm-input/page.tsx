@@ -2,6 +2,7 @@
 "use client";
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import PalmInputForm from '@/components/palm-reading/PalmInputForm';
 import { useAppContext } from '@/context/AppContext';
 import { Loader2 } from 'lucide-react';
@@ -18,7 +19,7 @@ function PalmInputPageComponent() {
                 router.push('/');
             }
             setAuthCheckComplete(true);
-        }, 100); 
+        }, 100);
         return () => clearTimeout(timer);
     }
   }, [isAuthenticated, router, isInitializing]);
@@ -33,9 +34,32 @@ function PalmInputPageComponent() {
   }
 
   return (
-    <div className="space-y-12 md:space-y-16">
+    <div className="space-y-8 md:space-y-10">
+      <nav aria-label="Main navigation after login">
+        <ul className="flex justify-center items-center space-x-4 sm:space-x-6 md:space-x-8 py-3 bg-card/50 backdrop-blur-sm rounded-lg shadow-md border border-border">
+          <li>
+            <Link href="/" className="text-sm sm:text-base text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-md">
+              Home
+            </Link>
+          </li>
+          <li>
+            <Link href="/palm-input" className="text-sm sm:text-base font-semibold text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-md ring-1 ring-primary/50 bg-primary/10">
+              Palmistry
+            </Link>
+          </li>
+          <li>
+            <Link href="#products" className="text-sm sm:text-base text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-md">
+              Products
+            </Link>
+          </li>
+          <li>
+            <Link href="#remedies" className="text-sm sm:text-base text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded-md">
+              Remedies
+            </Link>
+          </li>
+        </ul>
+      </nav>
       <PalmInputForm />
-      {/* Product showcase removed from here, it's now on src/app/page.tsx */}
     </div>
   );
 }
