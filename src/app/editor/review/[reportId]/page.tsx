@@ -12,10 +12,10 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { generatePalmReading } from '@/ai/flows/generate-palm-reading';
 import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, ThumbsUp, Brain } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, ThumbsUp, Brain } from 'lucide-react'; // Removed Edit3 as it might not be used
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-export default function EditorReviewReportPage() { // Renamed AdminReviewReportPage
+export default function EditorReviewReportPage() {
   const { reportId } = useParams() as { reportId: string };
   const router = useRouter();
   const {
@@ -25,7 +25,7 @@ export default function EditorReviewReportPage() { // Renamed AdminReviewReportP
     stopOperation,
     isOperationInProgress,
     isAuthenticated,
-    isEditor, // Changed from isAdmin
+    isEditor,
     isInitializing
   } = useAppContext();
   const { toast } = useToast();
@@ -43,7 +43,7 @@ export default function EditorReviewReportPage() { // Renamed AdminReviewReportP
     if (!isInitializing) {
       if (!isAuthenticated) {
         router.push('/');
-      } else if (!isEditor) { // Changed from isAdmin
+      } else if (!isEditor) {
         toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
         router.push('/');
       } else {
@@ -52,7 +52,7 @@ export default function EditorReviewReportPage() { // Renamed AdminReviewReportP
       }
       setAuthCheckComplete(true);
     }
-  }, [isAuthenticated, isEditor, reportId, getReportById, router, toast, isInitializing]); // Changed isAdmin to isEditor
+  }, [isAuthenticated, isEditor, reportId, getReportById, router, toast, isInitializing]);
 
   const handleGetAiSuggestions = async () => {
     if (!report || !report.content) {
@@ -69,6 +69,7 @@ export default function EditorReviewReportPage() { // Renamed AdminReviewReportP
       setAiSuggestion(result.suggestions);
       toast({ title: "AI Suggestions Ready", description: `AI-powered suggestions generated.`});
     } catch (error) {
+      console.error("Error getting AI suggestions:", error);
       setAiSuggestion("Error: Could not fetch suggestions.");
       toast({ title: "Suggestion Error", description: `Failed to get AI suggestions.`, variant: "destructive" });
     } finally {
@@ -92,6 +93,7 @@ export default function EditorReviewReportPage() { // Renamed AdminReviewReportP
       setGeneratedReportPreview(result.report);
       toast({ title: "AI Report Generated", description: "Review the AI-generated report based on your analysis below." });
     } catch (error) {
+      console.error("Error generating report with expert analysis:", error);
       toast({ title: "Generation Error", description: `Failed to generate report with your analysis. Please try again.`, variant: "destructive" });
     } finally {
       stopOperation();
@@ -107,8 +109,9 @@ export default function EditorReviewReportPage() { // Renamed AdminReviewReportP
     try {
       approveReport(report.id, generatedReportPreview);
       toast({ title: "Report Approved & Live", description: `Report ID ${report.id.substring(0,10)}... has been approved with your guided content.` });
-      router.push('/editor/approved'); // Changed from /admin/approved
+      router.push('/editor/approved');
     } catch (error) {
+      console.error("Error during final approval:", error);
       toast({ title: "Final Approval Error", description: `Failed to approve report. Please try again.`, variant: "destructive" });
     } finally {
       stopOperation();
@@ -120,7 +123,7 @@ export default function EditorReviewReportPage() { // Renamed AdminReviewReportP
     startOperation();
     approveReport(report.id, report.content);
     toast({ title: "Original Report Approved As-Is", description: `Report ID ${report.id.substring(0,10)}... (initial AI version) has been approved.` });
-    router.push('/editor/approved'); // Changed from /admin/approved
+    router.push('/editor/approved');
     stopOperation();
   };
 
@@ -139,7 +142,7 @@ export default function EditorReviewReportPage() { // Renamed AdminReviewReportP
         <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
         <h1 className="text-2xl font-bold">Report Not Found</h1>
         <p className="text-muted-foreground mb-4">The report you are looking for does not exist or could not be loaded.</p>
-        <Button onClick={() => router.push('/editor/workflow')}><ArrowLeft className="mr-2 h-4 w-4" />Back to Workflow</Button> {/* Changed /admin/workflow */}
+        <Button onClick={() => router.push('/editor/workflow')}><ArrowLeft className="mr-2 h-4 w-4" />Back to Workflow</Button>
       </div>
     );
   }
@@ -150,14 +153,14 @@ export default function EditorReviewReportPage() { // Renamed AdminReviewReportP
         <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
         <h1 className="text-2xl font-bold">Report Not Pending Review</h1>
         <p className="text-muted-foreground mb-4">This report (ID: {report.id.substring(0,10)}...) is not currently pending review. Its status is: {report.status}.</p>
-        <Button onClick={() => router.push('/editor/workflow')}><ArrowLeft className="mr-2 h-4 w-4" />Back to Workflow</Button> {/* Changed /admin/workflow */}
+        <Button onClick={() => router.push('/editor/workflow')}><ArrowLeft className="mr-2 h-4 w-4" />Back to Workflow</Button>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto py-8 max-w-4xl">
-      <Button onClick={() => router.push('/editor/workflow')} variant="outline" className="mb-6"> {/* Changed /admin/workflow */}
+      <Button onClick={() => router.push('/editor/workflow')} variant="outline" className="mb-6">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Workflow
       </Button>
 
@@ -242,7 +245,7 @@ export default function EditorReviewReportPage() { // Renamed AdminReviewReportP
           </div>
 
           <div className="space-y-2 border-t pt-6">
-            <Label htmlFor="expertAnalysisNotes" className="text-md font-medium flex items-center gap-1.5"><Brain className="h-5 w-5 text-primary"/>Editor's Expert Analysis & Directives for AI</Label> {/* Changed Admin to Editor */}
+            <Label htmlFor="expertAnalysisNotes" className="text-md font-medium flex items-center gap-1.5"><Brain className="h-5 w-5 text-primary"/>Editor's Expert Analysis & Directives for AI</Label>
             <Textarea
               id="expertAnalysisNotes"
               value={expertAnalysisNotes}
@@ -297,3 +300,5 @@ export default function EditorReviewReportPage() { // Renamed AdminReviewReportP
     </div>
   );
 }
+
+    

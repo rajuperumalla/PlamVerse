@@ -32,7 +32,8 @@ interface AppState {
   reports: ReportData[];
   isOperationInProgress: boolean;
   hasPaid: boolean;
-  isEditor: boolean; // Renamed from isAdmin
+  isEditor: boolean;
+  isAdmin: boolean; // New Admin role for Ecommerce
   isInitializing: boolean;
 }
 
@@ -110,7 +111,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [reports, setReports] = useState<ReportData[]>([]);
   const [isOperationInProgress, setIsOperationInProgress] = useState(false);
   const [hasPaid, setHasPaidState] = useState(false);
-  const [isEditor, setIsEditor] = useState(false); // Renamed from isAdmin
+  const [isEditor, setIsEditor] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false); // New Admin role for Ecommerce
   const router = useRouter();
 
   const persistReports = (updatedReports: ReportData[]) => {
@@ -137,14 +139,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const storedAuth = sessionStorage.getItem('palmverse_isAuthenticated');
     const storedName = sessionStorage.getItem('palmverse_userName');
     const storedPaid = sessionStorage.getItem('palmverse_hasPaid');
-    const storedIsEditor = sessionStorage.getItem('palmverse_isEditor'); // Changed from isAdmin
+    const storedIsEditor = sessionStorage.getItem('palmverse_isEditor');
+    const storedIsAdmin = sessionStorage.getItem('palmverse_isAdmin'); // New Admin role
     const storedReports = localStorage.getItem(REPORTS_STORAGE_KEY);
 
     if (storedAuth === 'true' && storedName) {
       setIsAuthenticated(true);
       setUserName(storedName);
-      if (storedIsEditor === 'true') { // Changed from isAdmin
+      if (storedIsEditor === 'true') {
         setIsEditor(true);
+      }
+      if (storedIsAdmin === 'true') { // New Admin role
+        setIsAdmin(true);
       }
     }
     if (storedPaid === 'true') {
@@ -176,12 +182,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.setItem('palmverse_isAuthenticated', 'true');
     sessionStorage.setItem('palmverse_userName', name);
 
-    if (name === 'editor_user') { // Changed from admin_user
+    if (name === 'editor_user') {
       setIsEditor(true);
-      sessionStorage.setItem('palmverse_isEditor', 'true'); // Changed from isAdmin
+      setIsAdmin(false);
+      sessionStorage.setItem('palmverse_isEditor', 'true');
+      sessionStorage.setItem('palmverse_isAdmin', 'false');
+    } else if (name === 'admin_user') { // New Admin role
+      setIsAdmin(true);
+      setIsEditor(false);
+      sessionStorage.setItem('palmverse_isAdmin', 'true');
+      sessionStorage.setItem('palmverse_isEditor', 'false');
     } else {
       setIsEditor(false);
-      sessionStorage.setItem('palmverse_isEditor', 'false'); // Changed from isAdmin
+      setIsAdmin(false);
+      sessionStorage.setItem('palmverse_isEditor', 'false');
+      sessionStorage.setItem('palmverse_isAdmin', 'false');
     }
   };
 
@@ -189,12 +204,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setIsAuthenticated(false);
     setUserName(null);
     setHasPaidState(false);
-    setIsEditor(false); // Changed from isAdmin
+    setIsEditor(false);
+    setIsAdmin(false); // New Admin role
 
     sessionStorage.removeItem('palmverse_isAuthenticated');
     sessionStorage.removeItem('palmverse_userName');
     sessionStorage.removeItem('palmverse_hasPaid');
-    sessionStorage.removeItem('palmverse_isEditor'); // Changed from isAdmin
+    sessionStorage.removeItem('palmverse_isEditor');
+    sessionStorage.removeItem('palmverse_isAdmin'); // New Admin role
 
     router.push('/');
   };
@@ -292,6 +309,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             return reportsWithStatus[0];
         }
     }
+    // Should not be reached if all reports have a status in priorityStatus, but as a fallback:
     return userReports.sort((a,b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime())[0];
   }, [reports, userName]);
 
@@ -331,7 +349,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       hasPaid,
       setHasPaid,
       clearCurrentUserReportStorage,
-      isEditor, // Renamed from isAdmin
+      isEditor,
+      isAdmin, // New Admin role
       loadSampleReports,
       updateReportContent,
       isInitializing,
@@ -348,3 +367,5 @@ export const useAppContext = () => {
   }
   return context;
 };
+
+    

@@ -9,10 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertTriangle, LogIn, Layers, ListTodo, FileCheck2, RefreshCw, Sparkles, ServerCrash } from 'lucide-react';
 
-export default function EditorDashboardPage() { // Renamed AdminDashboardPage to EditorDashboardPage
+export default function EditorDashboardPage() {
   const {
     isAuthenticated,
-    isEditor, // Changed from isAdmin
+    isEditor,
     reports,
     isInitializing,
     loadSampleReports,
@@ -27,13 +27,13 @@ export default function EditorDashboardPage() { // Renamed AdminDashboardPage to
     if (!isInitializing) {
         if (!isAuthenticated) {
             router.push('/');
-        } else if (!isEditor) { // Changed from isAdmin
+        } else if (!isEditor) {
             toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
             router.push('/');
         }
         setAuthCheckComplete(true);
     }
-  }, [isAuthenticated, isEditor, router, toast, isInitializing]); // Changed isAdmin to isEditor
+  }, [isAuthenticated, isEditor, router, toast, isInitializing]);
 
   const pendingReviewReports = reports.filter(report => report.status === 'pending_review');
   const approvedReports = reports.filter(report => report.status === 'approved');
@@ -50,7 +50,7 @@ export default function EditorDashboardPage() { // Renamed AdminDashboardPage to
     );
   }
 
-  if (!isAuthenticated || !isEditor) { // Changed from isAdmin
+  if (!isAuthenticated || !isEditor) {
     return (
         <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
              <Card className="w-full max-w-md text-center p-6">
@@ -72,13 +72,13 @@ export default function EditorDashboardPage() { // Renamed AdminDashboardPage to
   return (
     <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold">Editor Dashboard</h1> {/* Changed Admin to Editor */}
+          <h1 className="text-2xl font-semibold">Editor Dashboard</h1>
           <Button onClick={loadSampleReports} variant="outline" size="sm" disabled={isOperationInProgress}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Reload Sample Data
           </Button>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"> {/* Adjusted for 4 cards initially, then to 5 for all statuses */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"> {/* Adjusted grid to fit cards */}
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
@@ -98,7 +98,7 @@ export default function EditorDashboardPage() { // Renamed AdminDashboardPage to
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">{pendingReviewReports.length}</div>
-                     <Link href="/editor/workflow" className="text-xs text-primary hover:underline"> {/* Changed /admin/workflow to /editor/workflow */}
+                     <Link href="/editor/workflow" className="text-xs text-primary hover:underline">
                         Go to Workflow
                     </Link>
                 </CardContent>
@@ -110,7 +110,7 @@ export default function EditorDashboardPage() { // Renamed AdminDashboardPage to
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">{approvedReports.length}</div>
-                     <Link href="/editor/approved" className="text-xs text-primary hover:underline"> {/* Changed /admin/approved to /editor/approved */}
+                     <Link href="/editor/approved" className="text-xs text-primary hover:underline">
                         View Approved
                     </Link>
                 </CardContent>
@@ -143,3 +143,5 @@ export default function EditorDashboardPage() { // Renamed AdminDashboardPage to
     </div>
   );
 }
+
+    

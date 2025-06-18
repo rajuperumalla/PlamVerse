@@ -1,146 +1,79 @@
 
 "use client";
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useAppContext } from '@/context/AppContext';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertTriangle, LogIn, Layers, ListTodo, FileCheck2, RefreshCw, Sparkles, ServerCrash } from 'lucide-react';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ShoppingCart, Users, BarChart3, Settings } from "lucide-react";
 
 export default function AdminDashboardPage() {
-  const {
-    isAuthenticated,
-    isAdmin,
-    reports,
-    isInitializing,
-    loadSampleReports,
-    isOperationInProgress,
-  } = useAppContext();
-  const router = useRouter();
-  const { toast } = useToast();
-
-  const [authCheckComplete, setAuthCheckComplete] = useState(false);
-
-  useEffect(() => {
-    if (!isInitializing) {
-        if (!isAuthenticated) {
-            router.push('/');
-        } else if (!isAdmin) {
-            toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
-            router.push('/');
-        }
-        setAuthCheckComplete(true);
-    }
-  }, [isAuthenticated, isAdmin, router, toast, isInitializing]);
-
-  const pendingReviewReports = reports.filter(report => report.status === 'pending_review');
-  const approvedReports = reports.filter(report => report.status === 'approved');
-  const submittedForGenerationReports = reports.filter(report => report.status === 'submitted_for_generation');
-  const generationFailedReports = reports.filter(report => report.status === 'generation_failed');
-  const totalReports = reports.length;
-
-  if (isInitializing || !authCheckComplete) {
-    return (
-        <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-            <p>Loading dashboard data...</p>
-        </div>
-    );
-  }
-
-  if (!isAuthenticated || !isAdmin) {
-    return (
-        <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
-             <Card className="w-full max-w-md text-center p-6">
-                <CardHeader>
-                    <div className="mx-auto bg-destructive/10 p-3 rounded-full w-fit mb-4">
-                        <AlertTriangle className="h-10 w-10 text-destructive" />
-                    </div>
-                    <CardTitle>Access Denied</CardTitle>
-                    <CardDescription>You do not have permission to view this page.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Button onClick={() => router.push('/')}><LogIn className="mr-2"/> Go to Login</Button>
-                </CardContent>
-            </Card>
-        </div>
-    );
-  }
+  // This page is now for the new "Admin" role (Ecommerce focus)
+  // It's a placeholder for now.
 
   return (
     <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-          <Button onClick={loadSampleReports} variant="outline" size="sm" disabled={isOperationInProgress}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Reload Sample Data
-          </Button>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"> {/* Adjusted for potentially 5 cards */}
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
-                    <Layers className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{totalReports}</div>
-                     <p className="text-xs text-muted-foreground">
-                        All reports in the system.
-                    </p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-                    <ListTodo className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{pendingReviewReports.length}</div>
-                     <Link href="/admin/workflow" className="text-xs text-primary hover:underline">
-                        Go to Workflow
-                    </Link>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Approved Reports</CardTitle>
-                    <FileCheck2 className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{approvedReports.length}</div>
-                     <Link href="/admin/approved" className="text-xs text-primary hover:underline">
-                        View Approved
-                    </Link>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Generating Reports</CardTitle>
-                    <Sparkles className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{submittedForGenerationReports.length}</div>
-                    <p className="text-xs text-muted-foreground">
-                        Currently being generated by AI.
-                    </p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Generation Failed</CardTitle>
-                    <ServerCrash className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{generationFailedReports.length}</div>
-                     <p className="text-xs text-muted-foreground">
-                        AI failed to generate these.
-                    </p>
-                </CardContent>
-            </Card>
-        </div>
+      <h1 className="text-3xl font-bold font-headline">Admin Dashboard</h1>
+      <CardDescription>Overview of your Ecommerce operations and application settings.</CardDescription>
+      
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Product Management</CardTitle>
+            <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">Manage products, categories, inventory.</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Order Management</CardTitle>
+             <ShoppingCart className="h-5 w-5 text-muted-foreground transform scale-x-[-1]" /> {/* Flipped for variety */}
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">View orders, update statuses, handle returns.</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Customer Management</CardTitle>
+            <Users className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">View customer data, segments, support.</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Site Configuration</CardTitle>
+            <Settings className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">Store settings, payments, shipping.</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-8 p-6 border rounded-lg bg-card shadow">
+        <h2 className="text-xl font-semibold mb-3">Ecommerce Modules Placeholder</h2>
+        <p className="text-muted-foreground">
+          This area will host comprehensive ecommerce management tools, including:
+        </p>
+        <ul className="list-disc list-inside text-muted-foreground mt-2 space-y-1 text-sm">
+          <li>🛍️ Product Management (Products, Categories, Inventory, Pricing)</li>
+          <li>📦 Order Management (Orders, Statuses, Shipping, Invoices)</li>
+          <li>👥 Customer Management (Customer List, Groups, Activity)</li>
+          <li>🎯 Marketing & Promotions (Coupons, Banners, Email Campaigns)</li>
+          <li>📊 Analytics & Reports (Sales, Customer, Product Performance)</li>
+          <li>⚙️ Settings & Configuration (Store, Payment, Shipping, Tax)</li>
+          <li>📄 Content Management (CMS for Pages, Blog)</li>
+          <li>🔐 Security & Access (Admin Users, Roles)</li>
+          <li>🛠️ Tools & Utilities (Backup, Logs, Integrations)</li>
+        </ul>
+        <p className="mt-4 text-sm text-primary">
+          Development for these features is planned.
+        </p>
+      </div>
     </div>
   );
 }
 
+    

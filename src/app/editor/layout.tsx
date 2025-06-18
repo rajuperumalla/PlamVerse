@@ -13,12 +13,12 @@ import {
   SidebarTrigger,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, Hand, PanelLeft, FileCheck2, Edit2 } from 'lucide-react'; // Added Edit2 for Editor
+import { LayoutDashboard, ListChecks, PanelLeft, FileCheck2, Edit2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
-export default function EditorLayout({ children }: { children: ReactNode }) { // Renamed AdminLayout to EditorLayout
+export default function EditorLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   return (
@@ -27,19 +27,19 @@ export default function EditorLayout({ children }: { children: ReactNode }) { //
         <Sidebar className="border-r hidden md:flex flex-shrink-0">
           <SidebarContent>
             <SidebarHeader className="p-4">
-              <Link href="/editor" className="flex items-center gap-2 text-lg font-semibold text-primary"> {/* Changed /admin to /editor */}
-                <Edit2 className="h-6 w-6" /> {/* Changed Hand to Edit2 */}
-                <span>PalmVerse Editor</span> {/* Changed Admin to Editor */}
+              <Link href="/editor" className="flex items-center gap-2 text-lg font-semibold text-primary">
+                <Edit2 className="h-6 w-6" />
+                <span>PalmVerse Editor</span>
               </Link>
             </SidebarHeader>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === '/editor' || pathname === '/editor/'} /* Changed /admin to /editor */
+                  isActive={pathname === '/editor' || pathname === '/editor/'}
                   tooltip={{ children: 'Dashboard', side: 'right', className: "md:block hidden" }}
                 >
-                  <Link href="/editor"> {/* Changed /admin to /editor */}
+                  <Link href="/editor">
                     <LayoutDashboard />
                     <span>Dashboard</span>
                   </Link>
@@ -48,10 +48,10 @@ export default function EditorLayout({ children }: { children: ReactNode }) { //
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === '/editor/workflow'} /* Changed /admin/workflow to /editor/workflow */
+                  isActive={pathname === '/editor/workflow'}
                   tooltip={{ children: 'Pending Reviews', side: 'right', className: "md:block hidden" }}
                 >
-                  <Link href="/editor/workflow"> {/* Changed /admin/workflow to /editor/workflow */}
+                  <Link href="/editor/workflow">
                     <ListChecks />
                     <span>Pending Reviews</span>
                   </Link>
@@ -60,10 +60,10 @@ export default function EditorLayout({ children }: { children: ReactNode }) { //
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === '/editor/approved'} /* Changed /admin/approved to /editor/approved */
+                  isActive={pathname === '/editor/approved'}
                   tooltip={{ children: 'Approved Reports', side: 'right', className: "md:block hidden" }}
                 >
-                  <Link href="/editor/approved"> {/* Changed /admin/approved to /editor/approved */}
+                  <Link href="/editor/approved">
                     <FileCheck2 />
                     <span>Approved Reports</span>
                   </Link>
@@ -82,7 +82,7 @@ export default function EditorLayout({ children }: { children: ReactNode }) { //
               </Button>
             </SidebarTrigger>
             <div className="text-lg font-semibold text-primary md:hidden">
-              PalmVerse Editor {/* Changed Admin to Editor */}
+              PalmVerse Editor
             </div>
           </header>
 
@@ -100,3 +100,5 @@ export default function EditorLayout({ children }: { children: ReactNode }) { //
     </SidebarProvider>
   );
 }
+
+    

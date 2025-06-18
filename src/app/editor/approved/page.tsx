@@ -13,10 +13,10 @@ import { Loader2, AlertTriangle, LogIn, Eye, Archive, FileCheck2 } from 'lucide-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDesc, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
 
-export default function EditorApprovedReportsPage() { // Renamed AdminApprovedReportsPage to EditorApprovedReportsPage
+export default function EditorApprovedReportsPage() {
   const {
     isAuthenticated,
-    isEditor, // Changed from isAdmin
+    isEditor,
     reports,
     isInitializing,
     isOperationInProgress,
@@ -33,13 +33,13 @@ export default function EditorApprovedReportsPage() { // Renamed AdminApprovedRe
     if (!isInitializing) {
         if (!isAuthenticated) {
             router.push('/');
-        } else if (!isEditor) { // Changed from isAdmin
+        } else if (!isEditor) {
             toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
             router.push('/');
         }
         setAuthCheckComplete(true);
     }
-  }, [isAuthenticated, isEditor, router, toast, isInitializing]); // Changed isAdmin to isEditor
+  }, [isAuthenticated, isEditor, router, toast, isInitializing]);
 
   const approvedReports = reports.filter(report => report.status === 'approved');
 
@@ -57,7 +57,7 @@ export default function EditorApprovedReportsPage() { // Renamed AdminApprovedRe
     );
   }
 
-  if (!isAuthenticated || !isEditor) { // Changed from isAdmin
+  if (!isAuthenticated || !isEditor) {
     return (
         <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
              <Card className="w-full max-w-md text-center p-6">
@@ -168,3 +168,5 @@ export default function EditorApprovedReportsPage() { // Renamed AdminApprovedRe
     </div>
   );
 }
+
+    

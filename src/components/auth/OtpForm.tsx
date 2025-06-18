@@ -8,15 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { Phone, KeyRound, UserPlus, ArrowLeft, Edit } from 'lucide-react'; // Changed ShieldAlert to Edit
+import { Phone, KeyRound, UserPlus, ArrowLeft, Edit, ShieldCheck } from 'lucide-react';
 
 interface OtpFormProps {
   onBack?: () => void;
-  mode?: 'login' | 'register' | 'editor'; // Changed 'admin' to 'editor'
+  mode?: 'login' | 'register' | 'editor' | 'admin';
 }
 
 const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
-  const [mobileNumber, setMobileNumber] = useState('');
+  const [mobileNumber, setMobileNumber] = useState(''); // This field will be used for 'identifier'
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,10 +28,11 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
   let cardDescription = "Enter your mobile number to begin.";
   let primaryButtonText = "Send OTP";
   let verifyButtonText = "Verify OTP & Continue";
-  let mobileLabel = "Mobile Number";
-  let mobilePlaceholder = "Enter 10-digit mobile number";
+  let identifierLabel = "Mobile Number";
+  let identifierPlaceholder = "Enter 10-digit mobile number";
   let otpPlaceholder = "Enter 6-digit OTP";
   let formIcon = <KeyRound className="h-10 w-10 text-primary" />;
+  let inputType: 'tel' | 'text' = 'tel';
 
   if (mode === 'register') {
     cardTitle = "Create Your Account";
@@ -39,25 +40,41 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     primaryButtonText = "Register & Send OTP";
     verifyButtonText = "Verify OTP & Register";
     formIcon = <UserPlus className="h-10 w-10 text-primary" />;
-  } else if (mode === 'editor') { // Changed from 'admin'
+  } else if (mode === 'editor') {
     cardTitle = "Editor Portal Access";
     cardDescription = "Enter editor credentials to proceed.";
     primaryButtonText = "Send Editor OTP";
     verifyButtonText = "Verify OTP & Login as Editor";
-    mobileLabel = "Editor ID";
-    mobilePlaceholder = "Enter Editor ID (use 'editor')"; // Changed from 'admin'
+    identifierLabel = "Editor ID";
+    identifierPlaceholder = "Enter Editor ID (use 'editor')";
     otpPlaceholder = "Editor OTP (use '000000')";
-    formIcon = <Edit className="h-10 w-10 text-primary" />; // Changed from ShieldAlert
+    formIcon = <Edit className="h-10 w-10 text-purple-600" />;
+    inputType = 'text';
+  } else if (mode === 'admin') {
+    cardTitle = "Admin Portal Access";
+    cardDescription = "Enter admin credentials to proceed.";
+    primaryButtonText = "Send Admin OTP";
+    verifyButtonText = "Verify OTP & Login as Admin";
+    identifierLabel = "Admin ID";
+    identifierPlaceholder = "Enter Admin ID (use 'admin')";
+    otpPlaceholder = "Admin OTP (use '111111')";
+    formIcon = <ShieldCheck className="h-10 w-10 text-teal-600" />;
+    inputType = 'text';
   }
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === 'editor') { // Changed from 'admin'
-      if (mobileNumber !== 'editor') { // Changed from 'admin'
+    if (mode === 'editor') {
+      if (mobileNumber !== 'editor') {
         toast({ title: "Invalid Editor ID", description: "Please enter the correct Editor ID.", variant: "destructive" });
         return;
       }
-    } else if (!/^\d{10}$/.test(mobileNumber)) {
+    } else if (mode === 'admin') {
+      if (mobileNumber !== 'admin') {
+        toast({ title: "Invalid Admin ID", description: "Please enter the correct Admin ID.", variant: "destructive" });
+        return;
+      }
+    } else if (!/^\d{10}$/.test(mobileNumber)) { // For 'login' and 'register'
       toast({ title: "Invalid Mobile Number", description: "Please enter a 10-digit mobile number.", variant: "destructive" });
       return;
     }
@@ -65,7 +82,7 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     setOtpSent(true);
     setIsLoading(false);
-    const simulatedOtp = mode === 'editor' ? '000000' : '123456'; // Changed from 'admin'
+    const simulatedOtp = mode === 'editor' ? '000000' : (mode === 'admin' ? '111111' : '123456');
     toast({ title: "OTP Sent", description: `An OTP has been sent (simulated: ${simulatedOtp}).` });
   };
 
@@ -74,13 +91,21 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    if (mode === 'editor') { // Changed from 'admin'
-      if (mobileNumber === 'editor' && otp === '000000') { // Changed from 'admin_user' to 'editor_user'
+    if (mode === 'editor') {
+      if (mobileNumber === 'editor' && otp === '000000') {
         login('editor_user');
         toast({ title: "Editor Login Successful", description: "Redirecting to Editor Panel..." });
-        router.push('/editor'); // Changed from '/admin'
+        router.push('/editor');
       } else {
         toast({ title: "Invalid Editor Credentials", description: "The Editor ID or OTP is incorrect.", variant: "destructive" });
+      }
+    } else if (mode === 'admin') {
+      if (mobileNumber === 'admin' && otp === '111111') {
+        login('admin_user');
+        toast({ title: "Admin Login Successful", description: "Redirecting to Admin Panel..." });
+        router.push('/admin'); // New route for Ecommerce Admin
+      } else {
+        toast({ title: "Invalid Admin Credentials", description: "The Admin ID or OTP is incorrect.", variant: "destructive" });
       }
     } else { // Regular login or register
       if (otp === '123456') {
@@ -98,7 +123,7 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     <div className="flex justify-center items-center py-12">
       <Card className="w-full max-w-md shadow-xl animate-fade-in">
         <CardHeader className="text-center">
-          <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
+          <div className={`mx-auto ${mode === 'editor' ? 'bg-purple-500/10' : mode === 'admin' ? 'bg-teal-500/10' : 'bg-primary/10'} p-3 rounded-full w-fit mb-4`}>
             {formIcon}
           </div>
           <CardTitle className="font-headline text-3xl">{cardTitle}</CardTitle>
@@ -108,18 +133,18 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
           {!otpSent ? (
             <form onSubmit={handleSendOtp} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="mobileNumber" className="text-base">{mobileLabel}</Label>
+                <Label htmlFor="identifier" className="text-base">{identifierLabel}</Label>
                 <div className="flex items-center gap-2 border rounded-md px-3 focus-within:ring-2 focus-within:ring-ring">
-                  <Phone className="h-5 w-5 text-muted-foreground" />
+                  {mode === 'login' || mode === 'register' ? <Phone className="h-5 w-5 text-muted-foreground" /> : (mode === 'editor' ? <Edit className="h-5 w-5 text-muted-foreground" /> : <ShieldCheck className="h-5 w-5 text-muted-foreground" />)}
                   <Input
-                    id="mobileNumber"
-                    type={mode === 'editor' ? 'text' : 'tel'} // Changed from 'admin'
+                    id="identifier"
+                    type={inputType}
                     value={mobileNumber}
                     onChange={(e) => setMobileNumber(e.target.value)}
-                    placeholder={mobilePlaceholder}
+                    placeholder={identifierPlaceholder}
                     required
                     className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-1 text-base"
-                    aria-label={mobileLabel}
+                    aria-label={identifierLabel}
                   />
                 </div>
               </div>
@@ -150,7 +175,7 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
                 {isLoading ? 'Verifying...' : verifyButtonText}
               </Button>
               <Button variant="link" onClick={() => setOtpSent(false)} className="w-full" disabled={isLoading}>
-                {mode === 'editor' ? 'Change Editor ID' : 'Change mobile number'} {/* Changed from 'admin' */}
+                Change {identifierLabel}
               </Button>
             </form>
           )}
@@ -171,3 +196,5 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
 };
 
 export default OtpForm;
+
+    

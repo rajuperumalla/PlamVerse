@@ -10,25 +10,76 @@ import {
   SidebarMenuButton,
   SidebarContent,
   SidebarHeader,
-  SidebarTrigger, 
-  SidebarInset, 
+  SidebarTrigger,
+  SidebarInset,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, Hand, PanelLeft, FileCheck2 } from 'lucide-react';
+import { LayoutDashboard, PanelLeft, ShoppingCart, ShieldCheck } from 'lucide-react'; // ShieldCheck for Admin
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { useAppContext } from '@/context/AppContext';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, AlertTriangle, LogIn } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const { isAuthenticated, isAdmin, isInitializing } = useAppContext();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [authCheckComplete, setAuthCheckComplete] = useState(false);
+
+  useEffect(() => {
+    if (!isInitializing) {
+      if (!isAuthenticated) {
+        router.push('/');
+      } else if (!isAdmin) {
+        toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
+        router.push('/');
+      }
+      setAuthCheckComplete(true);
+    }
+  }, [isAuthenticated, isAdmin, router, toast, isInitializing]);
+
+  if (isInitializing || !authCheckComplete) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <p>Verifying admin access...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !isAdmin) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen p-4">
+        <Card className="w-full max-w-md text-center">
+          <CardHeader>
+            <div className="mx-auto bg-destructive/10 p-3 rounded-full w-fit mb-4">
+              <AlertTriangle className="h-10 w-10 text-destructive" />
+            </div>
+            <CardTitle>Access Denied</CardTitle>
+            <CardDescription>You do not have permission to view the Admin Panel.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => router.push('/')}><LogIn className="mr-2 h-4 w-4" /> Go to Login</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider defaultOpen>
       <div className="flex h-[calc(100vh-var(--header-height,0px)-var(--footer-height,0px))]">
-        <Sidebar className="border-r hidden md:flex flex-shrink-0"> 
+        <Sidebar className="border-r hidden md:flex flex-shrink-0">
           <SidebarContent>
             <SidebarHeader className="p-4">
               <Link href="/admin" className="flex items-center gap-2 text-lg font-semibold text-primary">
-                <Hand className="h-6 w-6" />
+                <ShieldCheck className="h-6 w-6" />
                 <span>PalmVerse Admin</span>
               </Link>
             </SidebarHeader>
@@ -45,34 +96,23 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
+              {/* Add more admin-specific (ecommerce) menu items here later */}
+               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === '/admin/workflow'}
-                  tooltip={{ children: 'Pending Reviews', side: 'right', className: "md:block hidden" }}
+                  isActive={pathname === '/admin/ecommerce'} // Example
+                  tooltip={{ children: 'Ecommerce', side: 'right', className: "md:block hidden" }}
                 >
-                  <Link href="/admin/workflow">
-                    <ListChecks />
-                    <span>Pending Reviews</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/admin/approved'}
-                  tooltip={{ children: 'Approved Reports', side: 'right', className: "md:block hidden" }}
-                >
-                  <Link href="/admin/approved">
-                    <FileCheck2 />
-                    <span>Approved Reports</span>
+                  <Link href="/admin/ecommerce">
+                    <ShoppingCart />
+                    <span>Ecommerce</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
         </Sidebar>
-        
+
         <SidebarInset className="flex-1 flex flex-col overflow-hidden">
           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 md:hidden">
             <SidebarTrigger asChild>
@@ -85,7 +125,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               PalmVerse Admin
             </div>
           </header>
-          
+
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
             {children}
           </main>
@@ -100,3 +140,5 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
+
+    

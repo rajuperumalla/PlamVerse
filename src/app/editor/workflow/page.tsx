@@ -11,10 +11,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertTriangle, LogIn, Edit, Archive, Columns } from 'lucide-react';
 
-export default function EditorWorkflowPage() { // Renamed AdminWorkflowPage to EditorWorkflowPage
+export default function EditorWorkflowPage() {
   const {
     isAuthenticated,
-    isEditor, // Changed from isAdmin
+    isEditor,
     reports,
     isInitializing,
     isOperationInProgress,
@@ -29,13 +29,13 @@ export default function EditorWorkflowPage() { // Renamed AdminWorkflowPage to E
     if (!isInitializing) {
         if (!isAuthenticated) {
             router.push('/');
-        } else if (!isEditor) { // Changed from isAdmin
+        } else if (!isEditor) {
             toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
             router.push('/');
         }
         setAuthCheckComplete(true);
     }
-  }, [isAuthenticated, isEditor, router, toast, isInitializing]); // Changed isAdmin to isEditor
+  }, [isAuthenticated, isEditor, router, toast, isInitializing]);
 
   const pendingReviewReports = reports.filter(report => report.status === 'pending_review');
 
@@ -48,7 +48,7 @@ export default function EditorWorkflowPage() { // Renamed AdminWorkflowPage to E
     );
   }
 
-  if (!isAuthenticated || !isEditor) { // Changed from isAdmin
+  if (!isAuthenticated || !isEditor) {
     return (
         <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
              <Card className="w-full max-w-md text-center p-6">
@@ -111,7 +111,7 @@ export default function EditorWorkflowPage() { // Renamed AdminWorkflowPage to E
                             </TableCell>
                             <TableCell className="text-right">
                                 <Button asChild variant="outline" size="sm" disabled={isOperationInProgress}>
-                                <Link href={`/editor/review/${report.id}`}> {/* Changed /admin/review to /editor/review */}
+                                <Link href={`/editor/review/${report.id}`}>
                                     <Edit className="mr-2 h-4 w-4"/> Review
                                 </Link>
                                 </Button>
@@ -127,3 +127,5 @@ export default function EditorWorkflowPage() { // Renamed AdminWorkflowPage to E
     </div>
   );
 }
+
+    

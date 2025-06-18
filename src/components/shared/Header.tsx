@@ -1,12 +1,20 @@
 
 "use client";
 import Link from 'next/link';
-import { Hand, LogOut, Edit } from 'lucide-react'; // Changed ShieldAlert to Edit
+import { Hand, LogOut, Edit, ShieldCheck } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 
 const Header = () => {
-  const { isAuthenticated, logout, userName, isEditor } = useAppContext(); // Changed isAdmin to isEditor
+  const { isAuthenticated, logout, userName, isEditor, isAdmin } = useAppContext();
+
+  let welcomeMessage = "Welcome!";
+  if (userName) {
+    if (isAdmin) welcomeMessage = "Welcome, Admin";
+    else if (isEditor) welcomeMessage = `Welcome, Editor`;
+    else welcomeMessage = `Welcome, ${userName}`;
+  }
+
 
   return (
     <header className="bg-primary text-primary-foreground shadow-md">
@@ -18,12 +26,20 @@ const Header = () => {
         <nav>
           {isAuthenticated && (
             <div className="flex items-center gap-2 sm:gap-4">
-              {userName && <span className="text-sm hidden md:inline">Welcome, {userName === 'editor_user' ? 'Editor' : userName}!</span>} {/* Changed admin_user to editor_user */}
+              {userName && <span className="text-sm hidden md:inline">{welcomeMessage}</span>}
 
-              {isEditor && ( // Changed isAdmin to isEditor
-                <Link href="/editor" passHref> {/* Changed /admin to /editor */}
+              {isEditor && (
+                <Link href="/editor" passHref>
                   <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary/80 px-2 sm:px-3">
-                    <Edit className="mr-0 sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">Editor Panel</span> {/* Changed icon and text */}
+                    <Edit className="mr-0 sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">Editor Panel</span>
+                  </Button>
+                </Link>
+              )}
+
+              {isAdmin && ( // New Admin Panel Link
+                <Link href="/admin" passHref>
+                  <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary/80 px-2 sm:px-3">
+                    <ShieldCheck className="mr-0 sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">Admin Panel</span>
                   </Button>
                 </Link>
               )}
@@ -40,3 +56,5 @@ const Header = () => {
 };
 
 export default Header;
+
+    

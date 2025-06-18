@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogIn, Smartphone, Mail, UserPlus, Edit } from 'lucide-react'; // Changed ShieldCheck to Edit for Editor
+import { LogIn, Smartphone, Mail, UserPlus, Edit, ShieldCheck } from 'lucide-react';
 import OtpForm from './OtpForm';
 import { useAppContext } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
@@ -11,13 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 
 const AuthOptions = () => {
   const [showOtpForm, setShowOtpForm] = useState(false);
-  const [otpMode, setOtpMode] = useState<'login' | 'register' | 'editor'>('login'); // Changed 'admin' to 'editor'
+  const [otpMode, setOtpMode] = useState<'login' | 'register' | 'editor' | 'admin'>('login');
   const { login } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
 
   const handleGoogleLogin = () => {
-    login("GoogleUser");
+    login("GoogleUser"); // This user will be neither editor nor admin by default
     toast({ title: "Login Successful (Simulated)", description: "Welcome via Google!" });
     router.push('/palm-input');
   };
@@ -32,8 +32,13 @@ const AuthOptions = () => {
     setShowOtpForm(true);
   };
 
-  const handleShowEditorLogin = () => { // Renamed from handleShowAdminLogin
-    setOtpMode('editor'); // Changed from 'admin'
+  const handleShowEditorLogin = () => {
+    setOtpMode('editor');
+    setShowOtpForm(true);
+  };
+
+  const handleShowAdminLogin = () => { // New handler for Admin (Ecommerce)
+    setOtpMode('admin');
     setShowOtpForm(true);
   };
 
@@ -55,7 +60,7 @@ const AuthOptions = () => {
         <CardTitle className="font-headline text-3xl">Welcome to PalmVerse</CardTitle>
         <CardDescription>Choose how you'd like to connect.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         <Button onClick={handleShowOtpLogin} className="w-full text-lg py-3 sm:py-4 md:py-6">
           <Smartphone className="mr-2 h-5 w-5" /> Login with Mobile Number
         </Button>
@@ -75,11 +80,26 @@ const AuthOptions = () => {
         <Button onClick={handleShowOtpRegister} variant="secondary" className="w-full text-lg py-3 sm:py-4 md:py-6">
           <UserPlus className="mr-2 h-5 w-5" /> Register / Create Account
         </Button>
-        <Button onClick={handleShowEditorLogin} variant="ghost" className="w-full text-lg py-3 sm:py-4 md:py-6 mt-2 border border-primary/50 hover:bg-primary/10"> {/* Changed variant and text */}
-          <Edit className="mr-2 h-5 w-5" /> Editor Login
+
+        <div className="relative my-3 pt-2">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">
+              Special Access
+            </span>
+          </div>
+        </div>
+
+        <Button onClick={handleShowEditorLogin} variant="ghost" className="w-full text-base py-3 sm:py-4 md:py-5 border border-purple-500/50 hover:bg-purple-500/10 text-purple-600">
+          <Edit className="mr-2 h-5 w-5" /> Editor Login (Palm Reading)
+        </Button>
+        <Button onClick={handleShowAdminLogin} variant="ghost" className="w-full text-base py-3 sm:py-4 md:py-5 border border-teal-500/50 hover:bg-teal-500/10 text-teal-600">
+          <ShieldCheck className="mr-2 h-5 w-5" /> Admin Login (Ecommerce)
         </Button>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="mt-2">
         <p className="text-xs text-muted-foreground text-center w-full">
             PalmVerse - Your destiny, revealed.
         </p>
@@ -89,3 +109,5 @@ const AuthOptions = () => {
 };
 
 export default AuthOptions;
+
+    
