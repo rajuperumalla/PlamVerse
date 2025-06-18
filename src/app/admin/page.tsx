@@ -98,7 +98,7 @@ export default function AdminPage() {
               <div>
                 <h3 className="text-xl font-semibold mb-2 font-headline">Original AI Report (Pending Review)</h3>
                 <ScrollArea className="h-[300px] w-full rounded-md border p-4 bg-muted/30">
-                  {reportData.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
+                  {reportData.content.split('\\n').filter(p => p.trim() !== '').map((paragraph, index) => (
                     <p key={index} className="mb-3 text-sm leading-relaxed">{paragraph}</p>
                   ))}
                 </ScrollArea>
