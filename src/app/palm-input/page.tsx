@@ -6,10 +6,10 @@ import Link from 'next/link';
 import PalmInputForm from '@/components/palm-reading/PalmInputForm';
 import { useAppContext } from '@/context/AppContext';
 import { Loader2 } from 'lucide-react';
-import Image from 'next/image'; // Added for product showcase
-import { Button } from '@/components/ui/button'; // Added for product showcase
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'; // Added for product showcase
-import { Sparkles, ArrowRight } from 'lucide-react'; // Added for product showcase
+import Image from 'next/image'; 
+import { Button } from '@/components/ui/button'; 
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'; 
+import { Sparkles, ArrowRight } from 'lucide-react'; 
 
 // Sample product categories for display after login
 const productCategories = [
@@ -46,80 +46,91 @@ function PalmInputPageComponent() {
   }
 
   return (
-    <div className="space-y-8 md:space-y-10">
-      <nav aria-label="Main navigation after login">
-        <ul className="flex justify-center items-center space-x-2 sm:space-x-4 md:space-x-6 py-3 bg-amber-100 dark:bg-amber-800/30 backdrop-blur-sm rounded-lg shadow-md border border-amber-300 dark:border-amber-700">
-          <li>
-            <Link href="/" className="text-sm sm:text-base text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link href="/palm-input" className="text-sm sm:text-base font-semibold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 animate-shimmer bg-[length:200%_100%] transition-colors px-2 py-1 rounded-md ring-1 ring-amber-500/50 bg-amber-500/10">
-              Palmistry
-            </Link>
-          </li>
-          <li>
-            <Link href="#products" className="text-sm sm:text-base text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
-              Products
-            </Link>
-          </li>
-          <li>
-            <Link href="#remedies" className="text-sm sm:text-base text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
-              Remedies
-            </Link>
-          </li>
-        </ul>
-      </nav>
-      <PalmInputForm />
+    <div className="relative space-y-8 md:space-y-10">
+      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
+        <Image
+          src="https://placehold.co/1920x1080.png" 
+          alt="Sacred Geometry Page Background"
+          layout="fill"
+          objectFit="cover"
+          data-ai-hint="sacred geometry background"
+        />
+      </div>
+      <div className="relative z-10"> {/* Content wrapper */}
+        <nav aria-label="Main navigation after login">
+          <ul className="flex justify-center items-center space-x-2 sm:space-x-4 md:space-x-6 py-3 bg-amber-100 dark:bg-amber-800/30 backdrop-blur-sm rounded-lg shadow-md border border-amber-300 dark:border-amber-700">
+            <li>
+              <Link href="/" className="text-sm sm:text-base text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link href="/palm-input" className="text-sm sm:text-base font-semibold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 animate-shimmer bg-[length:200%_100%] transition-colors px-2 py-1 rounded-md ring-1 ring-amber-500/50 bg-amber-500/10">
+                Palmistry
+              </Link>
+            </li>
+            <li>
+              <Link href="#products" className="text-sm sm:text-base text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
+                Products
+              </Link>
+            </li>
+            <li>
+              <Link href="#remedies" className="text-sm sm:text-base text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
+                Remedies
+              </Link>
+            </li>
+          </ul>
+        </nav>
+        <PalmInputForm />
 
-      {/* Spiritual Products Showcase Block - Moved here from landing page */}
-      <div className="w-full space-y-8 mt-12">
-          <Card className="shadow-lg bg-card/90 backdrop-blur-sm border border-border">
-            <CardHeader>
-                <div className="flex items-center gap-2">
-                    <Sparkles className="h-7 w-7 text-primary" />
-                    <CardTitle className="font-headline text-2xl md:text-3xl text-foreground">Enhance Your Journey</CardTitle>
+        {/* Spiritual Products Showcase Block - Moved here from landing page */}
+        <div className="w-full space-y-8 mt-12">
+            <Card className="shadow-lg bg-card/90 backdrop-blur-sm border border-border">
+              <CardHeader>
+                  <div className="flex items-center gap-2">
+                      <Sparkles className="h-7 w-7 text-primary" />
+                      <CardTitle className="font-headline text-2xl md:text-3xl text-foreground">Enhance Your Journey</CardTitle>
+                  </div>
+                <CardDescription className="text-base md:text-lg">Explore our curated collection of spiritual products.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {productCategories.map((category) => (
+                    <Card key={category.name} className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col group bg-background">
+                      <div className="relative h-48 w-full">
+                        <Image
+                          src={category.imageUrl}
+                          alt={category.name}
+                          layout="fill"
+                          objectFit="cover"
+                          data-ai-hint={category.imageHint}
+                          className="transition-transform duration-300 group-hover:scale-105"
+                        />
+                      </div>
+                      <CardHeader className="p-4">
+                        <CardTitle className="font-headline text-xl text-card-foreground">{category.name}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0 flex-grow">
+                        <p className="text-muted-foreground text-sm line-clamp-3">{category.description}</p>
+                      </CardContent>
+                      <CardFooter className="p-4 border-t border-border">
+                        <Button variant="outline" className="w-full group text-primary border-primary/50 hover:bg-primary/10 text-sm py-2.5" disabled>
+                          Explore
+                          <ArrowRight className="ml-2 h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
                 </div>
-              <CardDescription className="text-base md:text-lg">Explore our curated collection of spiritual products.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {productCategories.map((category) => (
-                  <Card key={category.name} className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col group bg-background">
-                    <div className="relative h-48 w-full">
-                      <Image
-                        src={category.imageUrl}
-                        alt={category.name}
-                        layout="fill"
-                        objectFit="cover"
-                        data-ai-hint={category.imageHint}
-                        className="transition-transform duration-300 group-hover:scale-105"
-                      />
-                    </div>
-                    <CardHeader className="p-4">
-                      <CardTitle className="font-headline text-xl text-card-foreground">{category.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0 flex-grow">
-                      <p className="text-muted-foreground text-sm line-clamp-3">{category.description}</p>
-                    </CardContent>
-                    <CardFooter className="p-4 border-t border-border">
-                      <Button variant="outline" className="w-full group text-primary border-primary/50 hover:bg-primary/10 text-sm py-2.5" disabled>
-                        Explore
-                        <ArrowRight className="ml-2 h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-            <CardFooter className="p-4 text-center border-t border-border">
-                 <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground text-md py-3 px-6" disabled>
-                    Visit Our Full Shop <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-            </CardFooter>
-             <p className="text-sm text-center pb-4 text-amber-700 dark:text-amber-500 font-semibold">More products coming soon!</p>
-          </Card>
+              </CardContent>
+              <CardFooter className="p-4 text-center border-t border-border">
+                   <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground text-md py-3 px-6" disabled>
+                      Visit Our Full Shop <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+              </CardFooter>
+               <p className="text-sm text-center pb-4 text-amber-700 dark:text-amber-500 font-semibold">More products coming soon!</p>
+            </Card>
+          </div>
         </div>
     </div>
   );
@@ -137,3 +148,5 @@ export default function PalmInputPage() {
     </Suspense>
   );
 }
+
+  
