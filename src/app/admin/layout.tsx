@@ -143,12 +143,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                 <SidebarMenuButton asChild isActive={pathname === '/admin/products'} className="w-full justify-start h-8 mb-1 text-xs">
                                     <Link href="/admin/products"><ShoppingBag className="mr-2 h-3.5 w-3.5"/>All Products</Link>
                                 </SidebarMenuButton>
-                                <SidebarMenuButton asChild isActive={pathname === '/admin/products/variants'} className="w-full justify-start h-8 mb-1 text-xs">
-                                    <Link href="/admin/products/variants"><Palette className="mr-2 h-3.5 w-3.5"/>Variants</Link>
-                                </SidebarMenuButton>
-                                <SidebarMenuButton asChild isActive={pathname === '/admin/products/inventory'} className="w-full justify-start h-8 mb-1 text-xs">
-                                    <Link href="/admin/products/inventory"><Boxes className="mr-2 h-3.5 w-3.5"/>Inventory</Link>
-                                </SidebarMenuButton>
                                 <SidebarMenuButton asChild isActive={pathname === '/admin/products/bulk-upload'} className="w-full justify-start h-8 mb-1 text-xs">
                                     <Link href="/admin/products/bulk-upload"><Upload className="mr-2 h-3.5 w-3.5"/>Bulk Upload</Link>
                                 </SidebarMenuButton>
@@ -253,5 +247,4 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   );
 }
     
-
     
