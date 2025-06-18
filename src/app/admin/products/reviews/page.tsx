@@ -68,7 +68,7 @@ export default function AdminProductReviewsPage() {
         <div>
           <h1 className="text-3xl font-bold font-headline flex items-center gap-2">
             <MessageSquareText className="h-8 w-8 text-primary" />
-            PRODUCT REVIEWS
+            Product Reviews
           </h1>
           <div className="text-sm text-muted-foreground flex items-center mt-1">
             <Link href="/admin" className="hover:text-primary">Ecommerce</Link>
@@ -203,5 +203,3 @@ export default function AdminProductReviewsPage() {
     </div>
   );
 }
-
-    

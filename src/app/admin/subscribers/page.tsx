@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Search, Users, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Subscriber {
@@ -31,7 +31,7 @@ export default function AdminSubscribersPage() {
         <div>
           <h1 className="text-3xl font-bold font-headline flex items-center gap-2">
             <Users className="h-8 w-8 text-primary" />
-            SUBSCRIBERS
+            Subscribers
           </h1>
           <CardDescription className="mt-1">Manage your newsletter subscribers.</CardDescription>
         </div>
@@ -98,5 +98,3 @@ export default function AdminSubscribersPage() {
     </div>
   );
 }
-
-    

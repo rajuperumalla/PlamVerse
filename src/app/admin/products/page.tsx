@@ -39,7 +39,7 @@ export default function AdminAllProductsPage() {
     <div className="space-y-6">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-headline">PRODUCTS</h1>
+          <h1 className="text-3xl font-bold font-headline">Products</h1>
           <div className="text-sm text-muted-foreground flex items-center mt-1">
             <Link href="/admin" className="hover:text-primary">Ecommerce</Link>
             <ChevronRight className="h-4 w-4 mx-1" />
