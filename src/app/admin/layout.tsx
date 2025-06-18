@@ -14,7 +14,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { LayoutDashboard, PanelLeft, Package, Briefcase, Users, Settings, ShieldCheck, ShoppingCart, Tag, Palette, Boxes, Upload, MessageSquareText, Info, MailCheck } from 'lucide-react';
+import { LayoutDashboard, PanelLeft, Package, Briefcase, Users, Settings, ShieldCheck, ShoppingCart, Tag, Palette, Boxes, Upload, MessageSquareText, Info, MailCheck, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
