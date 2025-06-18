@@ -7,10 +7,10 @@ import { useAppContext } from '@/context/AppContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Info } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export default function ReportPage() {
-  const { isAuthenticated, reportData, isLoading: contextIsLoading, approveReport } = useAppContext();
+  const { isAuthenticated, reportData, isLoading: contextIsLoading } = useAppContext();
   const router = useRouter();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
@@ -19,6 +19,8 @@ export default function ReportPage() {
         if (!isAuthenticated) {
             router.push('/');
         } else if (!reportData && !contextIsLoading) {
+            // If no report data and not loading, redirect to input. 
+            // This can happen if user navigates here directly without generating a report.
             router.push('/palm-input');
         }
         setIsCheckingAuth(false);
@@ -26,7 +28,7 @@ export default function ReportPage() {
     return () => clearTimeout(timer);
   }, [isAuthenticated, reportData, router, contextIsLoading]);
 
-  if (isCheckingAuth || contextIsLoading && !reportData) { // Show skeleton if context is loading AND no report data yet
+  if (isCheckingAuth || (contextIsLoading && !reportData)) { 
     return (
       <div className="space-y-6 p-8 max-w-3xl mx-auto">
         <Skeleton className="h-12 w-3/4 mx-auto" />
@@ -41,6 +43,7 @@ export default function ReportPage() {
   }
 
   if (!reportData) {
+    // This case should ideally be caught by the useEffect redirect, but as a fallback:
     return (
       <div className="flex flex-col items-center justify-center text-center py-12 min-h-[calc(100vh-200px)]">
         <AlertTriangle className="h-16 w-16 text-destructive mb-4" />
@@ -56,30 +59,22 @@ export default function ReportPage() {
   if (reportData.status === 'pending_review') {
     return (
       <div className="flex flex-col items-center justify-center text-center py-12 min-h-[calc(100vh-200px)]">
-        <Card className="w-full max-w-lg shadow-lg p-8">
+        <Card className="w-full max-w-lg shadow-lg">
           <CardHeader className="items-center">
             <div className="p-3 bg-blue-100 rounded-full mb-4">
               <Info className="h-12 w-12 text-blue-600" />
             </div>
-            <CardTitle className="font-headline text-2xl">Report Pending Review</CardTitle>
+            <CardTitle className="font-headline text-2xl">Report Pending Expert Review</CardTitle>
+            <CardDescription>Your personalized palm reading is being carefully reviewed.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">
-              Your personalized palm reading report has been generated and is currently undergoing an expert review.
-              This ensures the highest quality and accuracy.
+              Your report has been generated and is currently undergoing an expert review to ensure the highest quality and accuracy.
             </p>
             <p className="text-muted-foreground">
-              Please check back soon. You will be notified once it's ready.
+              Please check back soon. This usually takes a short while.
             </p>
-            {/* Simulated Admin Action Section */}
-            <div className="mt-6 pt-6 border-t">
-              <h3 className="text-lg font-semibold mb-2 text-gray-700">Admin Actions (Simulated)</h3>
-              <p className="text-sm text-muted-foreground mb-3">This section would typically be in a secure admin panel.</p>
-              <Button onClick={approveReport} disabled={contextIsLoading}>
-                {contextIsLoading ? "Approving..." : "Approve Report"}
-              </Button>
-            </div>
-             <Button onClick={() => router.push('/palm-input')} variant="outline" className="mt-6 w-full">
+            <Button onClick={() => router.push('/palm-input')} variant="outline" className="mt-6 w-full">
               Back to Input / Start New
             </Button>
           </CardContent>

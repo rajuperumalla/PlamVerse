@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 interface ReportData {
   content: string;
@@ -20,8 +20,8 @@ interface AppState {
 interface AppContextType extends AppState {
   login: (name: string) => void;
   logout: () => void;
-  setReportContent: (content: string) => void; // Renamed to reflect it sets content, status is internal
-  approveReport: () => void;
+  generateNewReport: (content: string) => void;
+  approveCurrentReport: (newContent?: string) => void;
   startLoading: () => void;
   stopLoading: () => void;
   setHasPaid: (paid: boolean) => void;
@@ -33,11 +33,10 @@ const AppContext = createContext<AppContextType | null>(null);
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
-  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [reportData, setReportDataState] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasPaid, setHasPaidState] = useState(false); // Renamed to avoid conflict
+  const [hasPaid, setHasPaidState] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     const storedAuth = sessionStorage.getItem('palmverse_isAuthenticated');
@@ -54,16 +53,22 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
     if (storedReportData) {
       try {
-        setReportData(JSON.parse(storedReportData));
+        setReportDataState(JSON.parse(storedReportData));
       } catch (e) {
         console.error("Failed to parse stored report data", e);
         sessionStorage.removeItem('palmverse_reportData');
       }
     }
-    
-    // Redirect logic handled by individual pages now to avoid premature redirection
   }, []);
 
+  const setReportDataPersistence = (data: ReportData | null) => {
+    setReportDataState(data);
+    if (data) {
+      sessionStorage.setItem('palmverse_reportData', JSON.stringify(data));
+    } else {
+      sessionStorage.removeItem('palmverse_reportData');
+    }
+  };
 
   const login = (name: string) => {
     setIsAuthenticated(true);
@@ -75,7 +80,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setIsAuthenticated(false);
     setUserName(null);
-    setReportData(null);
+    setReportDataPersistence(null);
     setHasPaidState(false);
     sessionStorage.removeItem('palmverse_isAuthenticated');
     sessionStorage.removeItem('palmverse_userName');
@@ -84,23 +89,24 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     router.push('/');
   };
   
-  const setReportContent = (content: string) => {
-    const newReportData = { content, status: 'pending_review' as const };
-    setReportData(newReportData);
-    sessionStorage.setItem('palmverse_reportData', JSON.stringify(newReportData));
+  const generateNewReport = (content: string) => {
+    const newReport: ReportData = { content, status: 'pending_review' };
+    setReportDataPersistence(newReport);
   };
 
-  const approveReport = () => {
+  const approveCurrentReport = (newContent?: string) => {
     if (reportData) {
-      const approvedReportData = { ...reportData, status: 'approved' as const };
-      setReportData(approvedReportData);
-      sessionStorage.setItem('palmverse_reportData', JSON.stringify(approvedReportData));
+      const approvedReport: ReportData = {
+        ...reportData,
+        content: newContent || reportData.content,
+        status: 'approved',
+      };
+      setReportDataPersistence(approvedReport);
     }
   };
   
   const clearReport = () => {
-    setReportData(null);
-    sessionStorage.removeItem('palmverse_reportData');
+    setReportDataPersistence(null);
   }
 
   const startLoading = () => setIsLoading(true);
@@ -117,8 +123,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       login, 
       logout, 
       reportData, 
-      setReportContent,
-      approveReport, 
+      generateNewReport,
+      approveCurrentReport, 
       userName, 
       isLoading, 
       startLoading, 

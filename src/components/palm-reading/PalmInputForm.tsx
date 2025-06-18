@@ -27,19 +27,15 @@ const PalmInputForm = () => {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setReportContent, startLoading, stopLoading, isLoading, hasPaid, clearReport } = useAppContext();
+  const { generateNewReport, startLoading, stopLoading, isLoading, hasPaid, clearReport } = useAppContext();
   const { toast } = useToast();
 
-  // If returning from payment, and it was successful, try to submit.
   useEffect(() => {
     if (searchParams.get('payment_success') === 'true' && hasPaid) {
-        // Attempt to resubmit the form, assumes data is still in state.
-        // A more robust solution would temporarily store form data (e.g. sessionStorage)
-        // before redirecting to payment.
         const canSubmit = leftPalmImage && rightPalmImage && dateOfBirth && placeOfBirth && dominantHand && category;
         if (canSubmit) {
             toast({ title: "Payment Successful", description: "Generating your report..." });
-            handleSubmit(new Event('submit') as unknown as FormEvent, true); // bypass payment check
+            handleSubmit(new Event('submit') as unknown as FormEvent, true); 
         } else {
             toast({ title: "Payment Successful", description: "Please re-fill any missing fields and submit again." });
         }
@@ -79,15 +75,12 @@ const PalmInputForm = () => {
     }
 
     if (!hasPaid && !bypassPaymentCheck) {
-      // Store form data if needed, then redirect
-      // For simplicity, we're not storing form data across redirects here. User will need to re-fill.
-      // A real app would store this temporarily (e.g., session storage).
       toast({ title: "Payment Required", description: "Please complete payment to generate your report."});
-      router.push('/payment'); // Pass current form data as query params if small, or store in context/sessionStorage
+      router.push('/payment'); 
       return;
     }
     
-    clearReport(); // Clear any previous report before generating a new one
+    clearReport(); 
     startLoading();
     try {
       const leftPalmDataUri = await fileToDataUri(leftPalmImage);
@@ -104,7 +97,7 @@ const PalmInputForm = () => {
       };
 
       const result = await generatePalmReading(input);
-      setReportContent(result.report);
+      generateNewReport(result.report); // Use generateNewReport here
       toast({ title: "Palm Reading Generated!", description: "Your report is now pending expert review." });
       router.push('/report');
     } catch (error) {
