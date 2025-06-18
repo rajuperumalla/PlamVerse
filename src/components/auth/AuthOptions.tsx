@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogIn, Smartphone, Mail, UserPlus } from 'lucide-react';
+import { LogIn, Smartphone, Mail, UserPlus, ShieldCheck } from 'lucide-react'; // Added ShieldCheck for Admin
 import OtpForm from './OtpForm';
 import { useAppContext } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const AuthOptions = () => {
   const [showOtpForm, setShowOtpForm] = useState(false);
-  const [otpMode, setOtpMode] = useState<'login' | 'register'>('login');
+  const [otpMode, setOtpMode] = useState<'login' | 'register' | 'admin'>('login'); // Extended otpMode
   const { login } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
@@ -30,6 +30,11 @@ const AuthOptions = () => {
   const handleShowOtpRegister = () => {
     setOtpMode('register');
     setShowOtpForm(true); 
+  };
+
+  const handleShowAdminLogin = () => {
+    setOtpMode('admin');
+    setShowOtpForm(true);
   };
 
   if (showOtpForm) {
@@ -69,6 +74,9 @@ const AuthOptions = () => {
         </div>
         <Button onClick={handleShowOtpRegister} variant="secondary" className="w-full text-lg py-3 sm:py-4 md:py-6">
           <UserPlus className="mr-2 h-5 w-5" /> Register / Create Account
+        </Button>
+        <Button onClick={handleShowAdminLogin} variant="destructive" className="w-full text-lg py-3 sm:py-4 md:py-6 mt-2">
+          <ShieldCheck className="mr-2 h-5 w-5" /> Admin Login
         </Button>
       </CardContent>
       <CardFooter>

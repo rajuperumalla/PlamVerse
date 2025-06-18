@@ -10,28 +10,33 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { refinePalmReadingReport } from '@/ai/flows/refine-palm-reading-report';
-import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, ShieldQuestion, ThumbsUp } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, ShieldQuestion, ThumbsUp, LogIn } from 'lucide-react';
 
 export default function AdminPage() {
   const { 
-    isAuthenticated, 
+    isAuthenticated,
+    isAdmin, // Get isAdmin state
     reportData, 
     isLoading, 
     startLoading, 
     stopLoading, 
     approveCurrentReport,
-    userName 
   } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
   const [adminSuggestions, setAdminSuggestions] = useState('');
+  const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/'); // Redirect to login if not authenticated
+      router.push('/'); 
+    } else if (!isAdmin) {
+      // If authenticated but not admin, redirect to a non-admin page or show access denied
+      toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
+      router.push('/palm-input'); // Or '/' or a dedicated access-denied page
     }
-    // Add role-based check in a real app, e.g. if (userName !== 'admin_user') router.push('/');
-  }, [isAuthenticated, router, userName]);
+    setAuthCheckComplete(true);
+  }, [isAuthenticated, isAdmin, router, toast]);
 
   const handleRefineAndApprove = async () => {
     if (!reportData || reportData.status !== 'pending_review') {
@@ -50,7 +55,7 @@ export default function AdminPage() {
       });
       approveCurrentReport(refinedResult.refinedReport);
       toast({ title: "Report Refined & Approved", description: "The report has been updated and approved successfully." });
-      setAdminSuggestions(''); // Clear suggestions
+      setAdminSuggestions(''); 
     } catch (error) {
       console.error("Error refining report:", error);
       toast({ title: "Refinement Error", description: "Failed to refine the report. Please try again.", variant: "destructive" });
@@ -65,16 +70,35 @@ export default function AdminPage() {
       return;
     }
     startLoading();
-    approveCurrentReport(); // Approve with existing content
+    approveCurrentReport(); 
     toast({ title: "Report Approved", description: "The report has been approved as is." });
     stopLoading();
   };
 
-  if (!isAuthenticated) {
-    // Render a loading spinner or null while redirecting
-    return <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
+  if (!authCheckComplete || !isAuthenticated || !isAdmin) {
+    // Show loading spinner while auth/admin status is being checked or if not authorized
+    return (
+        <div className="flex flex-col justify-center items-center min-h-[calc(100vh-200px)]">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+            {!authCheckComplete && <p>Verifying access...</p>}
+            {authCheckComplete && (!isAuthenticated || !isAdmin) && (
+                 <Card className="w-full max-w-md text-center p-6">
+                    <CardHeader>
+                        <div className="mx-auto bg-destructive/10 p-3 rounded-full w-fit mb-4">
+                            <AlertTriangle className="h-10 w-10 text-destructive" />
+                        </div>
+                        <CardTitle>Access Denied</CardTitle>
+                        <CardDescription>You do not have permission to view this page.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Button onClick={() => router.push('/')}><LogIn className="mr-2"/> Go to Login</Button>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+    );
   }
-
+  
   return (
     <div className="container mx-auto py-8">
       <Card className="w-full max-w-4xl mx-auto shadow-xl">
@@ -86,7 +110,7 @@ export default function AdminPage() {
           <CardDescription>Review and approve AI-generated palm readings.</CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading && !reportData && ( // Initial loading state for reportData
+          {isLoading && !reportData && ( 
              <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
                 <p className="ml-4 text-muted-foreground">Loading report data...</p>
@@ -137,7 +161,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {!isLoading && !reportData && ( // This covers cases where reportData is null and not loading (e.g. no report submitted yet)
+          {!isLoading && !reportData && ( 
              <div className="text-center py-10">
               <AlertTriangle className="mx-auto h-16 w-16 text-amber-500 mb-4" />
               <h3 className="text-2xl font-semibold mb-2 font-headline">No Report Data</h3>

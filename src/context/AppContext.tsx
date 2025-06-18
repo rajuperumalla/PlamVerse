@@ -15,6 +15,7 @@ interface AppState {
   reportData: ReportData | null;
   isLoading: boolean;
   hasPaid: boolean;
+  isAdmin: boolean; // New state for admin status
 }
 
 interface AppContextType extends AppState {
@@ -36,6 +37,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [reportData, setReportDataState] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasPaid, setHasPaidState] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false); // Initialize isAdmin
   const router = useRouter();
 
   useEffect(() => {
@@ -43,10 +45,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const storedName = sessionStorage.getItem('palmverse_userName');
     const storedPaid = sessionStorage.getItem('palmverse_hasPaid');
     const storedReportData = sessionStorage.getItem('palmverse_reportData');
+    const storedIsAdmin = sessionStorage.getItem('palmverse_isAdmin'); // Load isAdmin
 
     if (storedAuth === 'true' && storedName) {
       setIsAuthenticated(true);
       setUserName(storedName);
+      if (storedIsAdmin === 'true') { // Set isAdmin based on stored value
+        setIsAdmin(true);
+      }
     }
     if (storedPaid === 'true') {
       setHasPaidState(true);
@@ -75,6 +81,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUserName(name);
     sessionStorage.setItem('palmverse_isAuthenticated', 'true');
     sessionStorage.setItem('palmverse_userName', name);
+
+    // Set admin status
+    if (name === 'admin_user') {
+      setIsAdmin(true);
+      sessionStorage.setItem('palmverse_isAdmin', 'true');
+    } else {
+      setIsAdmin(false);
+      sessionStorage.setItem('palmverse_isAdmin', 'false');
+    }
   };
 
   const logout = () => {
@@ -82,10 +97,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUserName(null);
     setReportDataPersistence(null);
     setHasPaidState(false);
+    setIsAdmin(false); // Reset isAdmin on logout
     sessionStorage.removeItem('palmverse_isAuthenticated');
     sessionStorage.removeItem('palmverse_userName');
     sessionStorage.removeItem('palmverse_hasPaid');
     sessionStorage.removeItem('palmverse_reportData');
+    sessionStorage.removeItem('palmverse_isAdmin'); // Clear isAdmin from storage
     router.push('/');
   };
   
@@ -131,7 +148,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       stopLoading,
       hasPaid,
       setHasPaid,
-      clearReport
+      clearReport,
+      isAdmin // Expose isAdmin
     }}>
       {children}
     </AppContext.Provider>
