@@ -335,6 +335,9 @@ export default function AdminPage() {
                     {isAiSuggestionLoadingInDialog ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                     Get AI Suggestions for Refinement
                 </Button>
+                <p className="text-xs text-muted-foreground mt-1 text-center">
+                  You can revise your guidance above and click again to get new suggestions.
+                </p>
 
                 {aiSuggestionForDialog && (
                 <Alert variant={aiSuggestionForDialog.startsWith("Error:") ? "destructive" : "default"} className="text-xs">
@@ -434,3 +437,4 @@ export default function AdminPage() {
     
 
     
+
