@@ -14,7 +14,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { LayoutDashboard, PanelLeft, Package, Briefcase, Users, Settings, ShieldCheck, ShoppingCart, Tag, Upload, MessageSquareText, Info, ShoppingBag, Settings2, CreditCard, Truck, Percent } from 'lucide-react';
+import { LayoutDashboard, PanelLeft, Package, Briefcase, Users, Settings, ShieldCheck, ShoppingCart, Tag, Upload, MessageSquareText, Info, ShoppingBag, Settings2, CreditCard, Truck, Percent, Globe, Search, Building2, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -74,8 +74,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   const productSubmenuActive = pathname.startsWith('/admin/products');
-  const settingsSubmenuActive = pathname.startsWith('/admin/settings/'); // Note the trailing slash
-  const ecommerceSubmenuActive = productSubmenuActive || pathname === '/admin/site-info' || pathname === '/admin/subscribers';
+  const siteInfoSubmenuActive = pathname.startsWith('/admin/site-info/');
+  const settingsSubmenuActive = pathname.startsWith('/admin/settings/');
+  const ecommerceSubmenuActive = productSubmenuActive || siteInfoSubmenuActive || pathname === '/admin/subscribers' || pathname === '/admin/products/categories';
+
 
   return (
     <SidebarProvider defaultOpen>
@@ -156,9 +158,42 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                         <SidebarMenuButton asChild isActive={pathname === '/admin/products/categories'} className="w-full justify-start h-9 my-0.5 text-xs">
                             <Link href="/admin/products/categories"><Tag className="mr-2 h-4 w-4"/>Categories</Link>
                         </SidebarMenuButton>
-                        <SidebarMenuButton asChild isActive={pathname === '/admin/site-info'} className="w-full justify-start h-9 my-0.5 text-xs">
-                            <Link href="/admin/site-info"><Info className="mr-2 h-4 w-4"/>Site Info</Link>
-                        </SidebarMenuButton>
+                        
+                        <Accordion type="single" collapsible className="w-full" defaultValue={siteInfoSubmenuActive ? "site-info-submenu" : undefined}>
+                          <AccordionItem value="site-info-submenu" className="border-none">
+                            <SidebarMenuButton 
+                              asChild 
+                              variant="ghost" 
+                              className="p-0 w-full h-auto"
+                              tooltip={{ children: 'Site Information', side: 'right', className: "md:block hidden" }}
+                              isActive={siteInfoSubmenuActive || pathname === '/admin/site-info'}
+                            >
+                              <AccordionTrigger 
+                                className="flex items-center justify-between w-full py-2 px-2 rounded-md text-xs hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Info />
+                                  <span className="group-data-[collapsible=icon]:hidden">Site Information</span>
+                                </div>
+                              </AccordionTrigger>
+                            </SidebarMenuButton>
+                            <AccordionContent className="pt-1 pl-4 group-data-[collapsible=icon]:hidden">
+                                <SidebarMenuButton asChild isActive={pathname === '/admin/site-info/general'} className="w-full justify-start h-8 mb-1 text-xs">
+                                    <Link href="/admin/site-info/general"><Globe className="mr-2 h-3.5 w-3.5"/>General</Link>
+                                </SidebarMenuButton>
+                                <SidebarMenuButton asChild isActive={pathname === '/admin/site-info/seo'} className="w-full justify-start h-8 mb-1 text-xs">
+                                    <Link href="/admin/site-info/seo"><Search className="mr-2 h-3.5 w-3.5"/>SEO & Analytics</Link>
+                                </SidebarMenuButton>
+                                <SidebarMenuButton asChild isActive={pathname === '/admin/site-info/company'} className="w-full justify-start h-8 mb-1 text-xs">
+                                    <Link href="/admin/site-info/company"><Building2 className="mr-2 h-3.5 w-3.5"/>Company Details</Link>
+                                </SidebarMenuButton>
+                                <SidebarMenuButton asChild isActive={pathname === '/admin/site-info/social'} className="w-full justify-start h-8 text-xs">
+                                    <Link href="/admin/site-info/social"><Share2 className="mr-2 h-3.5 w-3.5"/>Social Sharing</Link>
+                                </SidebarMenuButton>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+
                         <SidebarMenuButton asChild isActive={pathname === '/admin/subscribers'} className="w-full justify-start h-9 my-0.5 text-xs">
                             <Link href="/admin/subscribers"><Users className="mr-2 h-4 w-4"/>Subscribers</Link>
                         </SidebarMenuButton>
