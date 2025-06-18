@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogIn, Smartphone, Mail, UserPlus, ShieldCheck } from 'lucide-react'; // Added ShieldCheck for Admin
+import { LogIn, Smartphone, Mail, UserPlus, Edit } from 'lucide-react'; // Changed ShieldCheck to Edit for Editor
 import OtpForm from './OtpForm';
 import { useAppContext } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
@@ -11,13 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 
 const AuthOptions = () => {
   const [showOtpForm, setShowOtpForm] = useState(false);
-  const [otpMode, setOtpMode] = useState<'login' | 'register' | 'admin'>('login'); // Extended otpMode
+  const [otpMode, setOtpMode] = useState<'login' | 'register' | 'editor'>('login'); // Changed 'admin' to 'editor'
   const { login } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
 
   const handleGoogleLogin = () => {
-    login("GoogleUser"); 
+    login("GoogleUser");
     toast({ title: "Login Successful (Simulated)", description: "Welcome via Google!" });
     router.push('/palm-input');
   };
@@ -26,22 +26,22 @@ const AuthOptions = () => {
     setOtpMode('login');
     setShowOtpForm(true);
   };
-  
+
   const handleShowOtpRegister = () => {
     setOtpMode('register');
-    setShowOtpForm(true); 
+    setShowOtpForm(true);
   };
 
-  const handleShowAdminLogin = () => {
-    setOtpMode('admin');
+  const handleShowEditorLogin = () => { // Renamed from handleShowAdminLogin
+    setOtpMode('editor'); // Changed from 'admin'
     setShowOtpForm(true);
   };
 
   if (showOtpForm) {
     return (
-      <OtpForm 
-        onBack={() => setShowOtpForm(false)} 
-        mode={otpMode} 
+      <OtpForm
+        onBack={() => setShowOtpForm(false)}
+        mode={otpMode}
       />
     );
   }
@@ -75,8 +75,8 @@ const AuthOptions = () => {
         <Button onClick={handleShowOtpRegister} variant="secondary" className="w-full text-lg py-3 sm:py-4 md:py-6">
           <UserPlus className="mr-2 h-5 w-5" /> Register / Create Account
         </Button>
-        <Button onClick={handleShowAdminLogin} variant="destructive" className="w-full text-lg py-3 sm:py-4 md:py-6 mt-2">
-          <ShieldCheck className="mr-2 h-5 w-5" /> Admin Login
+        <Button onClick={handleShowEditorLogin} variant="ghost" className="w-full text-lg py-3 sm:py-4 md:py-6 mt-2 border border-primary/50 hover:bg-primary/10"> {/* Changed variant and text */}
+          <Edit className="mr-2 h-5 w-5" /> Editor Login
         </Button>
       </CardContent>
       <CardFooter>

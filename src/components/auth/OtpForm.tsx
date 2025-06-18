@@ -8,11 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { Phone, KeyRound, UserPlus, ArrowLeft, ShieldAlert } from 'lucide-react';
+import { Phone, KeyRound, UserPlus, ArrowLeft, Edit } from 'lucide-react'; // Changed ShieldAlert to Edit
 
 interface OtpFormProps {
   onBack?: () => void;
-  mode?: 'login' | 'register' | 'admin';
+  mode?: 'login' | 'register' | 'editor'; // Changed 'admin' to 'editor'
 }
 
 const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
@@ -39,22 +39,22 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     primaryButtonText = "Register & Send OTP";
     verifyButtonText = "Verify OTP & Register";
     formIcon = <UserPlus className="h-10 w-10 text-primary" />;
-  } else if (mode === 'admin') {
-    cardTitle = "Admin Portal Access";
-    cardDescription = "Enter admin credentials to proceed.";
-    primaryButtonText = "Send Admin OTP";
-    verifyButtonText = "Verify OTP & Login as Admin";
-    mobileLabel = "Admin ID";
-    mobilePlaceholder = "Enter Admin ID (use 'admin')";
-    otpPlaceholder = "Admin OTP (use '000000')";
-    formIcon = <ShieldAlert className="h-10 w-10 text-primary" />;
+  } else if (mode === 'editor') { // Changed from 'admin'
+    cardTitle = "Editor Portal Access";
+    cardDescription = "Enter editor credentials to proceed.";
+    primaryButtonText = "Send Editor OTP";
+    verifyButtonText = "Verify OTP & Login as Editor";
+    mobileLabel = "Editor ID";
+    mobilePlaceholder = "Enter Editor ID (use 'editor')"; // Changed from 'admin'
+    otpPlaceholder = "Editor OTP (use '000000')";
+    formIcon = <Edit className="h-10 w-10 text-primary" />; // Changed from ShieldAlert
   }
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === 'admin') {
-      if (mobileNumber !== 'admin') {
-        toast({ title: "Invalid Admin ID", description: "Please enter the correct Admin ID.", variant: "destructive" });
+    if (mode === 'editor') { // Changed from 'admin'
+      if (mobileNumber !== 'editor') { // Changed from 'admin'
+        toast({ title: "Invalid Editor ID", description: "Please enter the correct Editor ID.", variant: "destructive" });
         return;
       }
     } else if (!/^\d{10}$/.test(mobileNumber)) {
@@ -65,7 +65,7 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     setOtpSent(true);
     setIsLoading(false);
-    const simulatedOtp = mode === 'admin' ? '000000' : '123456';
+    const simulatedOtp = mode === 'editor' ? '000000' : '123456'; // Changed from 'admin'
     toast({ title: "OTP Sent", description: `An OTP has been sent (simulated: ${simulatedOtp}).` });
   };
 
@@ -74,17 +74,17 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    if (mode === 'admin') {
-      if (mobileNumber === 'admin' && otp === '000000') {
-        login('admin_user'); 
-        toast({ title: "Admin Login Successful", description: "Redirecting to Admin Panel..." });
-        router.push('/admin');
+    if (mode === 'editor') { // Changed from 'admin'
+      if (mobileNumber === 'editor' && otp === '000000') { // Changed from 'admin_user' to 'editor_user'
+        login('editor_user');
+        toast({ title: "Editor Login Successful", description: "Redirecting to Editor Panel..." });
+        router.push('/editor'); // Changed from '/admin'
       } else {
-        toast({ title: "Invalid Admin Credentials", description: "The Admin ID or OTP is incorrect.", variant: "destructive" });
+        toast({ title: "Invalid Editor Credentials", description: "The Editor ID or OTP is incorrect.", variant: "destructive" });
       }
     } else { // Regular login or register
-      if (otp === '123456') { 
-        login(mobileNumber); 
+      if (otp === '123456') {
+        login(mobileNumber);
         toast({ title: mode === 'register' ? "Registration Successful" : "Login Successful", description: "Welcome to PalmVerse!" });
         router.push('/palm-input');
       } else {
@@ -113,7 +113,7 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
                   <Phone className="h-5 w-5 text-muted-foreground" />
                   <Input
                     id="mobileNumber"
-                    type={mode === 'admin' ? 'text' : 'tel'}
+                    type={mode === 'editor' ? 'text' : 'tel'} // Changed from 'admin'
                     value={mobileNumber}
                     onChange={(e) => setMobileNumber(e.target.value)}
                     placeholder={mobilePlaceholder}
@@ -150,7 +150,7 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
                 {isLoading ? 'Verifying...' : verifyButtonText}
               </Button>
               <Button variant="link" onClick={() => setOtpSent(false)} className="w-full" disabled={isLoading}>
-                {mode === 'admin' ? 'Change Admin ID' : 'Change mobile number'}
+                {mode === 'editor' ? 'Change Editor ID' : 'Change mobile number'} {/* Changed from 'admin' */}
               </Button>
             </form>
           )}
