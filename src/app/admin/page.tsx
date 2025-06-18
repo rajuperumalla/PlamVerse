@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { refinePalmReadingReport } from '@/ai/flows/refine-palm-reading-report';
 import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, ShieldQuestion, ThumbsUp, LogIn, Info, Eye, Sparkles, User, CalendarDays, ListChecksIcon, Columns, Archive, FileCheck2 } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, ShieldQuestion, ThumbsUp, LogIn, Eye, Sparkles, User, CalendarDays, ListChecksIcon, Columns, Archive, FileCheck2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -56,7 +56,7 @@ export default function AdminPage() {
   const handleRefineAndApprove = async (report: ReportData) => {
     const suggestions = adminSuggestions[report.id];
     if (!suggestions || !suggestions.trim()) {
-      toast({ title: "Missing Input", description: "Please provide refinement suggestions.", variant: "destructive" });
+      toast({ title: "Missing Input", description: "Please provide refinement suggestions for the AI.", variant: "destructive" });
       return;
     }
     startLoading();
@@ -66,12 +66,12 @@ export default function AdminPage() {
         adminSuggestions: suggestions,
       });
       approveReport(report.id, refinedResult.refinedReport); 
-      toast({ title: "Report Refined & Approved by AI", description: `Report ID ${report.id} has been updated and approved.` });
+      toast({ title: "Report Refined & Approved", description: `Report ID ${report.id.substring(0,10)}... has been updated by AI and approved.` });
       setAdminSuggestions(prev => ({ ...prev, [report.id]: '' })); 
-      setAiSuggestions(prev => ({...prev, [report.id]: null})); // Clear AI suggestions after approval
+      setAiSuggestions(prev => ({...prev, [report.id]: null}));
     } catch (error) {
       console.error("Error refining report:", error);
-      toast({ title: "Refinement Error", description: `Failed to refine report ID ${report.id}. Please try again.`, variant: "destructive" });
+      toast({ title: "Refinement Error", description: `Failed to refine report ID ${report.id.substring(0,10)}... Please try again.`, variant: "destructive" });
     } finally {
       stopLoading();
     }
@@ -80,8 +80,8 @@ export default function AdminPage() {
   const handleApproveAsIs = (reportId: string) => {
     startLoading();
     approveReport(reportId); 
-    toast({ title: "Report Approved", description: `Report ID ${reportId} has been approved as is.` });
-    setAiSuggestions(prev => { // Clear AI suggestions for this report ID
+    toast({ title: "Report Approved", description: `Report ID ${reportId.substring(0,10)}... has been approved as is.` });
+    setAiSuggestions(prev => { 
         const newAiSuggestions = {...prev};
         delete newAiSuggestions[reportId];
         return newAiSuggestions;
@@ -95,11 +95,11 @@ export default function AdminPage() {
     try {
       const result = await suggestReportImprovements({ report: report.content });
       setAiSuggestions(prev => ({ ...prev, [report.id]: result.suggestions }));
-      toast({ title: "AI Suggestions Ready", description: `AI-powered suggestions generated for Report ID ${report.id}.`});
+      toast({ title: "AI Suggestions Ready", description: `AI-powered suggestions generated for Report ID ${report.id.substring(0,10)}...`});
     } catch (error) {
       console.error("Error getting AI suggestions:", error);
       setAiSuggestions(prev => ({ ...prev, [report.id]: "Error: Could not fetch suggestions." }));
-      toast({ title: "Suggestion Error", description: `Failed to get AI suggestions for Report ID ${report.id}.`, variant: "destructive" });
+      toast({ title: "Suggestion Error", description: `Failed to get AI suggestions for Report ID ${report.id.substring(0,10)}...`, variant: "destructive" });
     } finally {
       setIsSuggestionsLoading(prev => ({ ...prev, [report.id]: false }));
     }
@@ -207,17 +207,22 @@ export default function AdminPage() {
                             ))}
                           </ScrollArea>
                            <DialogFooter className="mt-4">
-                              <Button onClick={() => {
+                              <Button 
+                                onClick={() => {
                                   const suggestionsFromAI = aiSuggestions[report.id];
                                   if (suggestionsFromAI && !suggestionsFromAI.startsWith("Error:")) {
                                     handleAdminSuggestionChange(report.id, (adminSuggestions[report.id] || '') + '\n\n--- AI Suggestions ---\n' + suggestionsFromAI);
-                                    toast({title: "AI Suggestions Added", description: "Suggestions appended to your refinement notes."})
+                                    toast({title: "AI Suggestions Appended", description: "Suggestions appended to your refinement notes."})
                                   } else if (suggestionsFromAI?.startsWith("Error:")){
-                                     toast({title: "Error in AI Suggestions", description: "Cannot append suggestions due to an error.", variant:"destructive"})
+                                     toast({title: "Error in AI Suggestions", description: "Cannot append: Error fetching suggestions.", variant:"destructive"})
                                   } else {
-                                    toast({title: "No AI Suggestions Available", description: "Generate AI suggestions first if you want to append them.", variant: "destructive"})
+                                    toast({title: "No AI Suggestions Available", description: "Generate AI suggestions first if you want to append them.", variant:"outline"})
                                   }
-                                }}>
+                                }}
+                                disabled={!aiSuggestions[report.id] || !!aiSuggestions[report.id]?.startsWith("Error:") || contextIsLoading }
+                                variant="outline"
+                                size="sm"
+                                >
                                   <Sparkles className="mr-2 h-4 w-4"/> Append AI Suggestions to Notes
                                 </Button>
                             </DialogFooter>
@@ -245,7 +250,7 @@ export default function AdminPage() {
                       <AlertTitle className="text-sm">AI Generated Suggestions for Admin</AlertTitle>
                       <AlertDescription>
                         <ScrollArea className="h-[80px]">
-                          {aiSuggestions[report.id]?.split('\n').map((line, i) => <p key={i}>{line}</p>)}
+                          {aiSuggestions[report.id]?.split('\n').map((line, i) => <p key={i} className="mb-1">{line}</p>)}
                         </ScrollArea>
                       </AlertDescription>
                     </Alert>
@@ -266,7 +271,7 @@ export default function AdminPage() {
                       onClick={() => handleRefineAndApprove(report)} 
                       disabled={contextIsLoading || !adminSuggestions[report.id]?.trim()} 
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                       title="AI will incorporate your suggestions to enhance the report."
                     >
                       {contextIsLoading && adminSuggestions[report.id]?.trim() ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
@@ -376,3 +381,4 @@ export default function AdminPage() {
   );
 }
 
+    
