@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { useAppContext } from '@/context/AppContext';
+import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { generatePalmReading, type GeneratePalmReadingInput } from '@/ai/flows/generate-palm-reading';
 import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard } from 'lucide-react';
@@ -17,10 +17,11 @@ import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks,
 const SESSION_STORAGE_KEY = 'palmVerseCheckoutForm';
 
 const PalmInputForm = () => {
-  const [leftPalmImage, setLeftPalmImage] = useState<File | null>(null);
-  const [rightPalmImage, setRightPalmImage] = useState<File | null>(null);
-  const [leftPalmPreview, setLeftPalmPreview] = useState<string | null>(null);
-  const [rightPalmPreview, setRightPalmPreview] = useState<string | null>(null);
+  const [leftPalmImageFile, setLeftPalmImageFile] = useState<File | null>(null); // For actual file submission
+  const [rightPalmImageFile, setRightPalmImageFile] = useState<File | null>(null); // For actual file submission
+  const [leftPalmPreview, setLeftPalmPreview] = useState<string | null>(null); // For UI preview & auto-submit
+  const [rightPalmPreview, setRightPalmPreview] = useState<string | null>(null); // For UI preview & auto-submit
+  
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [placeOfBirth, setPlaceOfBirth] = useState('');
   const [timeOfBirth, setTimeOfBirth] = useState('');
@@ -35,21 +36,22 @@ const PalmInputForm = () => {
     stopLoading, 
     isLoading, 
     hasPaid, 
-    clearReport 
+    clearCurrentUserReportStorage, // Use this to clear previous attempt if needed
+    userName, // Needed to associate with the report
   } = useAppContext();
   const { toast } = useToast();
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setImage: (file: File | null) => void, setPreview: (url: string | null) => void) => {
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setFile: (file: File | null) => void, setPreview: (url: string | null) => void) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setImage(file);
+      setFile(file); // Store the actual file
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result as string);
+        setPreview(reader.result as string); // Store Data URI for preview and potential auto-submit
       };
       reader.readAsDataURL(file);
     } else {
-        setImage(null);
+        setFile(null);
         setPreview(null);
     }
   };
@@ -66,46 +68,41 @@ const PalmInputForm = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!hasPaid) {
-      // Save current form state (complete or not) to sessionStorage before redirecting to payment
-      const formDataToPersist = {
+    // Data for ReportPalmInputDetails
+    const reportInputDetails: ReportPalmInputDetails = {
+        leftPalmDataUri: leftPalmPreview || undefined, // Use preview if file not re-selected
+        rightPalmDataUri: rightPalmPreview || undefined, // Use preview if file not re-selected
         dateOfBirth,
         placeOfBirth,
-        timeOfBirth,
+        timeOfBirth: timeOfBirth || "Not specified",
         dominantHand,
         category,
-        leftPalmPreview, // This is the Data URI string
-        rightPalmPreview, // This is the Data URI string
+      };
+
+    if (!hasPaid) {
+      const formDataToPersist = {
+        ...reportInputDetails, // Includes previews which are data URIs
       };
       sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(formDataToPersist));
-      
-      // Optionally, inform the user if they proceed to payment with an incomplete form.
-      // For now, we just proceed as per streamlining request.
-      // if (!leftPalmImage || !rightPalmImage || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
-      //   toast({ title: "Proceeding to Payment", description: "Some information may be missing. You can complete it after payment if needed.", variant: "default" });
-      // } else {
-      //   toast({ title: "Proceeding to Payment", description: "Your information has been saved."});
-      // }
       router.push('/payment'); 
-      return; // Return after redirecting
+      return;
     }
 
-    // This part executes if hasPaid is true (i.e., manual submission after returning from payment with incomplete data, or some other edge case)
-    if (!leftPalmImage || !rightPalmImage || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
+    // This part executes if hasPaid is true (i.e., manual submission)
+    if (!leftPalmImageFile || !rightPalmImageFile || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
       toast({ title: "Missing Information", description: "Please fill all required fields and upload both palm images.", variant: "destructive" });
       return;
     }
     
-    // Clear session storage as we are performing a manual submission that supersedes any persisted auto-submit data.
     sessionStorage.removeItem(SESSION_STORAGE_KEY); 
-    
-    clearReport(); 
+    clearCurrentUserReportStorage(); 
     startLoading();
     try {
-      const leftPalmDataUriFromFile = await fileToDataUri(leftPalmImage);
-      const rightPalmDataUriFromFile = await fileToDataUri(rightPalmImage);
+      // If submitting manually, ensure we use the latest files
+      const leftPalmDataUriFromFile = await fileToDataUri(leftPalmImageFile);
+      const rightPalmDataUriFromFile = await fileToDataUri(rightPalmImageFile);
 
-      const input: GeneratePalmReadingInput = {
+      const aiFlowInput: GeneratePalmReadingInput = {
         leftPalmDataUri: leftPalmDataUriFromFile,
         rightPalmDataUri: rightPalmDataUriFromFile,
         dateOfBirth,
@@ -114,9 +111,15 @@ const PalmInputForm = () => {
         dominantHand,
         category,
       };
-
-      const result = await generatePalmReading(input);
-      generateNewReport(result.report); 
+      
+      const result = await generatePalmReading(aiFlowInput);
+      // Update reportInputDetails with fresh data URIs from files for storage
+      const finalReportInputDetails: ReportPalmInputDetails = {
+        ...reportInputDetails,
+        leftPalmDataUri: leftPalmDataUriFromFile,
+        rightPalmDataUri: rightPalmDataUriFromFile,
+      };
+      generateNewReport(result.report, finalReportInputDetails); 
       toast({ title: "Palm Reading Generated!", description: "Your report is now pending expert review." });
       router.push('/report');
     } catch (error) {
@@ -128,44 +131,43 @@ const PalmInputForm = () => {
   };
 
   const attemptAutoSubmit = useCallback(async () => {
-    if (searchParams.get('payment_success') === 'true' && hasPaid) {
+    if (searchParams.get('payment_success') === 'true' && hasPaid && userName) {
       const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
       
       const newParams = new URLSearchParams(searchParams.toString());
       newParams.delete('payment_success');
-      router.replace(`${router.pathname}?${newParams.toString()}`, { scroll: false });
+      router.replace(`/palm-input?${newParams.toString()}`, { scroll: false });
 
       if (persistedFormDataJson) {
-        const persistedData = JSON.parse(persistedFormDataJson);
-        // We've retrieved the data, so remove it from session storage to prevent reuse on refresh if auto-submit fails.
+        const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
         sessionStorage.removeItem(SESSION_STORAGE_KEY); 
 
-        // Restore form state for UI consistency, regardless of auto-submit outcome
+        // Restore form state for UI consistency
         setDateOfBirth(persistedData.dateOfBirth || '');
         setPlaceOfBirth(persistedData.placeOfBirth || '');
         setTimeOfBirth(persistedData.timeOfBirth || '');
         setDominantHand(persistedData.dominantHand || '');
         setCategory(persistedData.category || '');
-        setLeftPalmPreview(persistedData.leftPalmPreview || null);
-        setRightPalmPreview(persistedData.rightPalmPreview || null);
-        // File objects (leftPalmImage, rightPalmImage) are not restored here.
-        // Auto-submission will use the persisted Data URIs (leftPalmPreview, rightPalmPreview).
+        setLeftPalmPreview(persistedData.leftPalmDataUri || null);
+        setRightPalmPreview(persistedData.rightPalmDataUri || null);
+        // Files (leftPalmImageFile, rightPalmImageFile) are NOT restored from sessionStorage.
+        // Auto-submission relies on the persisted Data URIs (previews).
 
         if (
-          persistedData.leftPalmPreview &&
-          persistedData.rightPalmPreview &&
+          persistedData.leftPalmDataUri &&
+          persistedData.rightPalmDataUri &&
           persistedData.dateOfBirth &&
-          persistedData.placeOfBirth && // Not checking timeOfBirth as it's optional
+          persistedData.placeOfBirth &&
           persistedData.dominantHand &&
           persistedData.category
         ) {
           toast({ title: "Payment Successful", description: "Generating your report..." });
-          clearReport();
+          clearCurrentUserReportStorage();
           startLoading();
           try {
-            const input: GeneratePalmReadingInput = {
-              leftPalmDataUri: persistedData.leftPalmPreview,
-              rightPalmDataUri: persistedData.rightPalmPreview,
+            const aiFlowInput: GeneratePalmReadingInput = {
+              leftPalmDataUri: persistedData.leftPalmDataUri,
+              rightPalmDataUri: persistedData.rightPalmDataUri,
               dateOfBirth: persistedData.dateOfBirth,
               placeOfBirth: persistedData.placeOfBirth,
               timeOfBirth: persistedData.timeOfBirth || "Not specified",
@@ -173,20 +175,17 @@ const PalmInputForm = () => {
               category: persistedData.category,
             };
 
-            const result = await generatePalmReading(input);
-            generateNewReport(result.report);
+            const result = await generatePalmReading(aiFlowInput);
+            // persistedData already contains the necessary details for ReportPalmInputDetails
+            generateNewReport(result.report, persistedData);
             router.push('/report');
           } catch (error) {
             console.error("Error auto-generating palm reading:", error);
             toast({ title: "Auto-Generation Error", description: "Failed to auto-generate. Please verify details and submit manually.", variant: "destructive" });
-             // Stop loading on error so user can interact with the form
             stopLoading();
           } 
-          // No finally here for stopLoading, as successful navigation means component unmounts.
-          // Error case handles stopLoading. If more logic added, reconsider.
         } else {
-          toast({ title: "Payment Successful", description: "Please complete any missing fields (images will need re-upload if not previously selected) and submit." });
-          // User needs to manually submit, isLoading should be false.
+          toast({ title: "Payment Successful", description: "Please complete any missing fields (images may need re-upload) and submit." });
           if (isLoading) stopLoading(); 
         }
       } else {
@@ -194,8 +193,7 @@ const PalmInputForm = () => {
          if (isLoading) stopLoading();
       }
     }
-  }, [searchParams, hasPaid, router, toast, clearReport, startLoading, stopLoading, generateNewReport, isLoading,
-      setDateOfBirth, setPlaceOfBirth, setTimeOfBirth, setDominantHand, setCategory, setLeftPalmPreview, setRightPalmPreview]);
+  }, [searchParams, hasPaid, router, toast, clearCurrentUserReportStorage, startLoading, stopLoading, generateNewReport, isLoading, userName]);
 
   useEffect(() => {
     attemptAutoSubmit();
@@ -216,7 +214,6 @@ const PalmInputForm = () => {
     </div>
   );
 
-
   return (
     <div className="flex justify-center items-center py-8">
       <Card className="w-full max-w-2xl shadow-xl animate-fade-in">
@@ -233,12 +230,12 @@ const PalmInputForm = () => {
               <div className="space-y-2">
                 <Label htmlFor="leftPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Left Palm Image</Label>
                 {renderImagePreview(leftPalmPreview, "Left Palm", "palm hand")}
-                <Input id="leftPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setLeftPalmImage, setLeftPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
+                <Input id="leftPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setLeftPalmImageFile, setLeftPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rightPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Right Palm Image</Label>
                 {renderImagePreview(rightPalmPreview, "Right Palm", "palm hand")}
-                <Input id="rightPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setRightPalmImage, setRightPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
+                <Input id="rightPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setRightPalmImageFile, setRightPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
               </div>
             </div>
 
@@ -288,7 +285,7 @@ const PalmInputForm = () => {
               </div>
             </div>
             
-            <Button type="submit" className="w-full text-lg py-6 mt-8" disabled={isLoading}>
+            <Button type="submit" className="w-full text-lg py-6 mt-8" disabled={isLoading || (!hasPaid && (!leftPalmPreview || !rightPalmPreview || !dateOfBirth || !placeOfBirth || !dominantHand || !category))}>
               {isLoading ? (
                 <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Generating Report...</>
               ) : (
