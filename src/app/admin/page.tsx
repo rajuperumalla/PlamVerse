@@ -8,23 +8,18 @@ import { useAppContext, type ReportData } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertTriangle, LogIn, Eye, ShieldQuestion, Columns, Archive, FileCheck2, Edit, FileSearch, MessageCircleQuestion, Send, Brain, CheckCircle, ThumbsUp, CheckSquare } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { refinePalmReadingReport } from '@/ai/flows/refine-palm-reading-report';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, AlertTriangle, LogIn, Eye, FileCheck2, CheckSquare, Archive, Layers, ListTodo, Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
 
-export default function AdminPage() {
+export default function AdminDashboardPage() {
   const { 
     isAuthenticated,
     isAdmin,
     reports, 
-    isLoading: contextIsLoading, 
-    loadSampleReports,
+    isLoading: contextIsLoading,
   } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
@@ -33,54 +28,32 @@ export default function AdminPage() {
   const [selectedReportForView, setSelectedReportForView] = useState<ReportData | null>(null);
   const [isViewReportDialogOpen, setIsViewReportDialogOpen] = useState(false);
 
-
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/'); 
-    } else if (!isAdmin) {
-      toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
-      router.push('/'); 
+    if (!contextIsLoading) {
+        if (!isAuthenticated) {
+            router.push('/'); 
+        } else if (!isAdmin) {
+            toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
+            router.push('/'); 
+        }
+        setAuthCheckComplete(true);
     }
-    setAuthCheckComplete(true);
-  }, [isAuthenticated, isAdmin, router, toast]);
+  }, [isAuthenticated, isAdmin, router, toast, contextIsLoading]);
 
   const pendingReviewReports = reports.filter(report => report.status === 'pending_review');
   const approvedReports = reports.filter(report => report.status === 'approved');
   const completedReports = reports.filter(report => report.status === 'completed');
-
+  const totalReports = reports.length;
 
   const openViewReportDialog = (report: ReportData) => {
     setSelectedReportForView(report);
     setIsViewReportDialogOpen(true);
   };
 
-  if (!authCheckComplete || !isAuthenticated || !isAdmin) {
-    return (
-        <div className="flex flex-col justify-center items-center min-h-[calc(100vh-200px)]">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-            {!authCheckComplete && <p>Verifying access...</p>}
-            {authCheckComplete && (!isAuthenticated || !isAdmin) && (
-                 <Card className="w-full max-w-md text-center p-6">
-                    <CardHeader>
-                        <div className="mx-auto bg-destructive/10 p-3 rounded-full w-fit mb-4">
-                            <AlertTriangle className="h-10 w-10 text-destructive" />
-                        </div>
-                        <CardTitle>Access Denied</CardTitle>
-                        <CardDescription>You do not have permission to view this page.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Button onClick={() => router.push('/')}><LogIn className="mr-2"/> Go to Login</Button>
-                    </CardContent>
-                </Card>
-            )}
-        </div>
-    );
-  }
-
   const renderReportTable = (reportList: ReportData[], title: string, titleIcon: React.ReactNode, emptyMessage: string, actionButtonLabel: string, actionHandler: (report: ReportData) => void, actionIcon: React.ReactNode, rowLink?: (reportId: string) => string) => (
     <Card className="flex flex-col h-full">
       <CardHeader className="px-4 py-4 border-b">
-        <CardTitle className="text-2xl flex items-center gap-2 font-headline">
+        <CardTitle className="text-xl flex items-center gap-2 font-headline">
           {titleIcon}
           {title} ({reportList.length})
         </CardTitle>
@@ -95,12 +68,6 @@ export default function AdminPage() {
           <div className="flex-1 flex flex-col justify-center items-center text-center py-10 px-4 text-muted-foreground">
             <Archive className="mx-auto h-12 w-12 mb-3 text-gray-400" />
             <p>{emptyMessage}</p>
-            {title === "Pending Review" && (
-                <Button onClick={loadSampleReports} className="mt-4" variant="outline" size="sm" disabled={contextIsLoading}>
-                {contextIsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Load Sample Reports
-                </Button>
-            )}
           </div>
         ) : (
           <ScrollArea className="h-full">
@@ -148,48 +115,102 @@ export default function AdminPage() {
       </CardContent>
     </Card>
   );
-  
-  return (
-    <div className="container mx-auto py-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-        {renderReportTable(
-          pendingReviewReports,
-          "Pending Review",
-          <Columns className="h-7 w-7 text-amber-500" />,
-          "No reports currently pending review.",
-          "Review",
-          () => {}, 
-          <Edit className="mr-2 h-4 w-4"/>,
-          (reportId) => `/admin/review/${reportId}`
-        )}
 
+  if (!authCheckComplete || (contextIsLoading && !reports.length)) {
+    return (
+        <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+            <p>Loading dashboard...</p>
+        </div>
+    );
+  }
+  
+  if (authCheckComplete && (!isAuthenticated || !isAdmin)) {
+    return (
+        <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
+             <Card className="w-full max-w-md text-center p-6">
+                <CardHeader>
+                    <div className="mx-auto bg-destructive/10 p-3 rounded-full w-fit mb-4">
+                        <AlertTriangle className="h-10 w-10 text-destructive" />
+                    </div>
+                    <CardTitle>Access Denied</CardTitle>
+                    <CardDescription>You do not have permission to view this page.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button onClick={() => router.push('/')}><LogIn className="mr-2"/> Go to Login</Button>
+                </CardContent>
+            </Card>
+        </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+        <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Reports</CardTitle>
+                    <Layers className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{totalReports}</div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+                    <ListTodo className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{pendingReviewReports.length}</div>
+                     <Link href="/admin/workflow" className="text-xs text-primary hover:underline">
+                        Go to Workflow
+                    </Link>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Approved Reports</CardTitle>
+                    <FileCheck2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{approvedReports.length}</div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Completed Reports</CardTitle>
+                    <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{completedReports.length}</div>
+                </CardContent>
+            </Card>
+        </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {renderReportTable(
           approvedReports,
           "Approved Reports",
-          <FileCheck2 className="h-7 w-7 text-green-500" />,
+          <FileCheck2 className="h-6 w-6 text-green-500" />,
           "No reports have been approved yet.",
           "View",
           openViewReportDialog,
-          <FileSearch className="mr-2 h-4 w-4"/>
+          <Eye className="mr-2 h-4 w-4"/>
         )}
 
         {renderReportTable(
           completedReports,
           "Completed Reports",
-          <CheckSquare className="h-7 w-7 text-blue-500" />,
+          <CheckSquare className="h-6 w-6 text-blue-500" />,
           "No reports are marked as completed.",
           "View",
           openViewReportDialog,
-          <FileSearch className="mr-2 h-4 w-4"/>
+          <Eye className="mr-2 h-4 w-4"/>
         )}
       </div>
       
-      <CardFooter className="mt-12 border-t pt-6">
-        <p className="text-xs text-muted-foreground text-center w-full">
-          Admin actions are logged (simulated). Ensure all reports meet quality standards before approval.
-        </p>
-      </CardFooter>
-
       {selectedReportForView && isViewReportDialogOpen && (
          <Dialog open={isViewReportDialogOpen} onOpenChange={(open) => { setIsViewReportDialogOpen(open); if (!open) setSelectedReportForView(null); }}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -226,4 +247,3 @@ export default function AdminPage() {
     </div>
   );
 }
-    
