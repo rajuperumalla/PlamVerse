@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertTriangle, LogIn, Eye, ShieldQuestion, Columns, Archive, FileCheck2, Edit, FileSearch, MessageCircleQuestion, Send, Brain, CheckCircle, ThumbsUp } from 'lucide-react';
+import { Loader2, AlertTriangle, LogIn, Eye, ShieldQuestion, Columns, Archive, FileCheck2, Edit, FileSearch, MessageCircleQuestion, Send, Brain, CheckCircle, ThumbsUp, CheckSquare } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from '@/components/ui/textarea';
@@ -25,15 +25,13 @@ export default function AdminPage() {
     reports, 
     isLoading: contextIsLoading, 
     loadSampleReports,
-    approveReport,
-    updateReportContent, // Added for refine flow
   } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
   
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
   const [selectedReportForView, setSelectedReportForView] = useState<ReportData | null>(null);
-  const [isViewApprovedDialogOpen, setIsViewApprovedDialogOpen] = useState(false);
+  const [isViewReportDialogOpen, setIsViewReportDialogOpen] = useState(false);
 
 
   useEffect(() => {
@@ -48,10 +46,12 @@ export default function AdminPage() {
 
   const pendingReviewReports = reports.filter(report => report.status === 'pending_review');
   const approvedReports = reports.filter(report => report.status === 'approved');
+  const completedReports = reports.filter(report => report.status === 'completed');
 
-  const openViewApprovedDialog = (report: ReportData) => {
+
+  const openViewReportDialog = (report: ReportData) => {
     setSelectedReportForView(report);
-    setIsViewApprovedDialogOpen(true);
+    setIsViewReportDialogOpen(true);
   };
 
   if (!authCheckComplete || !isAuthenticated || !isAdmin) {
@@ -76,143 +76,113 @@ export default function AdminPage() {
         </div>
     );
   }
+
+  const renderReportTable = (reportList: ReportData[], title: string, titleIcon: React.ReactNode, emptyMessage: string, actionButtonLabel: string, actionHandler: (report: ReportData) => void, actionIcon: React.ReactNode, rowLink?: (reportId: string) => string) => (
+    <Card className="flex flex-col h-full">
+      <CardHeader className="px-4 py-4 border-b">
+        <CardTitle className="text-2xl flex items-center gap-2 font-headline">
+          {titleIcon}
+          {title} ({reportList.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0 flex-1 flex flex-col">
+        {contextIsLoading && reportList.length === 0 ? (
+          <div className="flex-1 flex justify-center items-center py-12">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="ml-3 text-muted-foreground">Loading reports...</p>
+          </div>
+        ) : !contextIsLoading && reportList.length === 0 ? (
+          <div className="flex-1 flex flex-col justify-center items-center text-center py-10 px-4 text-muted-foreground">
+            <Archive className="mx-auto h-12 w-12 mb-3 text-gray-400" />
+            <p>{emptyMessage}</p>
+            {title === "Pending Review" && (
+                <Button onClick={loadSampleReports} className="mt-4" variant="outline" size="sm" disabled={contextIsLoading}>
+                {contextIsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Load Sample Reports
+                </Button>
+            )}
+          </div>
+        ) : (
+          <ScrollArea className="h-full">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[100px]">Report ID</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {reportList.map((report) => (
+                  <TableRow key={report.id}>
+                    <TableCell className="font-medium text-xs">{report.id.substring(0, 8)}...</TableCell>
+                    <TableCell className="text-xs">{report.userName || 'N/A'}</TableCell>
+                    <TableCell className="text-xs">{report.category}</TableCell>
+                    <TableCell className="text-xs">
+                      {report.status === 'pending_review' ? 
+                        (report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? new Date(report.submissionDate).toLocaleDateString() : 'N/A')
+                        : (report.lastUpdateDate && !isNaN(new Date(report.lastUpdateDate).getTime()) ? new Date(report.lastUpdateDate).toLocaleDateString() : 'N/A')
+                      }
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {rowLink ? (
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={rowLink(report.id)}>
+                            {actionIcon} {actionButtonLabel}
+                          </Link>
+                        </Button>
+                      ) : (
+                        <Button variant="outline" size="sm" onClick={() => actionHandler(report)}>
+                          {actionIcon} {actionButtonLabel}
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
+  );
   
   return (
     <div className="container mx-auto py-8">
-      <div className="text-center mb-12">
-         <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-4 inline-block">
-          <ShieldQuestion className="h-12 w-12 text-primary" />
-        </div>
-        <h1 className="font-headline text-4xl font-bold">Admin Workflow Panel</h1>
-        <p className="text-muted-foreground text-lg mt-2">Manage and review AI-generated palm readings.</p>
-      </div>
+      {/* Removed main heading */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        {renderReportTable(
+          pendingReviewReports,
+          "Pending Review",
+          <Columns className="h-7 w-7 text-amber-500" />,
+          "No reports currently pending review.",
+          "Review",
+          () => {}, // Action handled by Link
+          <Edit className="mr-2 h-4 w-4"/>,
+          (reportId) => `/admin/review/${reportId}`
+        )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Pending Review Section */}
-        <section>
-          <Card className="flex flex-col h-full"> {/* Card as flex column and full height of grid cell */}
-            <CardHeader className="px-4 py-4 border-b">
-              <CardTitle className="text-2xl flex items-center gap-2 font-headline">
-                <Columns className="h-7 w-7 text-amber-500" />
-                Pending Review ({pendingReviewReports.length})
-              </CardTitle>
-              <CardDescription>Reports awaiting expert review and approval.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0 flex-1 flex flex-col"> {/* CardContent expands and is flex column */}
-              {contextIsLoading && pendingReviewReports.length === 0 ? ( 
-                <div className="flex-1 flex justify-center items-center py-12">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <p className="ml-3 text-muted-foreground">Loading pending reports...</p>
-                </div>
-              ) : !contextIsLoading && pendingReviewReports.length === 0 ? (
-                <div className="flex-1 flex flex-col justify-center items-center text-center py-10 px-4 text-muted-foreground">
-                  <Archive className="mx-auto h-12 w-12 mb-3 text-gray-400"/>
-                  <p>No reports currently pending review.</p>
-                  <Button onClick={loadSampleReports} className="mt-4" variant="outline" size="sm" disabled={contextIsLoading}>
-                    {contextIsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Load Sample Reports
-                  </Button>
-                </div>
-              ) : (
-                <ScrollArea className="h-full"> {/* ScrollArea takes full height of CardContent */}
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[120px]">Report ID</TableHead>
-                        <TableHead>User</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Submitted</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pendingReviewReports.map((report) => (
-                        <TableRow key={report.id}>
-                          <TableCell className="font-medium text-xs">{report.id.substring(0,10)}...</TableCell>
-                          <TableCell className="text-xs">{report.userName || 'N/A'}</TableCell>
-                          <TableCell className="text-xs">{report.category}</TableCell>
-                          <TableCell className="text-xs">
-                            {report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? 
-                              new Date(report.submissionDate).toLocaleDateString() : 
-                              'N/A'
-                            }
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button asChild variant="outline" size="sm">
-                              <Link href={`/admin/review/${report.id}`}>
-                                <Edit className="mr-2 h-4 w-4"/> Review
-                              </Link>
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        </section>
+        {renderReportTable(
+          approvedReports,
+          "Approved Reports",
+          <FileCheck2 className="h-7 w-7 text-green-500" />,
+          "No reports have been approved yet.",
+          "View",
+          openViewReportDialog,
+          <FileSearch className="mr-2 h-4 w-4"/>
+        )}
 
-        {/* Approved Reports Section */}
-        <section>
-           <Card className="flex flex-col h-full"> {/* Card as flex column and full height of grid cell */}
-            <CardHeader className="px-4 py-4 border-b">
-              <CardTitle className="text-2xl flex items-center gap-2 font-headline">
-                <FileCheck2 className="h-7 w-7 text-green-500" />
-                Approved Reports ({approvedReports.length})
-              </CardTitle>
-              <CardDescription>Reports that have been reviewed and approved for customers.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0 flex-1 flex flex-col"> {/* CardContent expands and is flex column */}
-              {contextIsLoading && approvedReports.length === 0 ? ( 
-                <div className="flex-1 flex justify-center items-center py-12">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <p className="ml-3 text-muted-foreground">Loading approved reports...</p>
-                </div>
-              ) : !contextIsLoading && approvedReports.length === 0 ? (
-                <div className="flex-1 flex flex-col justify-center items-center text-center py-10 px-4 text-muted-foreground">
-                  <Archive className="mx-auto h-12 w-12 mb-3 text-gray-400"/>
-                  <p>No reports have been approved yet.</p>
-                </div>
-              ) : (
-                <ScrollArea className="h-full"> {/* ScrollArea takes full height of CardContent */}
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[120px]">Report ID</TableHead>
-                        <TableHead>User</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Approved</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {approvedReports.map((report) => (
-                        <TableRow key={report.id}>
-                          <TableCell className="font-medium text-xs text-green-700">{report.id.substring(0,10)}...</TableCell>
-                          <TableCell className="text-xs">{report.userName || 'N/A'}</TableCell>
-                          <TableCell className="text-xs">{report.category}</TableCell>
-                          <TableCell className="text-xs">
-                            {report.lastUpdateDate && !isNaN(new Date(report.lastUpdateDate).getTime()) ? 
-                              new Date(report.lastUpdateDate).toLocaleDateString() : 
-                              'N/A'
-                            }
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" onClick={() => openViewApprovedDialog(report)} className="text-green-600 hover:bg-green-500/10">
-                              <FileSearch className="mr-2 h-4 w-4"/> View
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        </section>
+        {renderReportTable(
+          completedReports,
+          "Completed Reports",
+          <CheckSquare className="h-7 w-7 text-blue-500" />,
+          "No reports are marked as completed.",
+          "View",
+          openViewReportDialog,
+          <FileSearch className="mr-2 h-4 w-4"/>
+        )}
       </div>
       
       <CardFooter className="mt-12 border-t pt-6">
@@ -221,12 +191,11 @@ export default function AdminPage() {
         </p>
       </CardFooter>
 
-      {/* Dialog for Viewing Approved Report */}
-      {selectedReportForView && isViewApprovedDialogOpen && (
-         <Dialog open={isViewApprovedDialogOpen} onOpenChange={(open) => { setIsViewApprovedDialogOpen(open); if (!open) setSelectedReportForView(null); }}>
+      {selectedReportForView && isViewReportDialogOpen && (
+         <Dialog open={isViewReportDialogOpen} onOpenChange={(open) => { setIsViewReportDialogOpen(open); if (!open) setSelectedReportForView(null); }}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Approved Report: {selectedReportForView.id.substring(0,10)}...</DialogTitle>
+              <DialogTitle>{selectedReportForView.status.charAt(0).toUpperCase() + selectedReportForView.status.slice(1)} Report: {selectedReportForView.id.substring(0,10)}...</DialogTitle>
               <DialogDescription>Category: {selectedReportForView.category} | Submitted by: {selectedReportForView.userName || 'N/A'}</DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
@@ -243,14 +212,14 @@ export default function AdminPage() {
                 </div>
               }
             </div>
-            <Label className="font-semibold">Approved Report Content:</Label>
+            <Label className="font-semibold">Report Content:</Label>
             <ScrollArea className="h-[250px] w-full rounded-md border p-4 mt-1 bg-muted/10 text-sm">
               {selectedReportForView.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
                 <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
               ))}
             </ScrollArea>
              <DialogFooter className="mt-4">
-                <Button onClick={() => setIsViewApprovedDialogOpen(false)}>Close</Button>
+                <Button onClick={() => setIsViewReportDialogOpen(false)}>Close</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
