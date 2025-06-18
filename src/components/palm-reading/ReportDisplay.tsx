@@ -75,7 +75,7 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
       html2canvas(reportElement, { 
         scale: 2, 
         useCORS: true, 
-        scrollY: -window.scrollY 
+        scrollY: -window.scrollY // Helps with capturing elements correctly on a scrolled page
       }).then(canvas => {
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'pt', 'a4');
@@ -83,7 +83,7 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
         const imgProps = pdf.getImageProperties(imgData);
         const pdfPageWidth = pdf.internal.pageSize.getWidth();
         const pdfPageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 40;
+        const margin = 40; // 40pt margin
 
         const usableWidth = pdfPageWidth - 2 * margin;
         const usableHeight = pdfPageHeight - 2 * margin;
@@ -91,17 +91,21 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
         let finalPdfWidth = imgProps.width;
         let finalPdfHeight = imgProps.height;
 
+        // Scale width to fit
         if (finalPdfWidth > usableWidth) {
           finalPdfHeight = (usableWidth / finalPdfWidth) * finalPdfHeight;
           finalPdfWidth = usableWidth;
         }
 
+        // Scale height to fit (after width scaling)
         if (finalPdfHeight > usableHeight) {
-          finalPdfWidth = (usableHeight / finalPdfHeight) * finalPdfWidth;
-          finalPdfHeight = usableHeight;
+          // This might not be needed if content is very long and we want it to scroll in PDF
+          // For a single page attempt:
+           finalPdfWidth = (usableHeight / finalPdfHeight) * finalPdfWidth;
+           finalPdfHeight = usableHeight;
         }
         
-        const xOffset = (pdfPageWidth - finalPdfWidth) / 2; 
+        const xOffset = (pdfPageWidth - finalPdfWidth) / 2; // Center the image
         const yOffset = margin;
 
         pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalPdfWidth, finalPdfHeight);
@@ -141,15 +145,16 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
             </CardHeader>
             <CardContent>
             <ScrollArea className="h-[400px] w-full rounded-md border p-0 bg-background shadow-inner">
+                {/* This div will be captured for PDF. Styled for consistent PDF output. */}
                 <div id="report-content-area-for-pdf" className="p-6 bg-white dark:bg-gray-900 text-black dark:text-white">
-                <h2 className="text-xl font-bold font-headline mb-2">Palm Reading Report</h2>
+                <h2 className="text-xl font-bold font-headline mb-2 text-gray-800 dark:text-gray-200">Palm Reading Report</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">For: {report.userName || "Valued User"}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Category: {report.category}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Date: {report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}</p>
                 <hr className="my-4 border-gray-300 dark:border-gray-700"/>
                 {reportParagraphs.length > 0 ? (
                     reportParagraphs.map((paragraph, index) => (
-                    <p key={index} className="mb-4 text-base leading-relaxed font-body animate-slide-in-up" style={{animationDelay: `${index * 0.1}s`}}>
+                    <p key={index} className="mb-4 text-base leading-relaxed font-body animate-slide-in-up text-gray-700 dark:text-gray-300" style={{animationDelay: `${index * 0.1}s`}}>
                         {paragraph}
                     </p>
                     ))
@@ -196,7 +201,8 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
             </CardContent>
             <CardFooter className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
             <Button onClick={handleDownloadPdf} variant="secondary" className="w-full sm:w-auto" disabled={isOperationInProgress}>
-                <Download className="mr-2 h-4 w-4" /> Download as PDF
+                {isOperationInProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                 Download as PDF
             </Button>
             <Button onClick={handleStartNewReading} className="w-full sm:w-auto" disabled={isOperationInProgress}>
                 <RefreshCw className="mr-2 h-4 w-4" /> Start New Reading
@@ -212,3 +218,4 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
 };
 
 export default ReportDisplay;
+

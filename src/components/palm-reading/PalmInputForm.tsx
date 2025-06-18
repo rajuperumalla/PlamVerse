@@ -80,14 +80,12 @@ const PalmInputForm = () => {
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(reportInputDetails));
 
     if (!hasPaid) {
-      if (!dateOfBirth || !placeOfBirth || !dominantHand || !category) {
-         toast({ title: "Missing Information", description: "Please fill in your birth details, dominant hand, and category before proceeding to payment. Images can be uploaded now or after payment.", variant: "destructive" });
-         return;
-      }
+      // Removed pre-payment validation as requested
       router.push('/payment'); 
       return;
     }
 
+    // This part executes only if hasPaid is true
     if (!leftPalmImageFile || !rightPalmImageFile || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
       toast({ title: "Missing Information", description: "Please fill all required fields and upload both palm images to generate your report.", variant: "destructive" });
       return;
@@ -111,7 +109,7 @@ const PalmInputForm = () => {
       };
 
       initialReportId = createInitialReportPlaceholder(finalReportInputDetails);
-      toast({ title: "Request Received", description: "Generating your report, please wait...", duration: 5000 });
+      toast({ title: "Request Received", description: "Your report is now being prepared and will be available in the Downloads section.", duration: 5000 });
 
       const aiFlowInput: GeneratePalmReadingInput = {
         leftPalmDataUri: leftPalmDataUriFromFile,
@@ -125,7 +123,7 @@ const PalmInputForm = () => {
       
       const result = await generatePalmReading(aiFlowInput);
       updateReportWithGeneratedContent(initialReportId, result.report);
-      toast({ title: "Palm Reading Generated!", description: "Your report is now pending expert review." });
+      toast({ title: "Palm Reading Generated!", description: "Your report is now pending expert review. It will be available for download once approved." });
       router.push('/report');
     } catch (error) {
       console.error("Error generating palm reading:", error);
@@ -163,14 +161,9 @@ const PalmInputForm = () => {
         setLeftPalmPreview(persistedData.leftPalmDataUri || null);
         setRightPalmPreview(persistedData.rightPalmDataUri || null);
         
-        // Check if image files were also stored as Data URIs and can be "rehydrated" for submission
-        // For this example, we assume if previews are there, they are from actual files or previous Data URIs.
-        // A more robust solution might involve storing File objects if possible or re-prompting for files if only URIs from placeholders were saved.
-        // For auto-submit, we need actual image data, not just placeholders.
-
         if (
-          persistedData.leftPalmDataUri && // Assuming these URIs are from actual files
-          persistedData.rightPalmDataUri && // or were previously validated.
+          persistedData.leftPalmDataUri && 
+          persistedData.rightPalmDataUri && 
           persistedData.dateOfBirth &&
           persistedData.placeOfBirth &&
           persistedData.dominantHand &&
@@ -181,7 +174,7 @@ const PalmInputForm = () => {
           let initialReportId = '';
           try {
             initialReportId = createInitialReportPlaceholder(persistedData);
-            toast({ title: "Payment Successful", description: "Generating your report, please wait...", duration: 5000 });
+            toast({ title: "Request Received", description: "Your report is now being prepared and will be available in the Downloads section.", duration: 5000 });
 
             const aiFlowInput: GeneratePalmReadingInput = {
               leftPalmDataUri: persistedData.leftPalmDataUri,
@@ -195,7 +188,7 @@ const PalmInputForm = () => {
 
             const result = await generatePalmReading(aiFlowInput);
             updateReportWithGeneratedContent(initialReportId, result.report);
-            toast({ title: "Palm Reading Generated!", description: "Your report is now pending expert review." });
+            toast({ title: "Palm Reading Generated!", description: "Your report is now pending expert review. It will be available for download once approved." });
             router.push('/report');
           } catch (error) {
             console.error("Error auto-generating palm reading:", error);
@@ -203,7 +196,6 @@ const PalmInputForm = () => {
                markReportAsGenerationFailed(initialReportId, "Failed to auto-generate palm reading after payment.");
              }
             toast({ title: "Auto-Generation Error", description: "Failed to auto-generate. Please verify details and submit manually.", variant: "destructive" });
-            // Don't redirect immediately to /report if auto-gen fails, let user see form.
           } finally {
             if(isOperationInProgress) stopOperation();
           }
@@ -245,11 +237,9 @@ const PalmInputForm = () => {
     dominantHand && 
     category;
 
-  const isReadyForPayment = 
-    dateOfBirth && 
-    placeOfBirth && 
-    dominantHand && 
-    category;
+  // Button is disabled if an operation is in progress OR if payment is done AND the form is not ready for manual submission.
+  // If payment is NOT done, the button (Proceed to Payment) is only disabled if an operation is in progress.
+  const buttonDisabled = isOperationInProgress || (hasPaid && !isReadyForManualSubmit);
 
   return (
     <div className="flex justify-center items-center py-8">
@@ -289,7 +279,7 @@ const PalmInputForm = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="dob" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Date of Birth *</Label>
-                    <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} disabled={isOperationInProgress} />
+                    <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} disabled={isOperationInProgress} required={hasPaid} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth (Optional)</Label>
@@ -299,13 +289,13 @@ const PalmInputForm = () => {
                 
                 <div className="space-y-2">
                 <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth *</Label>
-                <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} />
+                <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} required={hasPaid} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="dominantHand" className="text-base flex items-center gap-2"><UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *</Label>
-                    <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress}>
+                    <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress} required={hasPaid}>
                     <SelectTrigger id="dominantHand">
                         <SelectValue placeholder="Select your dominant hand" />
                     </SelectTrigger>
@@ -317,7 +307,7 @@ const PalmInputForm = () => {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
-                    <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress}>
+                    <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress} required={hasPaid}>
                     <SelectTrigger id="category">
                         <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
@@ -334,15 +324,15 @@ const PalmInputForm = () => {
                 <Button 
                 type="submit" 
                 className="w-full text-lg py-6 mt-8" 
-                disabled={isOperationInProgress || (hasPaid && !isReadyForManualSubmit) || (!hasPaid && !isReadyForPayment)}
+                disabled={buttonDisabled}
                 >
-                {isOperationInProgress && (hasPaid || (!hasPaid && isReadyForPayment)) ? ( 
+                {isOperationInProgress && (hasPaid || (!hasPaid)) ? ( 
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                 ) : (
                     hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
                 )}
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">* Required fields</p>
+                <p className="text-xs text-muted-foreground text-center">* Required fields when generating report after payment.</p>
             </form>
             </CardContent>
             <CardFooter className="mt-4">
