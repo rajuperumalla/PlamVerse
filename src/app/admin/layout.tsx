@@ -14,7 +14,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { LayoutDashboard, PanelLeft, Package, Briefcase, Users, Settings, ShieldCheck, ShoppingCart, Tag, Upload, MessageSquareText, Info, ShoppingBag, Settings2, CreditCard, Truck, Percent, Globe, Search, Building2, Share2 } from 'lucide-react';
+import { LayoutDashboard, PanelLeft, Package, Briefcase, Users, Settings, ShieldCheck, ShoppingCart, Tag, Upload, MessageSquareText, Info, ShoppingBag, Settings2, CreditCard, Truck, Percent, Globe, Search, Building2, Share2, ListOrdered, Activity, Undo2, FileText, Package2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -76,6 +76,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const productSubmenuActive = pathname.startsWith('/admin/products');
   const siteInfoSubmenuActive = pathname.startsWith('/admin/site-info/');
   const settingsSubmenuActive = pathname.startsWith('/admin/settings/');
+  const ordersSubmenuActive = pathname.startsWith('/admin/orders/');
   const ecommerceSubmenuActive = productSubmenuActive || siteInfoSubmenuActive || pathname === '/admin/subscribers' || pathname === '/admin/products/categories';
 
 
@@ -203,16 +204,43 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/admin/orders'}
-                  tooltip={{ children: 'Order Mgmt', side: 'right', className: "md:block hidden" }}
-                >
-                  <Link href="/admin/orders">
-                    <Briefcase />
-                    <span className="group-data-[collapsible=icon]:hidden">Orders</span>
-                  </Link>
-                </SidebarMenuButton>
+                <Accordion type="single" collapsible className="w-full" defaultValue={ordersSubmenuActive ? "orders-menu" : undefined}>
+                  <AccordionItem value="orders-menu" className="border-none">
+                    <SidebarMenuButton 
+                      asChild 
+                      variant="ghost" 
+                      className="p-0 w-full h-auto"
+                      tooltip={{ children: 'Orders', side: 'right', className: "md:block hidden" }}
+                      isActive={ordersSubmenuActive}
+                    >
+                      <AccordionTrigger 
+                        className="flex items-center justify-between w-full py-2 px-2 rounded-md text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Briefcase />
+                          <span className="group-data-[collapsible=icon]:hidden">Orders</span>
+                        </div>
+                      </AccordionTrigger>
+                    </SidebarMenuButton>
+                    <AccordionContent className="pt-1 pl-4 group-data-[collapsible=icon]:hidden">
+                        <SidebarMenuButton asChild isActive={pathname === '/admin/orders/all'} className="w-full justify-start h-9 my-0.5 text-xs">
+                            <Link href="/admin/orders/all"><ListOrdered className="mr-2 h-4 w-4"/>All Orders</Link>
+                        </SidebarMenuButton>
+                        <SidebarMenuButton asChild isActive={pathname === '/admin/orders/status'} className="w-full justify-start h-9 my-0.5 text-xs">
+                            <Link href="/admin/orders/status"><Activity className="mr-2 h-4 w-4"/>Order Status</Link>
+                        </SidebarMenuButton>
+                        <SidebarMenuButton asChild isActive={pathname === '/admin/orders/returns'} className="w-full justify-start h-9 my-0.5 text-xs">
+                            <Link href="/admin/orders/returns"><Undo2 className="mr-2 h-4 w-4"/>Returns & Refunds</Link>
+                        </SidebarMenuButton>
+                        <SidebarMenuButton asChild isActive={pathname === '/admin/orders/invoices'} className="w-full justify-start h-9 my-0.5 text-xs">
+                            <Link href="/admin/orders/invoices"><FileText className="mr-2 h-4 w-4"/>Invoice Generator</Link>
+                        </SidebarMenuButton>
+                        <SidebarMenuButton asChild isActive={pathname === '/admin/orders/shipping-providers'} className="w-full justify-start h-9 my-0.5 text-xs">
+                            <Link href="/admin/orders/shipping-providers"><Package2 className="mr-2 h-4 w-4"/>Shipping Providers</Link>
+                        </SidebarMenuButton>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
