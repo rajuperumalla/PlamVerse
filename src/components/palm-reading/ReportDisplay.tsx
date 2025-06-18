@@ -1,7 +1,7 @@
 
 "use client";
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { FileText, RefreshCw, ArrowLeft } from 'lucide-react';
@@ -54,3 +54,4 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
 };
 
 export default ReportDisplay;
+
