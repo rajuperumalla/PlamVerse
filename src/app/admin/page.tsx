@@ -65,12 +65,13 @@ export default function AdminPage() {
       return;
     }
     startLoading();
-    approveCurrentReport();
+    approveCurrentReport(); // Approve with existing content
     toast({ title: "Report Approved", description: "The report has been approved as is." });
     stopLoading();
   };
 
   if (!isAuthenticated) {
+    // Render a loading spinner or null while redirecting
     return <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
   }
 
@@ -136,7 +137,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {!isLoading && !reportData && (
+          {!isLoading && !reportData && ( // This covers cases where reportData is null and not loading (e.g. no report submitted yet)
              <div className="text-center py-10">
               <AlertTriangle className="mx-auto h-16 w-16 text-amber-500 mb-4" />
               <h3 className="text-2xl font-semibold mb-2 font-headline">No Report Data</h3>

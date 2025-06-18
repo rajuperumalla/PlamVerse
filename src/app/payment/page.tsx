@@ -19,8 +19,7 @@ export default function PaymentPage() {
       title: 'Payment Successful (Simulated)',
       description: 'You can now proceed to generate your palm reading.',
     });
-    // Redirect back to palm-input, ideally with a query param to trigger submission
-    // or user can click "Generate" again.
+    // Redirect back to palm-input, with a query param to trigger auto-submission
     router.push('/palm-input?payment_success=true'); 
   };
 
