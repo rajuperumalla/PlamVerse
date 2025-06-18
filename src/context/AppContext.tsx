@@ -33,7 +33,7 @@ interface AppState {
   isOperationInProgress: boolean;
   hasPaid: boolean;
   isEditor: boolean;
-  isAdmin: boolean; // New Admin role for Ecommerce
+  isAdmin: boolean; 
   isInitializing: boolean;
 }
 
@@ -60,7 +60,7 @@ const REPORTS_STORAGE_KEY = 'palmverse_reports_array';
 
 const createSampleReport = (idSuffix: number, category: string, userName: string, status: ReportData['status']): ReportData => {
   const baseDate = new Date();
-  baseDate.setDate(baseDate.getDate() - (idSuffix * 5));
+  baseDate.setDate(baseDate.getDate() - (idSuffix * 5 + 10)); // Ensure sample dates are distinct
 
   const submissionDate = new Date(baseDate);
   submissionDate.setHours(10 + idSuffix, 30 + idSuffix, 0, 0);
@@ -68,10 +68,10 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
   let lastUpdateDate = new Date(submissionDate);
   if (status === 'pending_review') {
     lastUpdateDate.setDate(lastUpdateDate.getDate() + 1);
-    lastUpdateDate.setHours(submissionDate.getHours() + 1);
+    lastUpdateDate.setHours(submissionDate.getHours() + (1 % 24), submissionDate.getMinutes() + 5);
   } else if (status === 'approved') {
     lastUpdateDate.setDate(lastUpdateDate.getDate() + 2 + idSuffix);
-    lastUpdateDate.setHours(submissionDate.getHours() + 2);
+    lastUpdateDate.setHours(submissionDate.getHours() + (2 % 24), submissionDate.getMinutes() + 10);
   }
 
 
@@ -94,9 +94,9 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
     inputDetails: {
       leftPalmDataUri: `https://placehold.co/300x200.png?text=L+Palm+${idSuffix}`,
       rightPalmDataUri: `https://placehold.co/300x200.png?text=R+Palm+${idSuffix}`,
-      dateOfBirth: `19${80 + idSuffix}-0${(idSuffix % 9) + 1}-0${(idSuffix % 2) + 1}1`,
+      dateOfBirth: `19${80 + idSuffix}-0${(idSuffix % 9) + 1}-0${(idSuffix % 2) + 1}${idSuffix % 9 +1}`,
       placeOfBirth: `City ${idSuffix}, Country ${idSuffix}`,
-      timeOfBirth: `${(10 + idSuffix) % 24}:00`,
+      timeOfBirth: `${(10 + idSuffix) % 24}:0${idSuffix % 6}`,
       dominantHand: idSuffix % 2 === 0 ? 'Right' : 'Left',
       category: category,
     }
@@ -112,7 +112,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isOperationInProgress, setIsOperationInProgress] = useState(false);
   const [hasPaid, setHasPaidState] = useState(false);
   const [isEditor, setIsEditor] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false); // New Admin role for Ecommerce
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
   const persistReports = (updatedReports: ReportData[]) => {
@@ -140,7 +140,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const storedName = sessionStorage.getItem('palmverse_userName');
     const storedPaid = sessionStorage.getItem('palmverse_hasPaid');
     const storedIsEditor = sessionStorage.getItem('palmverse_isEditor');
-    const storedIsAdmin = sessionStorage.getItem('palmverse_isAdmin'); // New Admin role
+    const storedIsAdmin = sessionStorage.getItem('palmverse_isAdmin');
     const storedReports = localStorage.getItem(REPORTS_STORAGE_KEY);
 
     if (storedAuth === 'true' && storedName) {
@@ -149,7 +149,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (storedIsEditor === 'true') {
         setIsEditor(true);
       }
-      if (storedIsAdmin === 'true') { // New Admin role
+      if (storedIsAdmin === 'true') { 
         setIsAdmin(true);
       }
     }
@@ -187,7 +187,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setIsAdmin(false);
       sessionStorage.setItem('palmverse_isEditor', 'true');
       sessionStorage.setItem('palmverse_isAdmin', 'false');
-    } else if (name === 'admin_user') { // New Admin role
+    } else if (name === 'admin_user') { 
       setIsAdmin(true);
       setIsEditor(false);
       sessionStorage.setItem('palmverse_isAdmin', 'true');
@@ -205,13 +205,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUserName(null);
     setHasPaidState(false);
     setIsEditor(false);
-    setIsAdmin(false); // New Admin role
+    setIsAdmin(false); 
 
     sessionStorage.removeItem('palmverse_isAuthenticated');
     sessionStorage.removeItem('palmverse_userName');
     sessionStorage.removeItem('palmverse_hasPaid');
     sessionStorage.removeItem('palmverse_isEditor');
-    sessionStorage.removeItem('palmverse_isAdmin'); // New Admin role
+    sessionStorage.removeItem('palmverse_isAdmin'); 
 
     router.push('/');
   };
@@ -219,6 +219,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const createInitialReportPlaceholder = (inputData: ReportPalmInputDetails): string => {
     const newReportId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const currentDate = new Date().toISOString();
+    
+    // Filter out existing 'submitted_for_generation' or 'generation_failed' reports for THIS user
+    const reportsToKeep = reports.filter(r => {
+        return !(r.userName === userName && (r.status === 'submitted_for_generation' || r.status === 'generation_failed'));
+    });
+
     const newReport: ReportData = {
       id: newReportId,
       content: "Report generation initiated...",
@@ -229,8 +235,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       category: inputData.category,
       inputDetails: inputData,
     };
-    const filteredReports = reports.filter(r => !(r.userName === userName && (r.status === 'submitted_for_generation' || r.status === 'generation_failed')));
-    const updatedReports = [...filteredReports, newReport];
+    
+    const updatedReports = [...reportsToKeep, newReport];
     persistReports(updatedReports);
     return newReportId;
   };
@@ -309,12 +315,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             return reportsWithStatus[0];
         }
     }
-    // Should not be reached if all reports have a status in priorityStatus, but as a fallback:
+    
     return userReports.sort((a,b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime())[0];
   }, [reports, userName]);
 
 
   const clearCurrentUserReportStorage = () => {
+    // This function might be redundant if createInitialReportPlaceholder handles cleanup,
+    // but can be kept for explicit calls if needed elsewhere.
     const userReport = getCurrentUserReport();
     if (userReport && (userReport.status === 'generation_failed' || userReport.status === 'submitted_for_generation')) {
         const updatedReports = reports.filter(r => r.id !== userReport.id);
@@ -350,7 +358,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setHasPaid,
       clearCurrentUserReportStorage,
       isEditor,
-      isAdmin, // New Admin role
+      isAdmin, 
       loadSampleReports,
       updateReportContent,
       isInitializing,
