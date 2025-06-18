@@ -28,7 +28,7 @@ export interface ReportData {
 interface AppState {
   isAuthenticated: boolean;
   userName: string | null;
-  reports: ReportData[]; // Changed from single reportData to array
+  reports: ReportData[]; 
   isLoading: boolean;
   hasPaid: boolean;
   isAdmin: boolean;
@@ -44,33 +44,40 @@ interface AppContextType extends AppState {
   startLoading: () => void;
   stopLoading: () => void;
   setHasPaid: (paid: boolean) => void;
-  clearCurrentUserReportStorage: () => void; // To clear for new submission
-  loadSampleReports: () => void; // For admin simulation
-  updateReportContent: (reportId: string, newContent: string) => void; // For admin refinement
+  clearCurrentUserReportStorage: () => void; 
+  loadSampleReports: () => void; 
+  updateReportContent: (reportId: string, newContent: string) => void; 
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
-const REPORTS_STORAGE_KEY = 'palmverse_reports_array'; // For the array of reports
+const REPORTS_STORAGE_KEY = 'palmverse_reports_array';
 
 // Sample reports generator
-const createSampleReport = (id: number, category: string, userName: string): ReportData => {
+const createSampleReport = (id: number, category: string, userName: string, status: 'pending_review' | 'approved' = 'pending_review'): ReportData => {
   const date = new Date();
-  date.setDate(date.getDate() - id);
+  date.setDate(date.getDate() - id); // Make submission dates vary
+  let content = `This is a sample AI-generated report for ${category}. It discusses various aspects related to the user's potential future, personality traits derived from palm lines, and general well-being. Report includes analysis of heart line, head line, and life line. Specific focus on ${category.toLowerCase()}. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`;
+  if (status === 'pending_review') {
+    content += " This report is currently pending expert review.";
+  } else {
+    content += " This report has been reviewed and approved by an expert.";
+  }
+
   return {
     id: `sample-${id}-${Date.now()}`,
-    content: `This is a sample AI-generated report for ${category}. It discusses various aspects related to the user's potential future, personality traits derived from palm lines, and general well-being. Report includes analysis of heart line, head line, and life line. Specific focus on ${category.toLowerCase()}. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. This report is currently pending expert review.`,
-    status: 'pending_review',
+    content: content,
+    status: status,
     userName: userName,
     submissionDate: date.toISOString(),
     category: category,
     inputDetails: {
-      leftPalmDataUri: `https://placehold.co/300x200.png?text=Left+Palm+${id}`,
-      rightPalmDataUri: `https://placehold.co/300x200.png?text=Right+Palm+${id}`,
+      leftPalmDataUri: `https://placehold.co/300x200.png?text=L+Palm+${id}`,
+      rightPalmDataUri: `https://placehold.co/300x200.png?text=R+Palm+${id}`,
       dateOfBirth: '1990-01-01',
       placeOfBirth: `City ${id}, Country ${id}`,
       timeOfBirth: '12:00',
-      dominantHand: 'Right',
+      dominantHand: id % 2 === 0 ? 'Right' : 'Left',
       category: category,
     }
   };
@@ -85,6 +92,22 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [hasPaid, setHasPaidState] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
+
+  const persistReports = (updatedReports: ReportData[]) => {
+    setReports(updatedReports);
+    localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(updatedReports));
+  };
+  
+  const loadSampleReports = useCallback(() => {
+    const samples = [
+      createSampleReport(1, 'Career and Finances', 'user_alpha@example.com', 'pending_review'),
+      createSampleReport(2, 'Love and Relationships', 'user_beta@example.com', 'pending_review'),
+      createSampleReport(3, 'Health and Wellness', 'user_gamma@example.com', 'approved'),
+      createSampleReport(4, 'General Personality', 'user_delta@example.com', 'pending_review'),
+      createSampleReport(5, 'Career and Finances', 'user_epsilon@example.com', 'approved'),
+    ];
+    persistReports(samples);
+  }, []); // Empty dependency array means this function's identity is stable
 
   useEffect(() => {
     const storedAuth = sessionStorage.getItem('palmverse_isAuthenticated');
@@ -105,31 +128,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
     if (storedReports) {
       try {
-        setReports(JSON.parse(storedReports));
+        const parsedReports = JSON.parse(storedReports);
+        if (Array.isArray(parsedReports) && parsedReports.length > 0) {
+            setReports(parsedReports);
+        } else {
+            loadSampleReports(); // Load samples if stored reports are empty or invalid
+        }
       } catch (e) {
         console.error("Failed to parse stored reports array", e);
         localStorage.removeItem(REPORTS_STORAGE_KEY);
+        loadSampleReports(); // Load samples if parsing fails
       }
     } else {
-      // If no reports in localStorage, load sample ones for admin demo
-       loadSampleReports();
+       loadSampleReports(); // Load samples if no reports in localStorage
     }
-  }, []);
-
-  const persistReports = (updatedReports: ReportData[]) => {
-    setReports(updatedReports);
-    localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(updatedReports));
-  };
-  
-  const loadSampleReports = () => {
-    const samples = [
-      createSampleReport(1, 'Career and Finances', 'user_alpha@example.com'),
-      createSampleReport(2, 'Love and Relationships', 'user_beta@example.com'),
-      createSampleReport(3, 'Health and Wellness', 'user_gamma@example.com'),
-      createSampleReport(4, 'General Personality', 'user_delta@example.com'),
-    ];
-    persistReports(samples);
-  };
+  }, [loadSampleReports]);
 
 
   const login = (name: string) => {
@@ -157,13 +170,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.removeItem('palmverse_userName');
     sessionStorage.removeItem('palmverse_hasPaid');
     sessionStorage.removeItem('palmverse_isAdmin');
-
-    // For reports, let's keep pending_review ones for admin, clear approved ones not belonging to admin.
-    // This is a simplified logic for demo; real app would be more robust.
-    const updatedReports = reports.filter(report => 
-      report.status === 'pending_review' || (report.status === 'approved' && report.userName === 'admin_user')
-    );
-    persistReports(updatedReports);
+    
+    // Keep all reports on logout, as admin might need to see them.
+    // If a user logs out, their specific report access is handled by getCurrentUserReport.
+    // Sample reports will persist for admin.
     
     router.push('/');
   };
@@ -173,7 +183,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       content: aiContent,
       status: 'pending_review',
-      userName: userName, // Current logged-in user
+      userName: userName, 
       submissionDate: new Date().toISOString(),
       category: inputData.category,
       inputDetails: inputData,
@@ -212,17 +222,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const getCurrentUserReport = useCallback((): ReportData | undefined => {
     if (!userName) return undefined;
-    // Find the latest report for the current user (can be pending or approved)
-    return [...reports] // Create a new array before sorting
+    return [...reports] 
       .filter(report => report.userName === userName)
       .sort((a, b) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime())[0];
   }, [reports, userName]);
 
 
   const clearCurrentUserReportStorage = () => {
-    // This function might be used if a user wants to discard their pending report
-    // For now, we'll rely on generating a new report to supersede.
-    // Or, if we want to clear the current user's *latest* report:
     const userReport = getCurrentUserReport();
     if (userReport) {
         const updatedReports = reports.filter(r => r.id !== userReport.id);
@@ -243,7 +249,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       isAuthenticated, 
       login, 
       logout, 
-      reports, // Provide the whole array
+      reports, 
       generateNewReport,
       approveReport, 
       getReportById,
@@ -271,3 +277,4 @@ export const useAppContext = () => {
   }
   return context;
 };
+
