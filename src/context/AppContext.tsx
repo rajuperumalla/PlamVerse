@@ -15,7 +15,7 @@ interface AppState {
   reportData: ReportData | null;
   isLoading: boolean;
   hasPaid: boolean;
-  isAdmin: boolean; // New state for admin status
+  isAdmin: boolean;
 }
 
 interface AppContextType extends AppState {
@@ -31,26 +31,30 @@ interface AppContextType extends AppState {
 
 const AppContext = createContext<AppContextType | null>(null);
 
+const REPORT_DATA_STORAGE_KEY = 'palmverse_reportData';
+
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
-  const [reportData, setReportDataState] = useState<ReportData | null>(null);
+  const [reportDataState, setReportDataState] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasPaid, setHasPaidState] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false); // Initialize isAdmin
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const storedAuth = sessionStorage.getItem('palmverse_isAuthenticated');
     const storedName = sessionStorage.getItem('palmverse_userName');
     const storedPaid = sessionStorage.getItem('palmverse_hasPaid');
-    const storedReportData = sessionStorage.getItem('palmverse_reportData');
-    const storedIsAdmin = sessionStorage.getItem('palmverse_isAdmin'); // Load isAdmin
+    const storedIsAdmin = sessionStorage.getItem('palmverse_isAdmin');
+    
+    // Use localStorage for reportData
+    const storedReportData = localStorage.getItem(REPORT_DATA_STORAGE_KEY);
 
     if (storedAuth === 'true' && storedName) {
       setIsAuthenticated(true);
       setUserName(storedName);
-      if (storedIsAdmin === 'true') { // Set isAdmin based on stored value
+      if (storedIsAdmin === 'true') {
         setIsAdmin(true);
       }
     }
@@ -62,7 +66,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setReportDataState(JSON.parse(storedReportData));
       } catch (e) {
         console.error("Failed to parse stored report data", e);
-        sessionStorage.removeItem('palmverse_reportData');
+        localStorage.removeItem(REPORT_DATA_STORAGE_KEY);
       }
     }
   }, []);
@@ -70,9 +74,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const setReportDataPersistence = (data: ReportData | null) => {
     setReportDataState(data);
     if (data) {
-      sessionStorage.setItem('palmverse_reportData', JSON.stringify(data));
+      localStorage.setItem(REPORT_DATA_STORAGE_KEY, JSON.stringify(data));
     } else {
-      sessionStorage.removeItem('palmverse_reportData');
+      localStorage.removeItem(REPORT_DATA_STORAGE_KEY);
     }
   };
 
@@ -82,7 +86,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.setItem('palmverse_isAuthenticated', 'true');
     sessionStorage.setItem('palmverse_userName', name);
 
-    // Set admin status
     if (name === 'admin_user') {
       setIsAdmin(true);
       sessionStorage.setItem('palmverse_isAdmin', 'true');
@@ -93,29 +96,42 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    const currentReportStatus = reportDataState?.status;
+
     setIsAuthenticated(false);
     setUserName(null);
-    setReportDataPersistence(null);
+    // Clear report from state
+    setReportDataState(null); 
     setHasPaidState(false);
-    setIsAdmin(false); // Reset isAdmin on logout
+    setIsAdmin(false);
+    
     sessionStorage.removeItem('palmverse_isAuthenticated');
     sessionStorage.removeItem('palmverse_userName');
     sessionStorage.removeItem('palmverse_hasPaid');
-    sessionStorage.removeItem('palmverse_reportData');
-    sessionStorage.removeItem('palmverse_isAdmin'); // Clear isAdmin from storage
+    sessionStorage.removeItem('palmverse_isAdmin');
+
+    // Conditional removal from localStorage
+    if (currentReportStatus === 'approved') {
+      localStorage.removeItem(REPORT_DATA_STORAGE_KEY);
+    }
+    // If 'pending_review', it remains in localStorage for admin.
+    // If reportDataState was null, removeItem does nothing.
+    
     router.push('/');
   };
   
   const generateNewReport = (content: string) => {
+    // When a new report is generated, it implies any previous one (even pending) is superseded for this flow.
+    // The clearReport() in PalmInputForm should handle clearing localStorage before this.
     const newReport: ReportData = { content, status: 'pending_review' };
     setReportDataPersistence(newReport);
   };
 
   const approveCurrentReport = (newContent?: string) => {
-    if (reportData) {
+    if (reportDataState) {
       const approvedReport: ReportData = {
-        ...reportData,
-        content: newContent || reportData.content,
+        ...reportDataState,
+        content: newContent || reportDataState.content,
         status: 'approved',
       };
       setReportDataPersistence(approvedReport);
@@ -123,6 +139,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const clearReport = () => {
+    // This will clear from state and localStorage
     setReportDataPersistence(null);
   }
 
@@ -139,7 +156,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       isAuthenticated, 
       login, 
       logout, 
-      reportData, 
+      reportData: reportDataState, 
       generateNewReport,
       approveCurrentReport, 
       userName, 
@@ -149,7 +166,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       hasPaid,
       setHasPaid,
       clearReport,
-      isAdmin // Expose isAdmin
+      isAdmin
     }}>
       {children}
     </AppContext.Provider>
@@ -163,3 +180,4 @@ export const useAppContext = () => {
   }
   return context;
 };
+
