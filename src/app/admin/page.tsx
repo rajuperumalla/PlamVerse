@@ -7,28 +7,29 @@ import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertTriangle, LogIn, Layers, ListTodo, FileCheck2 } from 'lucide-react';
+import { Loader2, AlertTriangle, LogIn, Layers, ListTodo, FileCheck2, RefreshCw } from 'lucide-react';
 
 export default function AdminDashboardPage() {
-  const { 
+  const {
     isAuthenticated,
     isAdmin,
-    reports, 
-    isInitializing, // Use new state
-    // isOperationInProgress can be used if dashboard performs actions
+    reports,
+    isInitializing,
+    loadSampleReports, // Added for the button
+    isOperationInProgress, // Added for disabling button during operations
   } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
-  
+
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
   useEffect(() => {
     if (!isInitializing) { // Wait for context to initialize
         if (!isAuthenticated) {
-            router.push('/'); 
+            router.push('/');
         } else if (!isAdmin) {
             toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
-            router.push('/'); 
+            router.push('/');
         }
         setAuthCheckComplete(true);
     }
@@ -46,7 +47,7 @@ export default function AdminDashboardPage() {
         </div>
     );
   }
-  
+
   // This check is secondary, primary auth redirect handled by useEffect
   if (!isAuthenticated || !isAdmin) {
     return (
@@ -69,7 +70,13 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-        <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
+          <Button onClick={loadSampleReports} variant="outline" size="sm" disabled={isOperationInProgress}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Reload Sample Data
+          </Button>
+        </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
