@@ -151,7 +151,6 @@ export default function AdminPage() {
   
   return (
     <div className="container mx-auto py-8">
-      {/* Removed main heading */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {renderReportTable(
           pendingReviewReports,
@@ -159,7 +158,7 @@ export default function AdminPage() {
           <Columns className="h-7 w-7 text-amber-500" />,
           "No reports currently pending review.",
           "Review",
-          () => {}, // Action handled by Link
+          () => {}, 
           <Edit className="mr-2 h-4 w-4"/>,
           (reportId) => `/admin/review/${reportId}`
         )}
