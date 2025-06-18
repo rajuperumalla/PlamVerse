@@ -13,7 +13,7 @@ import {
   SidebarTrigger,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, PanelLeft, ShoppingCart, ShieldCheck } from 'lucide-react'; // ShieldCheck for Admin
+import { LayoutDashboard, PanelLeft, Package, Briefcase, Users, Settings, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -96,16 +96,51 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              {/* Add more admin-specific (ecommerce) menu items here later */}
-               <SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === '/admin/ecommerce'} // Example
-                  tooltip={{ children: 'Ecommerce', side: 'right', className: "md:block hidden" }}
+                  isActive={pathname === '/admin/products'}
+                  tooltip={{ children: 'Product Mgmt', side: 'right', className: "md:block hidden" }}
                 >
-                  <Link href="/admin/ecommerce">
-                    <ShoppingCart />
-                    <span>Ecommerce</span>
+                  <Link href="/admin/products">
+                    <Package />
+                    <span>Products</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/admin/orders'}
+                  tooltip={{ children: 'Order Mgmt', side: 'right', className: "md:block hidden" }}
+                >
+                  <Link href="/admin/orders">
+                    <Briefcase />
+                    <span>Orders</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/admin/customers'}
+                  tooltip={{ children: 'Customer Mgmt', side: 'right', className: "md:block hidden" }}
+                >
+                  <Link href="/admin/customers">
+                    <Users />
+                    <span>Customers</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/admin/settings'}
+                  tooltip={{ children: 'Store Settings', side: 'right', className: "md:block hidden" }}
+                >
+                  <Link href="/admin/settings">
+                    <Settings />
+                    <span>Settings</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -140,5 +175,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
+    
 
     
