@@ -10,9 +10,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertTriangle, LogIn, Eye, ShieldQuestion, Columns, Archive, FileCheck2, Edit, FileSearch } from 'lucide-react';
+import { Loader2, AlertTriangle, LogIn, Eye, ShieldQuestion, Columns, Archive, FileCheck2, Edit, FileSearch, MessageCircleQuestion, Send, Brain, CheckCircle, ThumbsUp } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
+import { refinePalmReadingReport } from '@/ai/flows/refine-palm-reading-report';
 
 export default function AdminPage() {
   const { 
@@ -21,6 +25,8 @@ export default function AdminPage() {
     reports, 
     isLoading: contextIsLoading, 
     loadSampleReports,
+    approveReport,
+    updateReportContent, // Added for refine flow
   } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
@@ -28,6 +34,7 @@ export default function AdminPage() {
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
   const [selectedReportForView, setSelectedReportForView] = useState<ReportData | null>(null);
   const [isViewApprovedDialogOpen, setIsViewApprovedDialogOpen] = useState(false);
+
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -81,8 +88,9 @@ export default function AdminPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Pending Review Section */}
         <section>
-          <Card>
+          <Card className="flex flex-col h-full"> {/* Card as flex column and full height of grid cell */}
             <CardHeader className="px-4 py-4 border-b">
               <CardTitle className="text-2xl flex items-center gap-2 font-headline">
                 <Columns className="h-7 w-7 text-amber-500" />
@@ -90,15 +98,14 @@ export default function AdminPage() {
               </CardTitle>
               <CardDescription>Reports awaiting expert review and approval.</CardDescription>
             </CardHeader>
-            <CardContent className="p-0">
-              {contextIsLoading && pendingReviewReports.length === 0 && ( 
-                <div className="flex justify-center items-center py-12">
+            <CardContent className="p-0 flex-1 flex flex-col"> {/* CardContent expands and is flex column */}
+              {contextIsLoading && pendingReviewReports.length === 0 ? ( 
+                <div className="flex-1 flex justify-center items-center py-12">
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
                     <p className="ml-3 text-muted-foreground">Loading pending reports...</p>
                 </div>
-              )}
-              {!contextIsLoading && pendingReviewReports.length === 0 && (
-                <div className="text-center py-10 px-4 text-muted-foreground">
+              ) : !contextIsLoading && pendingReviewReports.length === 0 ? (
+                <div className="flex-1 flex flex-col justify-center items-center text-center py-10 px-4 text-muted-foreground">
                   <Archive className="mx-auto h-12 w-12 mb-3 text-gray-400"/>
                   <p>No reports currently pending review.</p>
                   <Button onClick={loadSampleReports} className="mt-4" variant="outline" size="sm" disabled={contextIsLoading}>
@@ -106,9 +113,8 @@ export default function AdminPage() {
                     Load Sample Reports
                   </Button>
                 </div>
-              )}
-              {pendingReviewReports.length > 0 && (
-                <ScrollArea className="h-auto max-h-[calc(100vh-420px)]">
+              ) : (
+                <ScrollArea className="h-full"> {/* ScrollArea takes full height of CardContent */}
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -148,8 +154,9 @@ export default function AdminPage() {
           </Card>
         </section>
 
+        {/* Approved Reports Section */}
         <section>
-           <Card>
+           <Card className="flex flex-col h-full"> {/* Card as flex column and full height of grid cell */}
             <CardHeader className="px-4 py-4 border-b">
               <CardTitle className="text-2xl flex items-center gap-2 font-headline">
                 <FileCheck2 className="h-7 w-7 text-green-500" />
@@ -157,21 +164,19 @@ export default function AdminPage() {
               </CardTitle>
               <CardDescription>Reports that have been reviewed and approved for customers.</CardDescription>
             </CardHeader>
-            <CardContent className="p-0">
-              {contextIsLoading && approvedReports.length === 0 && ( 
-                <div className="flex justify-center items-center py-12">
+            <CardContent className="p-0 flex-1 flex flex-col"> {/* CardContent expands and is flex column */}
+              {contextIsLoading && approvedReports.length === 0 ? ( 
+                <div className="flex-1 flex justify-center items-center py-12">
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
                     <p className="ml-3 text-muted-foreground">Loading approved reports...</p>
                 </div>
-              )}
-              {!contextIsLoading && approvedReports.length === 0 && (
-                <div className="text-center py-10 px-4 text-muted-foreground">
+              ) : !contextIsLoading && approvedReports.length === 0 ? (
+                <div className="flex-1 flex flex-col justify-center items-center text-center py-10 px-4 text-muted-foreground">
                   <Archive className="mx-auto h-12 w-12 mb-3 text-gray-400"/>
                   <p>No reports have been approved yet.</p>
                 </div>
-              )}
-              {approvedReports.length > 0 && (
-                <ScrollArea className="h-auto max-h-[calc(100vh-420px)]">
+              ) : (
+                <ScrollArea className="h-full"> {/* ScrollArea takes full height of CardContent */}
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -216,6 +221,7 @@ export default function AdminPage() {
         </p>
       </CardFooter>
 
+      {/* Dialog for Viewing Approved Report */}
       {selectedReportForView && isViewApprovedDialogOpen && (
          <Dialog open={isViewApprovedDialogOpen} onOpenChange={(open) => { setIsViewApprovedDialogOpen(open); if (!open) setSelectedReportForView(null); }}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
