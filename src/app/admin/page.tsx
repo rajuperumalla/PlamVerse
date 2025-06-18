@@ -6,14 +6,14 @@ import Image from 'next/image';
 import { useAppContext, type ReportData } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input'; // Added Input
+import { Input } from '@/components/ui/input'; 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { refinePalmReadingReport } from '@/ai/flows/refine-palm-reading-report';
 import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, ShieldQuestion, ThumbsUp, LogIn, Eye, Sparkles, User, CalendarDays, ListChecksIcon, Columns, Archive, FileCheck2, Edit, FileSearch, MessageCircleQuestion } from 'lucide-react'; // Added MessageCircleQuestion
+import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, ShieldQuestion, ThumbsUp, LogIn, Eye, Sparkles, FileSearch, MessageCircleQuestion, Columns, Archive, FileCheck2, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -39,9 +39,10 @@ export default function AdminPage() {
   const [isViewApprovedDialogOpen, setIsViewApprovedDialogOpen] = useState(false);
   
   const [adminSuggestionForDialog, setAdminSuggestionForDialog] = useState('');
-  const [adminGuidanceForSuggestions, setAdminGuidanceForSuggestions] = useState(''); // New state for guidance input
+  const [adminGuidanceForSuggestions, setAdminGuidanceForSuggestions] = useState('');
   const [aiSuggestionForDialog, setAiSuggestionForDialog] = useState<string | null>(null);
   const [isAiSuggestionLoadingInDialog, setIsAiSuggestionLoadingInDialog] = useState(false);
+  const [provisionallyRefinedContent, setProvisionallyRefinedContent] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -61,7 +62,8 @@ export default function AdminPage() {
     setSelectedReport(report);
     setAdminSuggestionForDialog(''); 
     setAiSuggestionForDialog(null);
-    setAdminGuidanceForSuggestions(''); // Reset guidance
+    setAdminGuidanceForSuggestions('');
+    setProvisionallyRefinedContent(null); // Reset provisionally refined content
     setIsReviewDialogOpen(true);
   };
 
@@ -77,7 +79,7 @@ export default function AdminPage() {
     try {
       const result = await suggestReportImprovements({ 
         report: selectedReport.content,
-        adminGuidance: adminGuidanceForSuggestions // Pass the admin guidance
+        adminGuidance: adminGuidanceForSuggestions 
       });
       setAiSuggestionForDialog(result.suggestions);
       toast({ title: "AI Suggestions Ready", description: `AI-powered suggestions generated for Report ID ${selectedReport.id.substring(0,10)}...`});
@@ -90,24 +92,43 @@ export default function AdminPage() {
     }
   };
 
-  const handleRefineAndApproveInDialog = async () => {
+  const handlePreviewAiRefinement = async () => {
     if (!selectedReport || !adminSuggestionForDialog.trim()) {
-      toast({ title: "Missing Input", description: "Please provide refinement suggestions for the final report.", variant: "destructive" });
+      toast({ title: "Missing Input", description: "Please provide refinement suggestions for the AI to process.", variant: "destructive" });
       return;
     }
     startLoading();
+    setProvisionallyRefinedContent(null);
     try {
       const refinedResult = await refinePalmReadingReport({
         originalReport: selectedReport.content,
         adminSuggestions: adminSuggestionForDialog,
       });
-      approveReport(selectedReport.id, refinedResult.refinedReport); 
-      toast({ title: "Report Refined & Approved", description: `Report ID ${selectedReport.id.substring(0,10)}... has been updated and approved.` });
+      setProvisionallyRefinedContent(refinedResult.refinedReport);
+      toast({ title: "AI Refinement Preview Ready", description: "Review the AI-refined content below before final approval for the customer." });
+    } catch (error) {
+      console.error("Error previewing AI refinement:", error);
+      toast({ title: "Refinement Preview Error", description: `Failed to get AI refinement preview for Report ID ${selectedReport.id.substring(0,10)}... Please try again.`, variant: "destructive" });
+    } finally {
+      stopLoading();
+    }
+  };
+
+  const handleFinalApproveForCustomer = async () => {
+    if (!selectedReport || !provisionallyRefinedContent) {
+      toast({ title: "Missing Content", description: "No refined content to approve.", variant: "destructive" });
+      return;
+    }
+    startLoading();
+    try {
+      approveReport(selectedReport.id, provisionallyRefinedContent); 
+      toast({ title: "Report Approved & Live", description: `Report ID ${selectedReport.id.substring(0,10)}... has been approved and is now available to the customer.` });
       setIsReviewDialogOpen(false);
       setSelectedReport(null);
+      setProvisionallyRefinedContent(null);
     } catch (error) {
-      console.error("Error refining report:", error);
-      toast({ title: "Refinement Error", description: `Failed to refine report ID ${selectedReport.id.substring(0,10)}... Please try again.`, variant: "destructive" });
+      console.error("Error during final approval:", error);
+      toast({ title: "Final Approval Error", description: `Failed to approve report ID ${selectedReport.id.substring(0,10)}... Please try again.`, variant: "destructive" });
     } finally {
       stopLoading();
     }
@@ -117,9 +138,10 @@ export default function AdminPage() {
     if (!selectedReport) return;
     startLoading();
     approveReport(selectedReport.id); 
-    toast({ title: "Report Approved", description: `Report ID ${selectedReport.id.substring(0,10)}... has been approved as is.` });
+    toast({ title: "Report Approved As-Is", description: `Report ID ${selectedReport.id.substring(0,10)}... has been approved and is now available to the customer.` });
     setIsReviewDialogOpen(false);
     setSelectedReport(null);
+    setProvisionallyRefinedContent(null);
     stopLoading();
   };
 
@@ -158,7 +180,6 @@ export default function AdminPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Pending Review Column */}
         <section>
           <Card>
             <CardHeader className="px-4 py-4 border-b">
@@ -219,7 +240,6 @@ export default function AdminPage() {
           </Card>
         </section>
 
-        {/* Approved Reports Column */}
         <section>
            <Card>
             <CardHeader className="px-4 py-4 border-b">
@@ -227,7 +247,7 @@ export default function AdminPage() {
                 <FileCheck2 className="h-7 w-7 text-green-500" />
                 Approved Reports ({approvedReports.length})
               </CardTitle>
-              <CardDescription>Reports that have been reviewed and approved.</CardDescription>
+              <CardDescription>Reports that have been reviewed and approved for customers.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               {contextIsLoading && approvedReports.length === 0 && ( 
@@ -283,7 +303,6 @@ export default function AdminPage() {
         </p>
       </CardFooter>
 
-      {/* Review Dialog for Pending Reports */}
       {selectedReport && isReviewDialogOpen && (
         <Dialog open={isReviewDialogOpen} onOpenChange={(open) => { setIsReviewDialogOpen(open); if (!open) setSelectedReport(null); }}>
           <DialogContent className="max-w-3xl">
@@ -352,10 +371,10 @@ export default function AdminPage() {
                         <Button 
                             onClick={() => {
                                 setAdminSuggestionForDialog((prev) => prev + (prev ? '\n\n--- AI Suggestions ---\n' : '--- AI Suggestions ---\n') + aiSuggestionForDialog);
-                                toast({title: "AI Suggestions Appended", description: "Suggestions appended to your refinement notes for the final report."})
+                                toast({title: "AI Suggestions Appended", description: "Suggestions appended to your refinement notes."})
                             }}
                             variant="link" size="sm" className="p-0 h-auto text-xs mt-1">
-                            Append to Final Report Notes
+                            Append to Final Refinement Notes
                         </Button>
                     )}
                 </Alert>
@@ -363,41 +382,60 @@ export default function AdminPage() {
             </div>
             
             <div className="mt-4 space-y-2 border-t pt-4">
-              <Label htmlFor="adminDialogSuggestions" className="text-sm font-medium flex items-center gap-1.5"><Edit3 className="h-4 w-4 text-primary"/>Your Final Refinement Notes & Edits for the Report</Label>
+              <Label htmlFor="adminDialogSuggestions" className="text-sm font-medium flex items-center gap-1.5"><Edit3 className="h-4 w-4 text-primary"/>Your Final Refinement Notes & Edits</Label>
               <Textarea
                 id="adminDialogSuggestions"
                 value={adminSuggestionForDialog}
                 onChange={(e) => setAdminSuggestionForDialog(e.target.value)}
-                placeholder="Enter your comprehensive suggestions and edits here to improve the final report..."
+                placeholder="Enter your comprehensive suggestions and edits here. This will be used by AI to generate the final report."
                 rows={4}
                 className="text-sm"
                 disabled={contextIsLoading}
               />
+               <Button 
+                    onClick={handlePreviewAiRefinement} 
+                    disabled={contextIsLoading || !adminSuggestionForDialog.trim()} 
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2"
+                    title="AI will process your notes above to generate a refined report preview."
+                >
+                    {contextIsLoading && adminSuggestionForDialog.trim() && !provisionallyRefinedContent ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                    Preview AI Refinement
+                </Button>
             </div>
+
+            {provisionallyRefinedContent && (
+              <div className="mt-4 space-y-2 border-t pt-4">
+                <Label className="font-semibold text-green-700 flex items-center gap-1.5"><FileCheck2 className="h-4 w-4"/>Preview of AI-Refined Report for Customer:</Label>
+                <ScrollArea className="h-[150px] w-full rounded-md border p-4 bg-green-50/50 text-sm">
+                  {provisionallyRefinedContent.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
+                    <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
+                  ))}
+                </ScrollArea>
+                <Button 
+                  onClick={handleFinalApproveForCustomer} 
+                  disabled={contextIsLoading}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white mt-2"
+                >
+                  {contextIsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                  Confirm & Approve for Customer
+                </Button>
+              </div>
+            )}
 
             <DialogFooter className="mt-6 gap-2 sm:gap-0">
                 <Button 
                     onClick={handleApproveAsIsInDialog} 
                     variant="secondary" 
-                    disabled={contextIsLoading} 
+                    disabled={contextIsLoading || !!provisionallyRefinedContent} 
+                    title={provisionallyRefinedContent ? "A refined preview exists. Clear it or approve it first." : "Approve the original AI report without admin refinements."}
                 >
-                    <ThumbsUp className="mr-2 h-4 w-4" /> Approve As-Is
-                </Button>
-                <Button 
-                    onClick={handleRefineAndApproveInDialog} 
-                    disabled={contextIsLoading || !adminSuggestionForDialog.trim()} 
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    title="AI will incorporate your final notes to enhance the report."
-                >
-                    {contextIsLoading && adminSuggestionForDialog.trim() ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                    Refine with AI & Approve
+                    <ThumbsUp className="mr-2 h-4 w-4" /> Approve Original As-Is
                 </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
 
-      {/* View Approved Report Dialog */}
       {selectedReport && isViewApprovedDialogOpen && (
          <Dialog open={isViewApprovedDialogOpen} onOpenChange={(open) => { setIsViewApprovedDialogOpen(open); if (!open) setSelectedReport(null); }}>
           <DialogContent className="max-w-3xl">
@@ -435,6 +473,3 @@ export default function AdminPage() {
   );
 }
     
-
-    
-
