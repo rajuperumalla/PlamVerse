@@ -26,12 +26,12 @@ interface Product {
 }
 
 const sampleProducts: Product[] = [
-  { id: "2", imageUrl: "https://placehold.co/50x50.png", imageHint: "pain relief oil", name: "Adiguru's Pain Relief Oil", category: "Pain Relief", stock: 0, price: 250.00, size: "60ml", refNo: "ADG-PRO-001", published: true, favourite: false },
-  { id: "3", imageUrl: "https://placehold.co/50x50.png", imageHint: "red balm", name: "Adiguru's All Purpose Red Balm", category: "Skin Care", stock: 0, price: 108.00, size: "12gm", refNo: "ADG-RBM-001", published: true, favourite: true },
-  { id: "4", imageUrl: "https://placehold.co/50x50.png", imageHint: "universal oil", name: "Adiguru's Universal Oil", category: "Cold, Cough, Migraine & Sinus", stock: 0, price: 108.00, size: "10ml", refNo: "ADG-UNI-001", published: true, favourite: false },
-  { id: "5", imageUrl: "https://placehold.co/50x50.png", imageHint: "cold oil", name: "Adiguru's Cold Oil", category: "Cold, Cough, Migraine & Sinus", stock: 0, price: 108.00, size: "10ml", refNo: "ADG-CLD-001", published: true, favourite: false },
-  { id: "1002", imageUrl: "https://placehold.co/50x50.png", imageHint: "herbal inhaler", name: "Adiguru's Herbal Inhaler", category: "Health & Wellness", stock: 0, price: 135.00, size: "45ml", refNo: "ADG-HBI-001", published: true, favourite: false },
-  { id: "1005", imageUrl: "https://placehold.co/50x50.png", imageHint: "deodorant stick", name: "Adiguru's Natural Deodorant Stick", category: "Skin Care", stock: 500, price: 0, size: "4 ML", refNo: "ADG-NDO-001", published: true, favourite: false },
+  { id: "SP001", imageUrl: "https://placehold.co/50x50.png", imageHint: "amethyst bracelet", name: "Enchanted Amethyst Bracelet", category: "Crystal Bracelets", stock: 50, price: 1200.00, size: "Medium", refNo: "CB-AMY-001", published: true, favourite: true },
+  { id: "SP002", imageUrl: "https://placehold.co/50x50.png", imageHint: "rose quartz", name: "Polished Rose Quartz Gemstone", category: "Gemstones", stock: 100, price: 800.00, size: "Large", refNo: "GS-ROQ-001", published: true, favourite: false },
+  { id: "SP003", imageUrl: "https://placehold.co/50x50.png", imageHint: "rudraksha beads", name: "Authentic 5 Mukhi Rudraksha", category: "Rudrakshas", stock: 200, price: 550.00, size: "Standard", refNo: "RD-5MK-001", published: true, favourite: true },
+  { id: "SP004", imageUrl: "https://placehold.co/50x50.png", imageHint: "shree yantra", name: "Copper Plated Shree Yantra", category: "Yantras", stock: 75, price: 2500.00, size: "3x3 inch", refNo: "YT-SHR-001", published: true, favourite: false },
+  { id: "SP005", imageUrl: "https://placehold.co/50x50.png", imageHint: "meditation cushion", name: "Zen Meditation Cushion", category: "Meditation Aids", stock: 30, price: 1500.00, size: "Large", refNo: "MA-CUS-001", published: true, favourite: false },
+  { id: "SP006", imageUrl: "https://placehold.co/50x50.png", imageHint: "incense sticks", name: "Sandalwood Incense Sticks (100g)", category: "Pooja Items", stock: 150, price: 300.00, size: "100g", refNo: "PI-INC-001", published: false, favourite: false },
 ];
 
 export default function AdminAllProductsPage() {

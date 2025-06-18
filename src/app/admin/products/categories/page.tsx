@@ -21,12 +21,12 @@ interface Category {
 }
 
 const sampleCategories: Category[] = [
-  { id: "6", imageUrl: "https://placehold.co/40x40.png", imageHint: "sleep aid", name: "Sleep Care", status: true, favourite: false },
-  { id: "7", imageUrl: "https://placehold.co/40x40.png", imageHint: "pain relief", name: "Pain Relief", status: true, favourite: false },
-  { id: "8", imageUrl: "https://placehold.co/40x40.png", imageHint: "skin cream", name: "Skin Care", status: true, favourite: false },
-  { id: "9", imageUrl: "https://placehold.co/40x40.png", imageHint: "vitamins supplements", name: "Health & Wellness", status: true, favourite: false },
-  { id: "10", imageUrl: "https://placehold.co/40x40.png", imageHint: "cold remedy", name: "Cold, Cough, Migraine & Sinus", status: true, favourite: false },
-  { id: "11", imageUrl: "https://placehold.co/40x40.png", imageHint: "personal hygiene", name: "Personal Care", status: true, favourite: false },
+  { id: "CAT01", imageUrl: "https://placehold.co/40x40.png", imageHint: "crystal bracelet", name: "Crystal Bracelets", status: true, favourite: true },
+  { id: "CAT02", imageUrl: "https://placehold.co/40x40.png", imageHint: "gemstone collection", name: "Gemstones", status: true, favourite: false },
+  { id: "CAT03", imageUrl: "https://placehold.co/40x40.png", imageHint: "rudraksha mala", name: "Rudrakshas", status: true, favourite: true },
+  { id: "CAT04", imageUrl: "https://placehold.co/40x40.png", imageHint: "sacred yantra", name: "Yantras", status: true, favourite: false },
+  { id: "CAT05", imageUrl: "https://placehold.co/40x40.png", imageHint: "meditation tools", name: "Meditation Aids", status: false, favourite: false },
+  { id: "CAT06", imageUrl: "https://placehold.co/40x40.png", imageHint: "pooja thali", name: "Pooja Items", status: true, favourite: false },
 ];
 
 export default function AdminProductCategoriesPage() {
