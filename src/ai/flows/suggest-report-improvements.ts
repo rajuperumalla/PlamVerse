@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -13,11 +14,12 @@ import {z} from 'genkit';
 
 const SuggestReportImprovementsInputSchema = z.object({
   report: z.string().describe('The initial draft of the palm reading report.'),
+  adminGuidance: z.string().optional().describe('Specific guidance or questions from the admin to help focus the AI suggestions (e.g., "Focus on career aspects", "Check for clarity in the love section").')
 });
 export type SuggestReportImprovementsInput = z.infer<typeof SuggestReportImprovementsInputSchema>;
 
 const SuggestReportImprovementsOutputSchema = z.object({
-  suggestions: z.string().describe('Suggested improvements for the palm reading report.'),
+  suggestions: z.string().describe('Suggested improvements for the palm reading report, taking into account any admin guidance.'),
 });
 export type SuggestReportImprovementsOutput = z.infer<typeof SuggestReportImprovementsOutputSchema>;
 
@@ -31,10 +33,17 @@ const prompt = ai.definePrompt({
   output: {schema: SuggestReportImprovementsOutputSchema},
   prompt: `You are an expert palmistry report editor.
 
-You will be provided with an initial draft of a palm reading report. Your task is to suggest improvements to the report to make it more accurate, insightful, and helpful to the user. Consider clarity, depth, and overall quality of the analysis. The suggested improvements should be concise and actionable.
+You will be provided with an initial draft of a palm reading report.
+Your task is to suggest improvements to the report to make it more accurate, insightful, and helpful to the user.
+Consider clarity, depth, and overall quality of the analysis. The suggested improvements should be concise and actionable.
+
+{{#if adminGuidance}}
+The admin has provided the following specific guidance or questions to focus your suggestions. Please address these points in your suggestions:
+"{{{adminGuidance}}}"
+{{/if}}
 
 Report:
-{{report}}`,
+{{{report}}}`,
 });
 
 const suggestReportImprovementsFlow = ai.defineFlow(
@@ -48,3 +57,4 @@ const suggestReportImprovementsFlow = ai.defineFlow(
     return output!;
   }
 );
+

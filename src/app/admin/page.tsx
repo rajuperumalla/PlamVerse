@@ -6,13 +6,14 @@ import Image from 'next/image';
 import { useAppContext, type ReportData } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input'; // Added Input
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { refinePalmReadingReport } from '@/ai/flows/refine-palm-reading-report';
 import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, ShieldQuestion, ThumbsUp, LogIn, Eye, Sparkles, User, CalendarDays, ListChecksIcon, Columns, Archive, FileCheck2, Edit, FileSearch } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, ShieldQuestion, ThumbsUp, LogIn, Eye, Sparkles, User, CalendarDays, ListChecksIcon, Columns, Archive, FileCheck2, Edit, FileSearch, MessageCircleQuestion } from 'lucide-react'; // Added MessageCircleQuestion
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -38,6 +39,7 @@ export default function AdminPage() {
   const [isViewApprovedDialogOpen, setIsViewApprovedDialogOpen] = useState(false);
   
   const [adminSuggestionForDialog, setAdminSuggestionForDialog] = useState('');
+  const [adminGuidanceForSuggestions, setAdminGuidanceForSuggestions] = useState(''); // New state for guidance input
   const [aiSuggestionForDialog, setAiSuggestionForDialog] = useState<string | null>(null);
   const [isAiSuggestionLoadingInDialog, setIsAiSuggestionLoadingInDialog] = useState(false);
 
@@ -57,8 +59,9 @@ export default function AdminPage() {
 
   const openReviewDialog = (report: ReportData) => {
     setSelectedReport(report);
-    setAdminSuggestionForDialog(''); // Reset suggestions for the new report
+    setAdminSuggestionForDialog(''); 
     setAiSuggestionForDialog(null);
+    setAdminGuidanceForSuggestions(''); // Reset guidance
     setIsReviewDialogOpen(true);
   };
 
@@ -72,7 +75,10 @@ export default function AdminPage() {
     setIsAiSuggestionLoadingInDialog(true);
     setAiSuggestionForDialog(null); 
     try {
-      const result = await suggestReportImprovements({ report: selectedReport.content });
+      const result = await suggestReportImprovements({ 
+        report: selectedReport.content,
+        adminGuidance: adminGuidanceForSuggestions // Pass the admin guidance
+      });
       setAiSuggestionForDialog(result.suggestions);
       toast({ title: "AI Suggestions Ready", description: `AI-powered suggestions generated for Report ID ${selectedReport.id.substring(0,10)}...`});
     } catch (error) {
@@ -86,7 +92,7 @@ export default function AdminPage() {
 
   const handleRefineAndApproveInDialog = async () => {
     if (!selectedReport || !adminSuggestionForDialog.trim()) {
-      toast({ title: "Missing Input", description: "Please provide refinement suggestions.", variant: "destructive" });
+      toast({ title: "Missing Input", description: "Please provide refinement suggestions for the final report.", variant: "destructive" });
       return;
     }
     startLoading();
@@ -173,7 +179,10 @@ export default function AdminPage() {
                 <div className="text-center py-10 px-4 text-muted-foreground">
                   <Archive className="mx-auto h-12 w-12 mb-3 text-gray-400"/>
                   <p>No reports currently pending review.</p>
-                  <Button onClick={loadSampleReports} className="mt-4" variant="outline" size="sm">Load Sample Reports</Button>
+                  <Button onClick={loadSampleReports} className="mt-4" variant="outline" size="sm" disabled={contextIsLoading}>
+                    {contextIsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Load Sample Reports
+                  </Button>
                 </div>
               )}
               {pendingReviewReports.length > 0 && (
@@ -299,13 +308,23 @@ export default function AdminPage() {
             </div>
 
             <Label className="font-semibold">Original AI Generated Content:</Label>
-            <ScrollArea className="h-[200px] w-full rounded-md border p-4 mt-1 bg-muted/10 text-sm">
+            <ScrollArea className="h-[150px] w-full rounded-md border p-4 mt-1 bg-muted/10 text-sm">
               {selectedReport.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
                 <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
               ))}
             </ScrollArea>
 
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-3 border-t pt-4">
+                <Label htmlFor="adminGuidanceForSuggestions" className="text-sm font-medium flex items-center gap-1.5"><MessageCircleQuestion className="h-4 w-4 text-primary"/>Your Guidance for AI Suggestions (Optional)</Label>
+                <Textarea
+                    id="adminGuidanceForSuggestions"
+                    value={adminGuidanceForSuggestions}
+                    onChange={(e) => setAdminGuidanceForSuggestions(e.target.value)}
+                    placeholder="e.g., 'Focus on career aspects', 'Check clarity on relationships', 'Is the tone appropriate?'"
+                    rows={2}
+                    className="text-sm"
+                    disabled={contextIsLoading || isAiSuggestionLoadingInDialog}
+                />
                 <Button 
                     onClick={handleGetAiSuggestionsInDialog} 
                     variant="outline" 
@@ -329,24 +348,24 @@ export default function AdminPage() {
                      {aiSuggestionForDialog && !aiSuggestionForDialog.startsWith("Error:") && (
                         <Button 
                             onClick={() => {
-                                setAdminSuggestionForDialog((prev) => prev + '\n\n--- AI Suggestions ---\n' + aiSuggestionForDialog);
-                                toast({title: "AI Suggestions Appended", description: "Suggestions appended to your refinement notes."})
+                                setAdminSuggestionForDialog((prev) => prev + (prev ? '\n\n--- AI Suggestions ---\n' : '--- AI Suggestions ---\n') + aiSuggestionForDialog);
+                                toast({title: "AI Suggestions Appended", description: "Suggestions appended to your refinement notes for the final report."})
                             }}
                             variant="link" size="sm" className="p-0 h-auto text-xs mt-1">
-                            Append to Notes
+                            Append to Final Report Notes
                         </Button>
                     )}
                 </Alert>
                 )}
             </div>
             
-            <div className="mt-4 space-y-2">
-              <Label htmlFor="adminDialogSuggestions" className="text-sm font-medium flex items-center gap-1.5"><Edit3 className="h-4 w-4 text-primary"/>Your Refinement Notes & Suggestions</Label>
+            <div className="mt-4 space-y-2 border-t pt-4">
+              <Label htmlFor="adminDialogSuggestions" className="text-sm font-medium flex items-center gap-1.5"><Edit3 className="h-4 w-4 text-primary"/>Your Final Refinement Notes & Edits for the Report</Label>
               <Textarea
                 id="adminDialogSuggestions"
                 value={adminSuggestionForDialog}
                 onChange={(e) => setAdminSuggestionForDialog(e.target.value)}
-                placeholder="Enter your suggestions to improve this report..."
+                placeholder="Enter your comprehensive suggestions and edits here to improve the final report..."
                 rows={4}
                 className="text-sm"
                 disabled={contextIsLoading}
@@ -365,7 +384,7 @@ export default function AdminPage() {
                     onClick={handleRefineAndApproveInDialog} 
                     disabled={contextIsLoading || !adminSuggestionForDialog.trim()} 
                     className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                    title="AI will incorporate your suggestions to enhance the report."
+                    title="AI will incorporate your final notes to enhance the report."
                 >
                     {contextIsLoading && adminSuggestionForDialog.trim() ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                     Refine with AI & Approve
