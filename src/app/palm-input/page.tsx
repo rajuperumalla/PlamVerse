@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 import Image from 'next/image'; 
 import { Button } from '@/components/ui/button'; 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'; 
-import { Sparkles, ArrowRight } from 'lucide-react'; 
+import { Sparkles, ArrowRight, Handshake, BookOpen } from 'lucide-react'; 
 
 // Sample product categories for display after login
 const productCategories = [
@@ -22,6 +22,8 @@ const productCategories = [
 function PalmInputPageComponent() {
   const { isAuthenticated, isInitializing } = useAppContext();
   const router = useRouter();
+  const searchParams = useSearchParams(); // Ensure searchParams is used for pathname
+  const currentPathname = searchParams.toString() ? `/palm-input?${searchParams.toString()}` : "/palm-input"; // Reconstruct or use pathname from router if available and reliable
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
   useEffect(() => {
@@ -58,24 +60,29 @@ function PalmInputPageComponent() {
       </div>
       <div className="relative z-10"> {/* Content wrapper */}
         <nav aria-label="Main navigation after login">
-          <ul className="flex justify-center items-center space-x-2 sm:space-x-4 md:space-x-6 py-3 bg-amber-100 dark:bg-amber-800/30 backdrop-blur-sm rounded-lg shadow-md border border-amber-300 dark:border-amber-700">
+          <ul className="flex justify-center items-center space-x-1 sm:space-x-2 md:space-x-4 py-3 bg-amber-100 dark:bg-amber-800/30 backdrop-blur-sm rounded-lg shadow-md border border-amber-300 dark:border-amber-700 text-xs sm:text-sm">
             <li>
-              <Link href="/" className="text-sm sm:text-base text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
+              <Link href="/" className="text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
                 Home
               </Link>
             </li>
             <li>
-              <Link href="/palm-input" className="text-sm sm:text-base font-semibold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 animate-shimmer bg-[length:200%_100%] transition-colors px-2 py-1 rounded-md ring-1 ring-amber-500/50 bg-amber-500/10">
-                Palmistry
+              <Link href="/palm-input" className={`transition-colors px-2 py-1 rounded-md ${currentPathname === '/palm-input' || currentPathname.startsWith('/palm-input?') ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 animate-shimmer bg-[length:200%_100%] ring-1 ring-amber-500/50 bg-amber-500/10' : 'text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200'}`}>
+                <Handshake className="inline-block mr-1 h-4 w-4 align-middle" /> Palmistry
+              </Link>
+            </li>
+             <li>
+              <Link href="/report" className={`transition-colors px-2 py-1 rounded-md ${currentPathname === '/report' ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 animate-shimmer bg-[length:200%_100%] ring-1 ring-amber-500/50 bg-amber-500/10' : 'text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200'}`}>
+                 <BookOpen className="inline-block mr-1 h-4 w-4 align-middle" /> My Reading
               </Link>
             </li>
             <li>
-              <Link href="#products" className="text-sm sm:text-base text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
+              <Link href="#products" className="text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
                 Products
               </Link>
             </li>
             <li>
-              <Link href="#remedies" className="text-sm sm:text-base text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
+              <Link href="#remedies" className="text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
                 Remedies
               </Link>
             </li>
