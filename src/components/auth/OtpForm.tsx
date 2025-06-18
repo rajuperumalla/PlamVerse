@@ -8,9 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { Phone, KeyRound, LogIn } from 'lucide-react';
+import { Phone, KeyRound, UserPlus, ArrowLeft } from 'lucide-react';
 
-const OtpForm = () => {
+interface OtpFormProps {
+  onBack?: () => void;
+  mode?: 'login' | 'register';
+}
+
+const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
   const [mobileNumber, setMobileNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -19,6 +24,12 @@ const OtpForm = () => {
   const { login } = useAppContext();
   const { toast } = useToast();
 
+  const cardTitle = mode === 'register' ? "Create Your Account" : "Login to PalmVerse";
+  const cardDescription = mode === 'register' ? "Enter your mobile to register." : "Enter your mobile number to begin.";
+  const primaryButtonText = mode === 'register' ? "Register & Send OTP" : "Send OTP";
+  const verifyButtonText = mode === 'register' ? "Verify OTP & Register" : "Verify OTP & Continue";
+
+
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^\d{10}$/.test(mobileNumber)) {
@@ -26,7 +37,6 @@ const OtpForm = () => {
       return;
     }
     setIsLoading(true);
-    // Simulate OTP sending
     await new Promise(resolve => setTimeout(resolve, 1000));
     setOtpSent(true);
     setIsLoading(false);
@@ -36,11 +46,10 @@ const OtpForm = () => {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate OTP verification
     await new Promise(resolve => setTimeout(resolve, 1000));
-    if (otp === '123456') { // Simulated OTP
-      login(mobileNumber); // Store mobile number as userName for now
-      toast({ title: "Login Successful", description: "Welcome to PalmVerse!" });
+    if (otp === '123456') { 
+      login(mobileNumber); 
+      toast({ title: mode === 'register' ? "Registration Successful" : "Login Successful", description: "Welcome to PalmVerse!" });
       router.push('/palm-input');
     } else {
       toast({ title: "Invalid OTP", description: "The OTP you entered is incorrect.", variant: "destructive" });
@@ -53,12 +62,12 @@ const OtpForm = () => {
       <Card className="w-full max-w-md shadow-xl animate-fade-in">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
-            <LogIn className="h-10 w-10 text-primary" />
+            {mode === 'register' ? <UserPlus className="h-10 w-10 text-primary" /> : <KeyRound className="h-10 w-10 text-primary" />}
           </div>
-          <CardTitle className="font-headline text-3xl">Welcome to PalmVerse</CardTitle>
-          <CardDescription>Enter your mobile number to begin your journey.</CardDescription>
+          <CardTitle className="font-headline text-3xl">{cardTitle}</CardTitle>
+          <CardDescription>{cardDescription}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           {!otpSent ? (
             <form onSubmit={handleSendOtp} className="space-y-6">
               <div className="space-y-2">
@@ -78,7 +87,7 @@ const OtpForm = () => {
                 </div>
               </div>
               <Button type="submit" className="w-full text-lg py-6" disabled={isLoading}>
-                {isLoading ? 'Sending OTP...' : 'Send OTP'}
+                {isLoading ? 'Processing...' : primaryButtonText}
               </Button>
             </form>
           ) : (
@@ -101,12 +110,17 @@ const OtpForm = () => {
                 </div>
               </div>
               <Button type="submit" className="w-full text-lg py-6" disabled={isLoading}>
-                {isLoading ? 'Verifying...' : 'Verify OTP & Continue'}
+                {isLoading ? 'Verifying...' : verifyButtonText}
               </Button>
               <Button variant="link" onClick={() => setOtpSent(false)} className="w-full" disabled={isLoading}>
                 Change mobile number
               </Button>
             </form>
+          )}
+          {onBack && (
+            <Button variant="outline" onClick={onBack} className="w-full mt-4 text-base py-6">
+              <ArrowLeft className="mr-2 h-5 w-5" /> Back to Options
+            </Button>
           )}
         </CardContent>
         <CardFooter>
