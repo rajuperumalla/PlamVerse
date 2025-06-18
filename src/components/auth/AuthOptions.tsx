@@ -52,19 +52,16 @@ const AuthOptions = () => {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-xl animate-fade-in">
-      <CardHeader className="text-center">
-        <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
-          <LogIn className="h-10 w-10 text-primary" />
-        </div>
-        <CardTitle className="font-headline text-3xl">Welcome to PalmVerse</CardTitle>
-        <CardDescription>Choose how you'd like to connect.</CardDescription>
+    <Card className="w-full max-w-md shadow-xl animate-fade-in flex-shrink-0">
+      <CardHeader>
+        <CardTitle className="font-headline text-2xl md:text-3xl">Unlock Your Destiny</CardTitle>
+        <CardDescription>Choose how you'd like to connect to PalmVerse.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Button onClick={handleShowOtpLogin} className="w-full text-lg py-3 sm:py-4 md:py-6">
+        <Button onClick={handleShowOtpLogin} className="w-full text-base sm:text-lg py-3 sm:py-4">
           <Smartphone className="mr-2 h-5 w-5" /> Login with Mobile Number
         </Button>
-        <Button onClick={handleGoogleLogin} variant="outline" className="w-full text-lg py-3 sm:py-4 md:py-6">
+        <Button onClick={handleGoogleLogin} variant="outline" className="w-full text-base sm:text-lg py-3 sm:py-4">
           <Mail className="mr-2 h-5 w-5" /> Continue with Google (Simulated)
         </Button>
          <div className="relative my-3">
@@ -77,7 +74,7 @@ const AuthOptions = () => {
             </span>
           </div>
         </div>
-        <Button onClick={handleShowOtpRegister} variant="secondary" className="w-full text-lg py-3 sm:py-4 md:py-6">
+        <Button onClick={handleShowOtpRegister} variant="secondary" className="w-full text-base sm:text-lg py-3 sm:py-4">
           <UserPlus className="mr-2 h-5 w-5" /> Register / Create Account
         </Button>
 
@@ -92,10 +89,10 @@ const AuthOptions = () => {
           </div>
         </div>
 
-        <Button onClick={handleShowEditorLogin} variant="ghost" className="w-full text-base py-3 sm:py-4 md:py-5 border border-purple-500/50 hover:bg-purple-500/10 text-purple-600">
+        <Button onClick={handleShowEditorLogin} variant="ghost" className="w-full text-sm sm:text-base py-3 sm:py-4 border border-purple-500/50 hover:bg-purple-500/10 text-purple-600">
           <Edit className="mr-2 h-5 w-5" /> Editor Login (Palm Reading)
         </Button>
-        <Button onClick={handleShowAdminLogin} variant="ghost" className="w-full text-base py-3 sm:py-4 md:py-5 border border-teal-500/50 hover:bg-teal-500/10 text-teal-600">
+        <Button onClick={handleShowAdminLogin} variant="ghost" className="w-full text-sm sm:text-base py-3 sm:py-4 border border-teal-500/50 hover:bg-teal-500/10 text-teal-600">
           <ShieldCheck className="mr-2 h-5 w-5" /> Admin Login (Ecommerce)
         </Button>
       </CardContent>
@@ -109,5 +106,3 @@ const AuthOptions = () => {
 };
 
 export default AuthOptions;
-
-    
