@@ -63,7 +63,7 @@ export default function AdminPage() {
     setAdminSuggestionForDialog(''); 
     setAiSuggestionForDialog(null);
     setAdminGuidanceForSuggestions('');
-    setProvisionallyRefinedContent(null); // Reset provisionally refined content
+    setProvisionallyRefinedContent(null); 
     setIsReviewDialogOpen(true);
   };
 
@@ -305,7 +305,7 @@ export default function AdminPage() {
 
       {selectedReport && isReviewDialogOpen && (
         <Dialog open={isReviewDialogOpen} onOpenChange={(open) => { setIsReviewDialogOpen(open); if (!open) setSelectedReport(null); }}>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Review Report: {selectedReport.id.substring(0,10)}...</DialogTitle>
               <DialogDescription>Category: {selectedReport.category} | Submitted by: {selectedReport.userName || 'N/A'} on {new Date(selectedReport.submissionDate).toLocaleDateString()}</DialogDescription>
@@ -438,7 +438,7 @@ export default function AdminPage() {
 
       {selectedReport && isViewApprovedDialogOpen && (
          <Dialog open={isViewApprovedDialogOpen} onOpenChange={(open) => { setIsViewApprovedDialogOpen(open); if (!open) setSelectedReport(null); }}>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Approved Report: {selectedReport.id.substring(0,10)}...</DialogTitle>
               <DialogDescription>Category: {selectedReport.category} | Submitted by: {selectedReport.userName || 'N/A'}</DialogDescription>
