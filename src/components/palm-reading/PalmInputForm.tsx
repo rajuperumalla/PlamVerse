@@ -121,7 +121,6 @@ const PalmInputForm = () => {
       
       const result = await generatePalmReading(aiFlowInput);
       updateReportWithGeneratedContent(initialReportId, result.report);
-      toast({ title: "Palm Reading Generated!", description: "Your report is available under 'My Reading'." });
       router.push('/');
     } catch (error) {
       console.error("Error generating palm reading:", error);
@@ -156,14 +155,9 @@ const PalmInputForm = () => {
         setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
         setDominantHand(persistedData.dominantHand || '');
         setCategory(persistedData.category || '');
-        // Crucially, we need to re-establish File objects if we want to proceed automatically
-        // For simplicity, if images were just previews (DataURIs), this is fine.
-        // If they were meant to be files, this auto-submit would need more complex handling for files (e.g., store file references or re-prompt)
-        // Given current structure, we're using previews (DataURIs) stored in session.
         setLeftPalmPreview(persistedData.leftPalmDataUri || null);
         setRightPalmPreview(persistedData.rightPalmDataUri || null);
         
-        // For auto-submit, ensure the DataURIs are present if we're not re-uploading files.
         if (
           persistedData.leftPalmDataUri && 
           persistedData.rightPalmDataUri && 
@@ -191,7 +185,6 @@ const PalmInputForm = () => {
 
             const result = await generatePalmReading(aiFlowInput);
             updateReportWithGeneratedContent(initialReportId, result.report);
-            toast({ title: "Palm Reading Generated!", description: "Your report is available under 'My Reading'." });
             router.push('/');
           } catch (error) {
             console.error("Error auto-generating palm reading:", error);
@@ -199,7 +192,7 @@ const PalmInputForm = () => {
                markReportAsGenerationFailed(initialReportId, "Failed to auto-generate palm reading after payment.");
              }
             toast({ title: "Auto-Generation Error", description: "Failed to auto-generate. Please check your details and try again.", variant: "destructive" });
-            router.push('/'); // Redirect to home even on failure
+            router.push('/'); 
           } finally {
             if(isOperationInProgress) stopOperation();
           }
@@ -233,8 +226,6 @@ const PalmInputForm = () => {
     </div>
   );
 
-  // If hasPaid is true, we need all fields including files for generation.
-  // If hasPaid is false, we only need to ensure operation is not in progress to proceed to payment.
   const isReadyForManualSubmitAfterPayment = 
     leftPalmImageFile && 
     rightPalmImageFile && 
@@ -243,7 +234,12 @@ const PalmInputForm = () => {
     dominantHand && 
     category;
 
-  const buttonDisabled = isOperationInProgress || (hasPaid && !isReadyForManualSubmitAfterPayment);
+  let finalButtonDisabled = isOperationInProgress;
+  if (hasPaid) {
+    if (!isReadyForManualSubmitAfterPayment) {
+      finalButtonDisabled = true;
+    }
+  }
 
 
   return (
@@ -329,7 +325,7 @@ const PalmInputForm = () => {
                 <Button 
                 type="submit" 
                 className="w-full text-lg py-6 mt-8" 
-                disabled={buttonDisabled}
+                disabled={finalButtonDisabled}
                 >
                 {isOperationInProgress ? ( 
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
@@ -352,5 +348,4 @@ const PalmInputForm = () => {
 };
 
 export default PalmInputForm;
-
     
