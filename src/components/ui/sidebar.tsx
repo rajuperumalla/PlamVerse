@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -260,30 +261,50 @@ const Sidebar = React.forwardRef<
 Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
-  React.ElementRef<typeof Button>,
-  React.ComponentProps<typeof Button>
->(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar()
+  HTMLButtonElement,
+  React.ComponentProps<typeof Button> // Accepts ButtonProps, which includes asChild and children
+>(({ className, onClick, children, asChild = false, ...props }, ref) => {
+  const { toggleSidebar } = useSidebar();
 
+  const Comp = asChild ? Slot : Button;
+
+  // Props specific to the trigger functionality or default appearance
+  const triggerProps = {
+    "data-sidebar": "trigger",
+    onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (onClick) onClick(event);
+      toggleSidebar();
+    },
+  };
+
+  if (asChild) {
+    // For Slot, we pass the ref, functional props, and allow the child to define visuals.
+    // className passed to SidebarTrigger is merged by Slot with child's className.
+    // Other props from ...props (like variant, size if set on SidebarTrigger) are passed to Slot.
+    return (
+      <Comp ref={ref} {...triggerProps} className={className} {...props}>
+        {children}
+      </Comp>
+    );
+  }
+
+  // Default rendering for Button
   return (
     <Button
       ref={ref}
-      data-sidebar="trigger"
-      variant="ghost"
-      size="icon"
-      className={cn("h-7 w-7", className)}
-      onClick={(event) => {
-        onClick?.(event)
-        toggleSidebar()
-      }}
-      {...props}
+      {...triggerProps}
+      variant="ghost" // Default visual for the trigger
+      size="icon"     // Default visual for the trigger
+      className={cn("h-7 w-7", className)} // Default class + className passed to SidebarTrigger
+      {...props} // Other props passed to SidebarTrigger (e.g., for overriding default variant/size)
     >
       <PanelLeft />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
-  )
-})
-SidebarTrigger.displayName = "SidebarTrigger"
+  );
+});
+SidebarTrigger.displayName = "SidebarTrigger";
+
 
 const SidebarRail = React.forwardRef<
   HTMLButtonElement,
