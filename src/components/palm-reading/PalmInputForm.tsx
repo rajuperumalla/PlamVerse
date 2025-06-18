@@ -31,14 +31,15 @@ const PalmInputForm = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { 
-    startLoading, 
-    stopLoading, 
-    isLoading, 
+    startOperation, 
+    stopOperation, 
+    isOperationInProgress, 
     hasPaid, 
     userName,
     createInitialReportPlaceholder,
     updateReportWithGeneratedContent,
     markReportAsGenerationFailed,
+    // isInitializing is used by the parent page, not directly here for the form logic
   } = useAppContext();
   const { toast } = useToast();
 
@@ -77,11 +78,9 @@ const PalmInputForm = () => {
       category,
     };
 
-    // Always save current form state to session storage before payment or submission attempt
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(reportInputDetails));
 
     if (!hasPaid) {
-      // Check if essential fields for *payment proceed* are filled (user might not have uploaded images yet)
       if (!dateOfBirth || !placeOfBirth || !dominantHand || !category) {
          toast({ title: "Missing Information", description: "Please fill in your birth details, dominant hand, and category before proceeding to payment. Images can be uploaded now or after payment.", variant: "destructive" });
          return;
@@ -90,18 +89,15 @@ const PalmInputForm = () => {
       return;
     }
 
-    // This part executes if hasPaid is true (i.e., manual submission or auto-submit after payment)
-    // For actual submission, both images are now strictly required.
     if (!leftPalmImageFile || !rightPalmImageFile || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
       toast({ title: "Missing Information", description: "Please fill all required fields and upload both palm images to generate your report.", variant: "destructive" });
       return;
     }
     
     sessionStorage.removeItem(SESSION_STORAGE_KEY); 
-    startLoading();
+    startOperation();
     let initialReportId = '';
     try {
-      // Use fresh data URIs from files for the AI flow and final storage
       const leftPalmDataUriFromFile = await fileToDataUri(leftPalmImageFile);
       const rightPalmDataUriFromFile = await fileToDataUri(rightPalmImageFile);
       
@@ -138,9 +134,9 @@ const PalmInputForm = () => {
         markReportAsGenerationFailed(initialReportId, "Failed to generate palm reading. An unexpected error occurred.");
       }
       toast({ title: "Generation Error", description: "Failed to generate palm reading. Please try again.", variant: "destructive" });
-      router.push('/report'); // Redirect to report page to show 'generation_failed' status
+      router.push('/report');
     } finally {
-      stopLoading();
+      stopOperation();
     }
   };
   
@@ -160,36 +156,32 @@ const PalmInputForm = () => {
       if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
         
-        // Restore form state for UI consistency, user might need to complete it
         setDateOfBirth(persistedData.dateOfBirth || '');
         setPlaceOfBirth(persistedData.placeOfBirth || '');
         setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
         setDominantHand(persistedData.dominantHand || '');
         setCategory(persistedData.category || '');
-        setLeftPalmPreview(persistedData.leftPalmDataUri || null); // Previews are Data URIs
+        setLeftPalmPreview(persistedData.leftPalmDataUri || null);
         setRightPalmPreview(persistedData.rightPalmDataUri || null);
-        // IMPORTANT: Actual File objects (leftPalmImageFile, rightPalmImageFile) cannot be restored from sessionStorage.
-        // The user MUST re-select files if they were not selected before payment or if auto-submit needs them.
-        // For auto-submit to work seamlessly, left/rightPalmDataUri *must* exist in persistedData.
-
+        
         if (
           persistedData.leftPalmDataUri &&
-          persistedData.rightPalmDataUri && // Check for Data URIs
+          persistedData.rightPalmDataUri &&
           persistedData.dateOfBirth &&
           persistedData.placeOfBirth &&
           persistedData.dominantHand &&
           persistedData.category
         ) {
           sessionStorage.removeItem(SESSION_STORAGE_KEY);
-          startLoading();
+          startOperation();
           let initialReportId = '';
           try {
             initialReportId = createInitialReportPlaceholder(persistedData);
             toast({ title: "Payment Successful", description: "Generating your report, please wait...", duration: 5000 });
 
             const aiFlowInput: GeneratePalmReadingInput = {
-              leftPalmDataUri: persistedData.leftPalmDataUri, // Use persisted Data URI
-              rightPalmDataUri: persistedData.rightPalmDataUri, // Use persisted Data URI
+              leftPalmDataUri: persistedData.leftPalmDataUri,
+              rightPalmDataUri: persistedData.rightPalmDataUri,
               dateOfBirth: persistedData.dateOfBirth,
               placeOfBirth: persistedData.placeOfBirth,
               timeOfBirth: persistedData.timeOfBirth || "Not specified",
@@ -209,18 +201,18 @@ const PalmInputForm = () => {
             toast({ title: "Auto-Generation Error", description: "Failed to auto-generate. Please verify details and submit manually.", variant: "destructive" });
             router.push('/report');
           } finally {
-            if(isLoading) stopLoading(); // Ensure loading stops if not already
+            if(isOperationInProgress) stopOperation();
           }
         } else {
           toast({ title: "Payment Successful", description: "Please complete any missing fields and upload images if necessary, then click 'Generate Palm Reading'." });
-          if (isLoading) stopLoading(); 
+          if (isOperationInProgress) stopOperation(); 
         }
       } else {
         toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
-         if (isLoading) stopLoading();
+         if (isOperationInProgress) stopOperation();
       }
     }
-  }, [searchParams, hasPaid, router, toast, startLoading, stopLoading, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, isLoading, userName]);
+  }, [searchParams, hasPaid, router, toast, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, isOperationInProgress, userName]);
 
   useEffect(() => {
     attemptAutoSubmitAfterPayment();
@@ -241,7 +233,6 @@ const PalmInputForm = () => {
     </div>
   );
 
-  // Determine if manual submission is ready (all fields + files if payment done)
   const isReadyForManualSubmit = 
     leftPalmImageFile && 
     rightPalmImageFile && 
@@ -250,7 +241,6 @@ const PalmInputForm = () => {
     dominantHand && 
     category;
 
-  // Determine if ready to proceed to payment (key fields filled, images optional at this stage)
   const isReadyForPayment = 
     dateOfBirth && 
     placeOfBirth && 
@@ -273,36 +263,35 @@ const PalmInputForm = () => {
               <div className="space-y-2">
                 <Label htmlFor="leftPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Left Palm Image *</Label>
                 {renderImagePreview(leftPalmPreview, "Left Palm", "palm hand")}
-                <Input id="leftPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setLeftPalmImageFile, setLeftPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
+                <Input id="leftPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setLeftPalmImageFile, setLeftPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress}/>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rightPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Right Palm Image *</Label>
                 {renderImagePreview(rightPalmPreview, "Right Palm", "palm hand")}
-                <Input id="rightPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setRightPalmImageFile, setRightPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
+                <Input id="rightPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setRightPalmImageFile, setRightPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress}/>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="dob" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Date of Birth *</Label>
-                <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)}  />
+                <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} disabled={isOperationInProgress} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth (Optional)</Label>
-                <Input id="tob" type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} />
+                <Input id="tob" type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} disabled={isOperationInProgress}/>
               </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth *</Label>
-              <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country"  />
+              <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} />
             </div>
-
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="dominantHand" className="text-base flex items-center gap-2"><UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *</Label>
-                <Select onValueChange={setDominantHand} value={dominantHand} >
+                <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress}>
                   <SelectTrigger id="dominantHand">
                     <SelectValue placeholder="Select your dominant hand" />
                   </SelectTrigger>
@@ -314,7 +303,7 @@ const PalmInputForm = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
-                <Select onValueChange={setCategory} value={category} >
+                <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress}>
                   <SelectTrigger id="category">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
@@ -331,9 +320,9 @@ const PalmInputForm = () => {
             <Button 
               type="submit" 
               className="w-full text-lg py-6 mt-8" 
-              disabled={isLoading || (hasPaid && !isReadyForManualSubmit) || (!hasPaid && !isReadyForPayment)}
+              disabled={isOperationInProgress || (hasPaid && !isReadyForManualSubmit) || (!hasPaid && !isReadyForPayment)}
             >
-              {isLoading ? (
+              {isOperationInProgress && (hasPaid || (!hasPaid && isReadyForPayment)) ? ( // Show loader only if an operation is relevant to current step
                 <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
               ) : (
                 hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
@@ -353,4 +342,3 @@ const PalmInputForm = () => {
 };
 
 export default PalmInputForm;
-

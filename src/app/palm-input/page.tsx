@@ -5,35 +5,30 @@ import { useRouter } from 'next/navigation';
 import PalmInputForm from '@/components/palm-reading/PalmInputForm';
 import { useAppContext } from '@/context/AppContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2 } from 'lucide-react';
 
-// It's good practice to wrap components that use useSearchParams in Suspense
 function PalmInputPageComponent() {
-  const { isAuthenticated, isLoading: contextIsLoading, hasPaid } = useAppContext();
+  const { isAuthenticated, isInitializing, hasPaid } = useAppContext(); // Use isInitializing
   const router = useRouter();
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-        if (!isAuthenticated) {
-            router.push('/');
-        }
-        setIsCheckingAuth(false);
-    }, 100); 
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, router]);
+    if (!isInitializing) { // Wait for context to initialize
+        const timer = setTimeout(() => { // Keep delay for auth check post-init
+            if (!isAuthenticated) {
+                router.push('/');
+            }
+            setAuthCheckComplete(true);
+        }, 100); 
+        return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, router, isInitializing]);
 
-  if (isCheckingAuth || contextIsLoading) {
+  if (isInitializing || !authCheckComplete) { // Primary loader based on isInitializing
     return (
-      <div className="space-y-6 p-8">
-        <Skeleton className="h-12 w-1/2 mx-auto" />
-        <Skeleton className="h-8 w-3/4 mx-auto" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-64 w-full" />
-        </div>
-        <Skeleton className="h-10 w-full mt-4" />
-        <Skeleton className="h-10 w-full mt-4" />
-        <Skeleton className="h-12 w-full mt-8" />
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Loading form data...</p>
       </div>
     );
   }
@@ -43,7 +38,12 @@ function PalmInputPageComponent() {
 
 export default function PalmInputPage() {
   return (
-    <Suspense fallback={<div>Loading payment status...</div>}> {/* Suspense for useSearchParams */}
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    }>
       <PalmInputPageComponent />
     </Suspense>
   );

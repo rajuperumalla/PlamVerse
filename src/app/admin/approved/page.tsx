@@ -10,7 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertTriangle, LogIn, Eye, Archive, FileCheck2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDesc, DialogFooter } from "@/components/ui/dialog"; // Renamed DialogDescription
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription as DialogDesc, DialogFooter } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
 
 export default function AdminApprovedReportsPage() {
@@ -18,8 +18,9 @@ export default function AdminApprovedReportsPage() {
     isAuthenticated,
     isAdmin,
     reports, 
-    isLoading: contextIsLoading,
-    loadSampleReports, // In case admin wants to repopulate if all reports are processed
+    isInitializing,
+    isOperationInProgress,
+    loadSampleReports,
   } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
@@ -29,7 +30,7 @@ export default function AdminApprovedReportsPage() {
   const [isViewReportDialogOpen, setIsViewReportDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (!contextIsLoading) {
+    if (!isInitializing) { // Wait for context to initialize
         if (!isAuthenticated) {
             router.push('/'); 
         } else if (!isAdmin) {
@@ -38,7 +39,7 @@ export default function AdminApprovedReportsPage() {
         }
         setAuthCheckComplete(true);
     }
-  }, [isAuthenticated, isAdmin, router, toast, contextIsLoading]);
+  }, [isAuthenticated, isAdmin, router, toast, isInitializing]);
 
   const approvedReports = reports.filter(report => report.status === 'approved');
 
@@ -47,16 +48,16 @@ export default function AdminApprovedReportsPage() {
     setIsViewReportDialogOpen(true);
   };
 
-  if (!authCheckComplete || (contextIsLoading && !reports.length)) {
+  if (isInitializing || !authCheckComplete) {
     return (
         <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
             <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-            <p>Loading approved reports...</p>
+            <p>Loading approved reports data...</p>
         </div>
     );
   }
   
-  if (authCheckComplete && (!isAuthenticated || !isAdmin)) {
+  if (!isAuthenticated || !isAdmin) { // Secondary check
     return (
         <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
              <Card className="w-full max-w-md text-center p-6">
@@ -87,18 +88,13 @@ export default function AdminApprovedReportsPage() {
                 <CardDescription>These reports have been approved and are visible to users.</CardDescription>
             </CardHeader>
             <CardContent className="p-0 flex-1 flex flex-col">
-                {contextIsLoading && approvedReports.length === 0 ? (
-                <div className="flex-1 flex justify-center items-center py-12">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <p className="ml-3 text-muted-foreground">Loading reports...</p>
-                </div>
-                ) : !contextIsLoading && approvedReports.length === 0 ? (
+                {approvedReports.length === 0 ? (
                 <div className="flex-1 flex flex-col justify-center items-center text-center py-10 px-4 text-muted-foreground">
                     <Archive className="mx-auto h-12 w-12 mb-3 text-gray-400" />
                     <p>No reports have been approved yet.</p>
-                     <Button onClick={loadSampleReports} className="mt-4" variant="outline" size="sm" disabled={contextIsLoading}>
-                        {contextIsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        Load Sample Reports (for testing)
+                     <Button onClick={loadSampleReports} className="mt-4" variant="outline" size="sm" disabled={isOperationInProgress}>
+                        {isOperationInProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Load Sample Reports
                     </Button>
                 </div>
                 ) : (
@@ -123,7 +119,7 @@ export default function AdminApprovedReportsPage() {
                             {report.lastUpdateDate && !isNaN(new Date(report.lastUpdateDate).getTime()) ? new Date(report.lastUpdateDate).toLocaleDateString() : 'N/A'}
                             </TableCell>
                             <TableCell className="text-right">
-                                <Button variant="outline" size="sm" onClick={() => openViewReportDialog(report)}>
+                                <Button variant="outline" size="sm" onClick={() => openViewReportDialog(report)} disabled={isOperationInProgress}>
                                     <Eye className="mr-2 h-4 w-4"/> View
                                 </Button>
                             </TableCell>
@@ -146,13 +142,13 @@ export default function AdminApprovedReportsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
               {selectedReportForView.inputDetails.leftPalmDataUri && 
                   <div className="text-center">
-                  <Image src={selectedReportForView.inputDetails.leftPalmDataUri} alt="Left Palm" width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand" />
+                  <Image src={selectedReportForView.inputDetails.leftPalmDataUri} alt="Left Palm" width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand"/>
                   <p className="text-xs text-muted-foreground mt-1">Left Palm</p>
                 </div>
               }
               {selectedReportForView.inputDetails.rightPalmDataUri && 
                 <div className="text-center">
-                  <Image src={selectedReportForView.inputDetails.rightPalmDataUri} alt="Right Palm" width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand" />
+                  <Image src={selectedReportForView.inputDetails.rightPalmDataUri} alt="Right Palm" width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand"/>
                   <p className="text-xs text-muted-foreground mt-1">Right Palm</p>
                 </div>
               }

@@ -14,7 +14,8 @@ export default function AdminDashboardPage() {
     isAuthenticated,
     isAdmin,
     reports, 
-    isLoading: contextIsLoading,
+    isInitializing, // Use new state
+    // isOperationInProgress can be used if dashboard performs actions
   } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
@@ -22,7 +23,7 @@ export default function AdminDashboardPage() {
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
   useEffect(() => {
-    if (!contextIsLoading) {
+    if (!isInitializing) { // Wait for context to initialize
         if (!isAuthenticated) {
             router.push('/'); 
         } else if (!isAdmin) {
@@ -31,23 +32,23 @@ export default function AdminDashboardPage() {
         }
         setAuthCheckComplete(true);
     }
-  }, [isAuthenticated, isAdmin, router, toast, contextIsLoading]);
+  }, [isAuthenticated, isAdmin, router, toast, isInitializing]);
 
   const pendingReviewReports = reports.filter(report => report.status === 'pending_review');
   const approvedReports = reports.filter(report => report.status === 'approved');
   const totalReports = reports.length;
 
-
-  if (!authCheckComplete || (contextIsLoading && !reports.length)) {
+  if (isInitializing || !authCheckComplete) {
     return (
         <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
             <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-            <p>Loading dashboard...</p>
+            <p>Loading dashboard data...</p>
         </div>
     );
   }
   
-  if (authCheckComplete && (!isAuthenticated || !isAdmin)) {
+  // This check is secondary, primary auth redirect handled by useEffect
+  if (!isAuthenticated || !isAdmin) {
     return (
         <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
              <Card className="w-full max-w-md text-center p-6">
@@ -104,7 +105,6 @@ export default function AdminDashboardPage() {
                 </CardContent>
             </Card>
         </div>
-        {/* Tables for Approved and Completed reports have been moved to /admin/approved page */}
     </div>
   );
 }

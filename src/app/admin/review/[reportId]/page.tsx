@@ -21,11 +21,12 @@ export default function AdminReviewReportPage() {
   const { 
     getReportById, 
     approveReport, 
-    startLoading, 
-    stopLoading, 
-    isLoading: contextIsLoading,
+    startOperation, 
+    stopOperation, 
+    isOperationInProgress,
     isAuthenticated,
-    isAdmin 
+    isAdmin,
+    isInitializing 
   } = useAppContext();
   const { toast } = useToast();
 
@@ -39,29 +40,31 @@ export default function AdminReviewReportPage() {
   const [generatedReportPreview, setGeneratedReportPreview] = useState<string | null>(null);
 
   useEffect(() => {
-     if (!isAuthenticated) {
-      router.push('/');
-    } else if (!isAdmin) {
-      toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
-      router.push('/');
-    } else {
-      const foundReport = getReportById(reportId);
-      setReport(foundReport);
-      if (foundReport && foundReport.content && !expertAnalysisNotes) {
-        // Pre-fill expert notes if report already has content (e.g. if admin revisits)
-        // This is optional, admin can overwrite
+    if (!isInitializing) { // Wait for context to initialize
+      if (!isAuthenticated) {
+        router.push('/');
+      } else if (!isAdmin) {
+        toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
+        router.push('/');
+      } else {
+        const foundReport = getReportById(reportId);
+        setReport(foundReport);
+        // Removed pre-fill logic for expertAnalysisNotes as it's a fresh input now
       }
+      setAuthCheckComplete(true);
     }
-    setAuthCheckComplete(true);
-  }, [isAuthenticated, isAdmin, reportId, getReportById, router, toast, expertAnalysisNotes]);
+  }, [isAuthenticated, isAdmin, reportId, getReportById, router, toast, isInitializing]);
 
   const handleGetAiSuggestions = async () => {
-    if (!report) return;
+    if (!report || !report.content) { // Ensure report and initial content exist
+        toast({ title: "Missing Content", description: "Initial AI report content is missing to get suggestions.", variant: "destructive"});
+        return;
+    }
     setIsAiSuggestionLoading(true);
     setAiSuggestion(null);
     try {
       const result = await suggestReportImprovements({ 
-        report: report.content, // Suggest improvements based on the *initial* AI report
+        report: report.content, 
         adminGuidance: adminGuidanceForSuggestions 
       });
       setAiSuggestion(result.suggestions);
@@ -80,12 +83,12 @@ export default function AdminReviewReportPage() {
       toast({ title: "Missing Input", description: "Please provide your expert analysis and directives.", variant: "destructive" });
       return;
     }
-    startLoading();
+    startOperation();
     setGeneratedReportPreview(null);
     try {
       const result = await generatePalmReading({
-        ...report.inputDetails, // Spread all original input details
-        category: report.category, // Ensure category is passed
+        ...report.inputDetails, 
+        category: report.category, 
         expertAnalysis: expertAnalysisNotes,
       });
       setGeneratedReportPreview(result.report);
@@ -94,7 +97,7 @@ export default function AdminReviewReportPage() {
       console.error("Error generating report with expert analysis:", error);
       toast({ title: "Generation Error", description: `Failed to generate report with your analysis. Please try again.`, variant: "destructive" });
     } finally {
-      stopLoading();
+      stopOperation();
     }
   };
 
@@ -103,30 +106,29 @@ export default function AdminReviewReportPage() {
       toast({ title: "Missing Content", description: "No AI-generated report (from your analysis) to approve.", variant: "destructive" });
       return;
     }
-    startLoading();
+    startOperation();
     try {
       approveReport(report.id, generatedReportPreview); 
       toast({ title: "Report Approved & Live", description: `Report ID ${report.id.substring(0,10)}... has been approved with your guided content.` });
-      router.push('/admin'); 
+      router.push('/admin/approved'); 
     } catch (error) {
       console.error("Error during final approval:", error);
       toast({ title: "Final Approval Error", description: `Failed to approve report. Please try again.`, variant: "destructive" });
     } finally {
-      stopLoading();
+      stopOperation();
     }
   };
 
   const handleApproveOriginalAsIs = () => {
     if (!report) return;
-    startLoading();
-    // Approves the report.content which is the initial AI generation
+    startOperation();
     approveReport(report.id, report.content); 
     toast({ title: "Original Report Approved As-Is", description: `Report ID ${report.id.substring(0,10)}... (initial AI version) has been approved.` });
-    router.push('/admin');
-    stopLoading(); 
+    router.push('/admin/approved');
+    stopOperation(); 
   };
 
-  if (!authCheckComplete || contextIsLoading && !report) {
+  if (isInitializing || !authCheckComplete || (report === null && !isInitializing)) { // report can be null if still fetching, undefined if not found after init
     return (
       <div className="flex flex-col justify-center items-center min-h-[calc(100vh-200px)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
@@ -135,52 +137,52 @@ export default function AdminReviewReportPage() {
     );
   }
 
-  if (!report) {
+  if (report === undefined) { // Explicitly check for undefined (not found after init)
     return (
       <div className="flex flex-col justify-center items-center min-h-[calc(100vh-200px)] text-center">
         <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
         <h1 className="text-2xl font-bold">Report Not Found</h1>
         <p className="text-muted-foreground mb-4">The report you are looking for does not exist or could not be loaded.</p>
-        <Button onClick={() => router.push('/admin')}><ArrowLeft className="mr-2 h-4 w-4" />Back to Admin Panel</Button>
+        <Button onClick={() => router.push('/admin/workflow')}><ArrowLeft className="mr-2 h-4 w-4" />Back to Workflow</Button>
       </div>
     );
   }
   
-  if (report.status !== 'pending_review') {
+  if (report && report.status !== 'pending_review') {
      return (
       <div className="flex flex-col justify-center items-center min-h-[calc(100vh-200px)] text-center">
         <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
         <h1 className="text-2xl font-bold">Report Not Pending Review</h1>
         <p className="text-muted-foreground mb-4">This report (ID: {report.id.substring(0,10)}...) is not currently pending review. Its status is: {report.status}.</p>
-        <Button onClick={() => router.push('/admin')}><ArrowLeft className="mr-2 h-4 w-4" />Back to Admin Panel</Button>
+        <Button onClick={() => router.push('/admin/workflow')}><ArrowLeft className="mr-2 h-4 w-4" />Back to Workflow</Button>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto py-8 max-w-4xl">
-      <Button onClick={() => router.push('/admin')} variant="outline" className="mb-6">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Admin Panel
+      <Button onClick={() => router.push('/admin/workflow')} variant="outline" className="mb-6">
+        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Workflow
       </Button>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl font-headline">Review Report: {report.id.substring(0,10)}...</CardTitle>
           <CardDescription>
-            Category: {report.category} | Submitted by: {report.userName || 'N/A'} on {report.submissionDate ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}
+            Category: {report.category} | Submitted by: {report.userName || 'N/A'} on {report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
             {report.inputDetails.leftPalmDataUri && 
               <div className="text-center">
-                <Image src={report.inputDetails.leftPalmDataUri} alt="Left Palm" width={300} height={225} className="rounded-md border mx-auto shadow" data-ai-hint="palm hand" />
+                <Image src={report.inputDetails.leftPalmDataUri} alt="Left Palm" width={300} height={225} className="rounded-md border mx-auto shadow" data-ai-hint="palm hand"/>
                 <p className="text-xs text-muted-foreground mt-1">Left Palm</p>
               </div>
             }
             {report.inputDetails.rightPalmDataUri && 
                <div className="text-center">
-                <Image src={report.inputDetails.rightPalmDataUri} alt="Right Palm" width={300} height={225} className="rounded-md border mx-auto shadow" data-ai-hint="palm hand" />
+                <Image src={report.inputDetails.rightPalmDataUri} alt="Right Palm" width={300} height={225} className="rounded-md border mx-auto shadow" data-ai-hint="palm hand"/>
                 <p className="text-xs text-muted-foreground mt-1">Right Palm</p>
               </div>
             }
@@ -189,13 +191,12 @@ export default function AdminReviewReportPage() {
           <div>
             <Label className="font-semibold text-lg">Initial AI Generated Content (From User Submission):</Label>
             <ScrollArea className="h-[150px] w-full rounded-md border p-4 mt-1 bg-muted/20 text-sm shadow-inner">
-              {report.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
+              {report.content && report.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
                 <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
               ))}
             </ScrollArea>
           </div>
           
-          {/* Helper: AI Suggestions for Admin */}
           <div className="space-y-3 border-t pt-6">
               <Label htmlFor="adminGuidanceForSuggestions" className="text-md font-medium flex items-center gap-1.5"><MessageCircleQuestion className="h-5 w-5 text-primary"/>Your Guidance for AI Suggestions (Optional Helper)</Label>
               <Textarea
@@ -205,14 +206,14 @@ export default function AdminReviewReportPage() {
                   placeholder="e.g., 'Focus on career aspects for initial suggestions', 'Check clarity on relationships'"
                   rows={2}
                   className="text-sm"
-                  disabled={contextIsLoading || isAiSuggestionLoading}
+                  disabled={isOperationInProgress || isAiSuggestionLoading}
               />
               <Button 
                   onClick={handleGetAiSuggestions} 
                   variant="outline" 
                   size="sm"
                   className="w-full"
-                  disabled={contextIsLoading || isAiSuggestionLoading}
+                  disabled={isOperationInProgress || isAiSuggestionLoading}
               >
                   {isAiSuggestionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                   Get AI Suggestions (to help formulate your analysis)
@@ -244,7 +245,6 @@ export default function AdminReviewReportPage() {
               )}
           </div>
           
-          {/* Main Admin Input Area */}
           <div className="space-y-2 border-t pt-6">
             <Label htmlFor="expertAnalysisNotes" className="text-md font-medium flex items-center gap-1.5"><Brain className="h-5 w-5 text-primary"/>Admin's Expert Analysis & Directives for AI</Label>
             <Textarea
@@ -254,15 +254,15 @@ export default function AdminReviewReportPage() {
               placeholder="Enter your comprehensive analysis, interpretations, and directives here. The AI will use this as the primary basis for generating the report."
               rows={8}
               className="text-sm"
-              disabled={contextIsLoading}
+              disabled={isOperationInProgress}
             />
              <Button 
                   onClick={handleGenerateWithExpertAnalysis} 
-                  disabled={contextIsLoading || !expertAnalysisNotes.trim()} 
+                  disabled={isOperationInProgress || !expertAnalysisNotes.trim()} 
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2 py-3 text-base"
                   title="AI will use your analysis above to generate a new report version."
               >
-                  {contextIsLoading && expertAnalysisNotes.trim() && !generatedReportPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                  {isOperationInProgress && expertAnalysisNotes.trim() && !generatedReportPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                   Generate Report using My Analysis
               </Button>
           </div>
@@ -277,10 +277,10 @@ export default function AdminReviewReportPage() {
               </ScrollArea>
               <Button 
                 onClick={handleFinalApproveForCustomer} 
-                disabled={contextIsLoading}
+                disabled={isOperationInProgress}
                 className="w-full bg-green-600 hover:bg-green-700 text-white mt-2 py-3 text-base"
               >
-                {contextIsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                {isOperationInProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
                 Confirm & Approve This Version
               </Button>
             </div>
@@ -290,7 +290,7 @@ export default function AdminReviewReportPage() {
             <Button 
                 onClick={handleApproveOriginalAsIs} 
                 variant="secondary" 
-                disabled={contextIsLoading || !!generatedReportPreview} 
+                disabled={isOperationInProgress || !!generatedReportPreview} 
                 title={generatedReportPreview ? "A new version based on your analysis exists. Approve that or clear it first." : "Approve the initial AI report (from user submission) without your direct analysis."}
                 className="w-full sm:w-auto py-3 text-base"
             >

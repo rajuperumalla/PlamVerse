@@ -8,20 +8,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { FileText, RefreshCw, ArrowLeft, MessageSquarePlus, Send, Loader2, ShieldCheck, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useAppContext, type ReportData } from '@/context/AppContext'; // Import ReportData
+import { useAppContext, type ReportData } from '@/context/AppContext'; 
 import { useToast } from '@/hooks/use-toast';
 import { processUserReportFeedback } from '@/ai/flows/process-user-report-feedback';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 interface ReportDisplayProps {
-  report: ReportData; // Changed from reportContent: string to report: ReportData
+  report: ReportData;
 }
 
-const ReportDisplay = ({ report }: ReportDisplayProps) => { // Destructure report
+const ReportDisplay = ({ report }: ReportDisplayProps) => {
   const router = useRouter();
   const { toast } = useToast();
-  const { isLoading: contextIsLoading, startLoading, stopLoading, clearCurrentUserReportStorage, setHasPaid } = useAppContext();
+  const { isOperationInProgress, startOperation, stopOperation, clearCurrentUserReportStorage, setHasPaid } = useAppContext();
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
 
@@ -36,7 +36,7 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => { // Destructure repor
       });
       return;
     }
-    startLoading();
+    startOperation();
     try {
       const result = await processUserReportFeedback({
         originalReport: report.content,
@@ -56,12 +56,12 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => { // Destructure repor
         variant: 'destructive',
       });
     } finally {
-      stopLoading();
+      stopOperation();
     }
   };
 
   const handleStartNewReading = () => {
-    clearCurrentUserReportStorage(); // Clear the specific report for the user
+    clearCurrentUserReportStorage(); 
     setHasPaid(false); 
     router.push('/palm-input');
   }
@@ -69,7 +69,7 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => { // Destructure repor
   const handleDownloadPdf = () => {
     const reportElement = document.getElementById('report-content-area-for-pdf');
     if (reportElement) {
-      startLoading();
+      startOperation();
       toast({ title: 'Preparing PDF...', description: 'Please wait while your report is being generated.' });
       html2canvas(reportElement, { 
         scale: 2, 
@@ -82,7 +82,7 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => { // Destructure repor
         const imgProps = pdf.getImageProperties(imgData);
         const pdfPageWidth = pdf.internal.pageSize.getWidth();
         const pdfPageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 40; // 20 points margin on each side
+        const margin = 40;
 
         const usableWidth = pdfPageWidth - 2 * margin;
         const usableHeight = pdfPageHeight - 2 * margin;
@@ -90,13 +90,11 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => { // Destructure repor
         let finalPdfWidth = imgProps.width;
         let finalPdfHeight = imgProps.height;
 
-        // Scale image to fit usable width
         if (finalPdfWidth > usableWidth) {
           finalPdfHeight = (usableWidth / finalPdfWidth) * finalPdfHeight;
           finalPdfWidth = usableWidth;
         }
 
-        // Scale image to fit usable height (if still too tall)
         if (finalPdfHeight > usableHeight) {
           finalPdfWidth = (usableHeight / finalPdfHeight) * finalPdfWidth;
           finalPdfHeight = usableHeight;
@@ -112,7 +110,7 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => { // Destructure repor
         console.error("Error generating PDF:", err);
         toast({ title: 'PDF Generation Failed', description: 'Could not generate PDF. Please try again.', variant: 'destructive' });
       }).finally(() => {
-        stopLoading();
+        stopOperation();
       });
     } else {
       toast({ title: 'Error', description: 'Report content not found for PDF generation.', variant: 'destructive' });
@@ -132,11 +130,11 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => { // Destructure repor
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px] w-full rounded-md border p-0 bg-background shadow-inner">
-            <div id="report-content-area-for-pdf" className="p-6 bg-white dark:bg-gray-900 text-black dark:text-white"> {/* Ensure PDF content has explicit bg/fg for capture */}
+            <div id="report-content-area-for-pdf" className="p-6 bg-white dark:bg-gray-900 text-black dark:text-white">
               <h2 className="text-xl font-bold font-headline mb-2">Palm Reading Report</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">For: {report.userName || "Valued User"}</p>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Category: {report.category}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Date: {new Date(report.submissionDate).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Date: {report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}</p>
               <hr className="my-4 border-gray-300 dark:border-gray-700"/>
               {reportParagraphs.length > 0 ? (
                 reportParagraphs.map((paragraph, index) => (
@@ -152,7 +150,7 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => { // Destructure repor
 
           <div className="mt-6 border-t pt-6">
             {!showFeedbackForm ? (
-              <Button variant="outline" onClick={() => setShowFeedbackForm(true)} className="w-full sm:w-auto">
+              <Button variant="outline" onClick={() => setShowFeedbackForm(true)} className="w-full sm:w-auto" disabled={isOperationInProgress}>
                 <MessageSquarePlus className="mr-2 h-4 w-4" /> Provide Feedback / Suggest Improvements
               </Button>
             ) : (
@@ -166,18 +164,18 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => { // Destructure repor
                     placeholder="What did we miss? How can we improve this report?"
                     rows={4}
                     className="mt-2"
-                    disabled={contextIsLoading}
+                    disabled={isOperationInProgress}
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={handleFeedbackSubmit} disabled={contextIsLoading || !feedbackText.trim()} className="w-full sm:w-auto">
-                    {contextIsLoading && feedbackText.trim() ? (
+                  <Button onClick={handleFeedbackSubmit} disabled={isOperationInProgress || !feedbackText.trim()} className="w-full sm:w-auto">
+                    {isOperationInProgress && feedbackText.trim() ? (
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
                     ) : (
                       <><Send className="mr-2 h-4 w-4" /> Submit Feedback</>
                     )}
                   </Button>
-                  <Button variant="ghost" onClick={() => setShowFeedbackForm(false)} disabled={contextIsLoading}>
+                  <Button variant="ghost" onClick={() => setShowFeedbackForm(false)} disabled={isOperationInProgress}>
                     Cancel
                   </Button>
                 </div>
@@ -186,13 +184,13 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => { // Destructure repor
           </div>
         </CardContent>
         <CardFooter className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-6">
-          <Button onClick={handleDownloadPdf} variant="secondary" className="w-full sm:w-auto" disabled={contextIsLoading}>
+          <Button onClick={handleDownloadPdf} variant="secondary" className="w-full sm:w-auto" disabled={isOperationInProgress}>
             <Download className="mr-2 h-4 w-4" /> Download as PDF
           </Button>
-          <Button onClick={handleStartNewReading} className="w-full sm:w-auto">
+          <Button onClick={handleStartNewReading} className="w-full sm:w-auto" disabled={isOperationInProgress}>
             <RefreshCw className="mr-2 h-4 w-4" /> Start New Reading
           </Button>
-           <Button onClick={() => router.push('/palm-input')} variant="outline" className="w-full sm:w-auto">
+           <Button onClick={() => router.push('/palm-input')} variant="outline" className="w-full sm:w-auto" disabled={isOperationInProgress}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Input Page
           </Button>
         </CardFooter>

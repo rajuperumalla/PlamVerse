@@ -4,42 +4,46 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ReportDisplay from '@/components/palm-reading/ReportDisplay';
 import { useAppContext, type ReportData } from '@/context/AppContext';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Info, Hourglass, FileText, Loader2, ServerCrash, Sparkles } from 'lucide-react'; 
+import { AlertTriangle, Info, Hourglass, Loader2, ServerCrash, Sparkles } from 'lucide-react'; 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 
 export default function ReportPage() {
-  const { isAuthenticated, isLoading: contextIsLoading, getCurrentUserReport, userName } = useAppContext();
+  const { isAuthenticated, isInitializing, getCurrentUserReport, userName, isOperationInProgress } = useAppContext(); // Use isInitializing
   const router = useRouter();
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [currentUserReport, setCurrentUserReport] = useState<ReportData | undefined | null>(null); // null means checking, undefined means no report found
+  const [currentUserReport, setCurrentUserReport] = useState<ReportData | undefined | null>(null);
 
   useEffect(() => {
-    if (!userName) { // If no userName, means not logged in or context not ready
-        setIsCheckingAuth(true); // Keep checking
-        const timer = setTimeout(() => { // Add a small delay before redirecting
-             if (!isAuthenticated && !contextIsLoading) { // check isAuthenticated after delay
-                router.push('/');
-             }
-        }, 500);
-        return () => clearTimeout(timer);
+    if (isInitializing) { // If context is still initializing, wait.
+      setCurrentUserReport(null); // Explicitly set to loading state
+      return;
+    }
+
+    // Context is initialized, proceed with auth and report fetching logic
+    if (!userName) {
+        if (!isAuthenticated) { // Check isAuthenticated only after isInitializing is false
+            router.push('/');
+            return; 
+        }
+        // If authenticated but userName is somehow null (shouldn't happen with proper login)
+        // or if context is ready but no userName, treat as error or redirect.
+        // For now, let's assume this means we can't fetch a user-specific report.
+        setCurrentUserReport(undefined); // No report can be fetched
+        return;
     }
 
     const report = getCurrentUserReport();
     setCurrentUserReport(report);
-    setIsCheckingAuth(false); // Auth check is complete (or user identified)
 
-    if (!report && !contextIsLoading && userName) {
-        // If definitively no report for this user and not loading, redirect to input.
+    if (!report && userName) { // userName exists, context initialized, but no report found
         const timer = setTimeout(() => router.push('/palm-input'), 100);
         return () => clearTimeout(timer);
     }
 
-  }, [isAuthenticated, getCurrentUserReport, router, contextIsLoading, userName]);
+  }, [isAuthenticated, getCurrentUserReport, router, isInitializing, userName]);
 
 
-  if (isCheckingAuth || currentUserReport === null || (contextIsLoading && !currentUserReport)) { 
+  if (isInitializing || currentUserReport === null) { 
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
@@ -48,7 +52,7 @@ export default function ReportPage() {
     );
   }
 
-  if (!currentUserReport) { // User is authenticated, but no report object found for them
+  if (!currentUserReport) { // userName exists, context initialized, but no report object found
     return (
       <div className="flex flex-col items-center justify-center text-center py-12 min-h-[calc(100vh-200px)]">
         <Info className="h-16 w-16 text-blue-500 mb-4" />
@@ -86,7 +90,7 @@ export default function ReportPage() {
               </p>
             </CardContent>
             <CardFooter>
-                <Button onClick={() => router.refresh()} variant="outline" className="w-full">Refresh Status</Button>
+                <Button onClick={() => router.refresh()} variant="outline" className="w-full" disabled={isOperationInProgress}>Refresh Status</Button>
             </CardFooter>
           </Card>
         </div>
@@ -142,14 +146,14 @@ export default function ReportPage() {
               </p>
             </CardContent>
              <CardFooter>
-                <Button onClick={() => router.refresh()} variant="outline" className="w-full">Refresh Status</Button>
+                <Button onClick={() => router.refresh()} variant="outline" className="w-full" disabled={isOperationInProgress}>Refresh Status</Button>
             </CardFooter>
           </Card>
         </div>
       );
     case 'approved':
       return <ReportDisplay report={currentUserReport} />;
-    default: // Should not happen with defined statuses
+    default: 
       return (
         <div className="flex flex-col items-center justify-center text-center py-12 min-h-[calc(100vh-200px)]">
           <AlertTriangle className="h-16 w-16 text-destructive mb-4" />

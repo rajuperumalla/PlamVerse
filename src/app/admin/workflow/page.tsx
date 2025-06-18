@@ -16,7 +16,8 @@ export default function AdminWorkflowPage() {
     isAuthenticated,
     isAdmin,
     reports, 
-    isLoading: contextIsLoading,
+    isInitializing,
+    isOperationInProgress,
     loadSampleReports,
   } = useAppContext();
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function AdminWorkflowPage() {
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
   useEffect(() => {
-    if (!contextIsLoading) {
+    if (!isInitializing) { // Wait for context to initialize
         if (!isAuthenticated) {
             router.push('/'); 
         } else if (!isAdmin) {
@@ -34,20 +35,20 @@ export default function AdminWorkflowPage() {
         }
         setAuthCheckComplete(true);
     }
-  }, [isAuthenticated, isAdmin, router, toast, contextIsLoading]);
+  }, [isAuthenticated, isAdmin, router, toast, isInitializing]);
 
   const pendingReviewReports = reports.filter(report => report.status === 'pending_review');
 
-  if (!authCheckComplete || (contextIsLoading && !reports.length)) {
+  if (isInitializing || !authCheckComplete) {
     return (
         <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
             <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-            <p>Loading workflow items...</p>
+            <p>Loading workflow data...</p>
         </div>
     );
   }
   
-  if (authCheckComplete && (!isAuthenticated || !isAdmin)) {
+  if (!isAuthenticated || !isAdmin) { // Secondary check
     return (
         <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
              <Card className="w-full max-w-md text-center p-6">
@@ -69,7 +70,7 @@ export default function AdminWorkflowPage() {
   return (
     <div className="space-y-6">
         <h1 className="text-2xl font-semibold">Pending Reviews Workflow</h1>
-        <Card className="flex flex-col h-full"> {/* Ensure Card can grow */}
+        <Card className="flex flex-col h-full">
             <CardHeader className="px-4 py-4 border-b">
                 <CardTitle className="text-xl flex items-center gap-2 font-headline">
                 <Columns className="h-6 w-6 text-amber-500" />
@@ -77,23 +78,18 @@ export default function AdminWorkflowPage() {
                 </CardTitle>
                 <CardDescription>Select a report to review and process.</CardDescription>
             </CardHeader>
-            <CardContent className="p-0 flex-1 flex flex-col"> {/* Allow CardContent to manage flex children */}
-                {contextIsLoading && pendingReviewReports.length === 0 ? (
-                <div className="flex-1 flex justify-center items-center py-12">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <p className="ml-3 text-muted-foreground">Loading reports...</p>
-                </div>
-                ) : !contextIsLoading && pendingReviewReports.length === 0 ? (
+            <CardContent className="p-0 flex-1 flex flex-col">
+                {pendingReviewReports.length === 0 ? (
                 <div className="flex-1 flex flex-col justify-center items-center text-center py-10 px-4 text-muted-foreground">
                     <Archive className="mx-auto h-12 w-12 mb-3 text-gray-400" />
                     <p>No reports currently pending review.</p>
-                    <Button onClick={loadSampleReports} className="mt-4" variant="outline" size="sm" disabled={contextIsLoading}>
-                        {contextIsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    <Button onClick={loadSampleReports} className="mt-4" variant="outline" size="sm" disabled={isOperationInProgress}>
+                        {isOperationInProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         Load Sample Reports
                     </Button>
                 </div>
                 ) : (
-                <ScrollArea className="h-full"> {/* ScrollArea takes height from parent */}
+                <ScrollArea className="h-full">
                     <Table>
                     <TableHeader>
                         <TableRow>
@@ -114,7 +110,7 @@ export default function AdminWorkflowPage() {
                             {report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}
                             </TableCell>
                             <TableCell className="text-right">
-                                <Button asChild variant="outline" size="sm">
+                                <Button asChild variant="outline" size="sm" disabled={isOperationInProgress}>
                                 <Link href={`/admin/review/${report.id}`}>
                                     <Edit className="mr-2 h-4 w-4"/> Review
                                 </Link>

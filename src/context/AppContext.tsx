@@ -18,7 +18,7 @@ export interface ReportPalmInputDetails {
 export interface ReportData {
   id: string;
   content: string; // Holds AI content or error messages for generation_failed
-  status: 'submitted_for_generation' | 'generation_failed' | 'pending_review' | 'approved'; // Removed 'completed'
+  status: 'submitted_for_generation' | 'generation_failed' | 'pending_review' | 'approved';
   userName: string | null; // User who submitted
   submissionDate: string; // Date of initial submission, ISO string
   lastUpdateDate: string; // Tracks last status change, ISO string
@@ -30,22 +30,23 @@ interface AppState {
   isAuthenticated: boolean;
   userName: string | null;
   reports: ReportData[]; 
-  isLoading: boolean;
+  isOperationInProgress: boolean; // Renamed from isLoading
   hasPaid: boolean;
   isAdmin: boolean;
+  isInitializing: boolean; // New state for initial load
 }
 
 interface AppContextType extends AppState {
   login: (name: string) => void;
   logout: () => void;
-  createInitialReportPlaceholder: (inputData: ReportPalmInputDetails) => string; // Returns the new report ID
+  createInitialReportPlaceholder: (inputData: ReportPalmInputDetails) => string;
   updateReportWithGeneratedContent: (reportId: string, aiContent: string) => void;
   markReportAsGenerationFailed: (reportId: string, errorMessage?: string) => void;
-  approveReport: (reportId: string, newContent?: string) => void; // Sets status to 'approved'
+  approveReport: (reportId: string, newContent?: string) => void;
   getReportById: (reportId: string) => ReportData | undefined;
   getCurrentUserReport: () => ReportData | undefined;
-  startLoading: () => void;
-  stopLoading: () => void;
+  startOperation: () => void; // Renamed from startLoading
+  stopOperation: () => void; // Renamed from stopLoading
   setHasPaid: (paid: boolean) => void;
   clearCurrentUserReportStorage: () => void; 
   loadSampleReports: () => void; 
@@ -56,33 +57,33 @@ const AppContext = createContext<AppContextType | null>(null);
 
 const REPORTS_STORAGE_KEY = 'palmverse_reports_array';
 
-// Sample reports generator
 const createSampleReport = (idSuffix: number, category: string, userName: string, status: ReportData['status']): ReportData => {
   const baseDate = new Date();
-  baseDate.setDate(baseDate.getDate() - (idSuffix * 2)); 
+  baseDate.setDate(baseDate.getDate() - (idSuffix * 5)); // Spread out dates more
 
   const submissionDate = new Date(baseDate);
+  submissionDate.setHours(10 + idSuffix, 30 + idSuffix, 0, 0);
   
-  let lastUpdateDate = new Date(baseDate);
-  if (status === 'approved' || status === 'pending_review') {
-    lastUpdateDate.setDate(lastUpdateDate.getDate() + idSuffix + 1); 
-  }
-  // For approved reports, ensure lastUpdateDate is somewhat recent but distinct
-  if (status === 'approved') {
-      lastUpdateDate.setDate(lastUpdateDate.getDate() + idSuffix + 2);
+  let lastUpdateDate = new Date(submissionDate);
+  if (status === 'pending_review') {
+    lastUpdateDate.setDate(lastUpdateDate.getDate() + 1); 
+    lastUpdateDate.setHours(submissionDate.getHours() + 1);
+  } else if (status === 'approved') {
+    lastUpdateDate.setDate(lastUpdateDate.getDate() + 2 + idSuffix);
+    lastUpdateDate.setHours(submissionDate.getHours() + 2);
   }
 
 
-  let content = `Sample content for ${category}.`;
+  let content = `Sample content for ${category} (Report ${idSuffix}).`;
   switch(status) {
-    case 'submitted_for_generation': content = "Report generation in progress for this sample."; break;
-    case 'generation_failed': content = "Sample report generation failed."; break;
-    case 'pending_review': content = `This is a sample AI-generated report for ${category}, pending expert review. Lorem ipsum dolor sit amet.`; break;
-    case 'approved': content = `This is a sample APPROVED AI-generated report for ${category}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. This report is considered final and available to the user.`; break;
+    case 'submitted_for_generation': content = `Report ID ${idSuffix}: Generation currently in progress for this sample.`; break;
+    case 'generation_failed': content = `Sample report (ID ${idSuffix}) generation encountered an issue.`; break;
+    case 'pending_review': content = `This is sample AI report ${idSuffix} for ${category}, awaiting expert review. Lorem ipsum dolor sit amet.`; break;
+    case 'approved': content = `This is final approved report ${idSuffix} for ${category}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ready for user.`; break;
   }
 
   return {
-    id: `sample-${idSuffix}-${Date.now()}`,
+    id: `sample-${idSuffix}-${submissionDate.getTime()}`, // More unique ID
     content: content,
     status: status,
     userName: userName,
@@ -92,9 +93,9 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
     inputDetails: {
       leftPalmDataUri: `https://placehold.co/300x200.png?text=L+Palm+${idSuffix}`,
       rightPalmDataUri: `https://placehold.co/300x200.png?text=R+Palm+${idSuffix}`,
-      dateOfBirth: '1990-01-01',
+      dateOfBirth: `19${80 + idSuffix}-0${(idSuffix % 9) + 1}-0${(idSuffix % 2) + 1}1`, // Vary DOB
       placeOfBirth: `City ${idSuffix}, Country ${idSuffix}`,
-      timeOfBirth: '12:00',
+      timeOfBirth: `${(10 + idSuffix) % 24}:00`,
       dominantHand: idSuffix % 2 === 0 ? 'Right' : 'Left',
       category: category,
     }
@@ -103,10 +104,11 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
 
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
+  const [isInitializing, setIsInitializing] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
   const [reports, setReports] = useState<ReportData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isOperationInProgress, setIsOperationInProgress] = useState(false);
   const [hasPaid, setHasPaidState] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
@@ -124,13 +126,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       createSampleReport(4, 'General Personality', 'user_delta@example.com', 'submitted_for_generation'),
       createSampleReport(5, 'Career and Finances', 'user_epsilon@example.com', 'generation_failed'),
       createSampleReport(6, 'Love and Relationships', 'user_zeta@example.com', 'approved'),
-      createSampleReport(7, 'General Personality', 'user_eta@example.com', 'approved'), // Was 'completed'
-      createSampleReport(8, 'Health and Wellness', 'user_theta@example.com', 'approved'), // Was 'completed'
+      createSampleReport(7, 'General Personality', 'user_eta@example.com', 'approved'),
+      createSampleReport(8, 'Health and Wellness', 'user_theta@example.com', 'approved'),
     ];
     persistReports(samples);
   }, []); 
 
   useEffect(() => {
+    setIsInitializing(true);
     const storedAuth = sessionStorage.getItem('palmverse_isAuthenticated');
     const storedName = sessionStorage.getItem('palmverse_userName');
     const storedPaid = sessionStorage.getItem('palmverse_hasPaid');
@@ -147,18 +150,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (storedPaid === 'true') {
       setHasPaidState(true);
     }
+
     if (storedReports) {
       try {
         const parsedReports = JSON.parse(storedReports) as ReportData[];
-        if (Array.isArray(parsedReports) && parsedReports.length > 0) {
-            if (parsedReports.every(r => typeof r.id === 'string' && typeof r.status === 'string')) {
-                setReports(parsedReports);
-            } else {
-                console.warn("Stored reports data structure mismatch. Loading samples.");
-                loadSampleReports();
-            }
+        if (Array.isArray(parsedReports) && parsedReports.length > 0 && parsedReports.every(r => typeof r.id === 'string' && typeof r.status === 'string' && r.inputDetails && typeof r.submissionDate === 'string' && typeof r.lastUpdateDate === 'string')) {
+            setReports(parsedReports);
         } else {
-            loadSampleReports(); 
+            console.warn("Stored reports data structure mismatch or empty. Loading samples.");
+            loadSampleReports();
         }
       } catch (e) {
         console.error("Failed to parse stored reports array", e);
@@ -168,6 +168,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } else {
        loadSampleReports(); 
     }
+    setIsInitializing(false); // Initialization complete
   }, [loadSampleReports]);
 
 
@@ -283,7 +284,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const userReports = reports.filter(report => report.userName === userName);
     if (userReports.length === 0) return undefined;
 
-    // Priority: active generation/failure states, then pending, then approved (final state for user)
     const priorityStatus: ReportData['status'][] = ['submitted_for_generation', 'generation_failed', 'pending_review', 'approved'];
     
     for (const status of priorityStatus) {
@@ -294,7 +294,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             return reportsWithStatus[0];
         }
     }
-    // Fallback if no specific priority status is found (should ideally not happen if user has any reports)
     return userReports.sort((a,b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime())[0];
   }, [reports, userName]);
 
@@ -307,8 +306,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const startLoading = () => setIsLoading(true);
-  const stopLoading = () => setIsLoading(false);
+  const startOperation = () => setIsOperationInProgress(true);
+  const stopOperation = () => setIsOperationInProgress(false);
 
   const setHasPaid = (paid: boolean) => {
     setHasPaidState(paid);
@@ -328,15 +327,16 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       getReportById,
       getCurrentUserReport,
       userName, 
-      isLoading, 
-      startLoading, 
-      stopLoading,
+      isOperationInProgress, 
+      startOperation, 
+      stopOperation,
       hasPaid,
       setHasPaid,
       clearCurrentUserReportStorage,
       isAdmin,
       loadSampleReports,
       updateReportContent,
+      isInitializing,
     }}>
       {children}
     </AppContext.Provider>
