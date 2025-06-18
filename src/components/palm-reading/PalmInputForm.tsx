@@ -65,27 +65,39 @@ const PalmInputForm = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!leftPalmImage || !rightPalmImage || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
-      toast({ title: "Missing Information", description: "Please fill all required fields and upload both palm images.", variant: "destructive" });
-      return;
-    }
 
     if (!hasPaid) {
+      // Save current form state (complete or not) to sessionStorage before redirecting to payment
       const formDataToPersist = {
         dateOfBirth,
         placeOfBirth,
         timeOfBirth,
         dominantHand,
         category,
-        leftPalmPreview, 
-        rightPalmPreview,
+        leftPalmPreview, // This is the Data URI string
+        rightPalmPreview, // This is the Data URI string
       };
       sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(formDataToPersist));
       
-      toast({ title: "Payment Required", description: "Please complete payment to generate your report."});
+      // Optionally, inform the user if they proceed to payment with an incomplete form.
+      // For now, we just proceed as per streamlining request.
+      // if (!leftPalmImage || !rightPalmImage || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
+      //   toast({ title: "Proceeding to Payment", description: "Some information may be missing. You can complete it after payment if needed.", variant: "default" });
+      // } else {
+      //   toast({ title: "Proceeding to Payment", description: "Your information has been saved."});
+      // }
       router.push('/payment'); 
+      return; // Return after redirecting
+    }
+
+    // This part executes if hasPaid is true (i.e., manual submission after returning from payment with incomplete data, or some other edge case)
+    if (!leftPalmImage || !rightPalmImage || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
+      toast({ title: "Missing Information", description: "Please fill all required fields and upload both palm images.", variant: "destructive" });
       return;
     }
+    
+    // Clear session storage as we are performing a manual submission that supersedes any persisted auto-submit data.
+    sessionStorage.removeItem(SESSION_STORAGE_KEY); 
     
     clearReport(); 
     startLoading();
@@ -119,17 +131,16 @@ const PalmInputForm = () => {
     if (searchParams.get('payment_success') === 'true' && hasPaid) {
       const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
       
-      // Remove the query param to prevent re-triggering on refresh if not navigating away
       const newParams = new URLSearchParams(searchParams.toString());
       newParams.delete('payment_success');
       router.replace(`${router.pathname}?${newParams.toString()}`, { scroll: false });
 
-
       if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson);
+        // We've retrieved the data, so remove it from session storage to prevent reuse on refresh if auto-submit fails.
         sessionStorage.removeItem(SESSION_STORAGE_KEY); 
 
-        // Restore form state for UI consistency
+        // Restore form state for UI consistency, regardless of auto-submit outcome
         setDateOfBirth(persistedData.dateOfBirth || '');
         setPlaceOfBirth(persistedData.placeOfBirth || '');
         setTimeOfBirth(persistedData.timeOfBirth || '');
@@ -137,14 +148,14 @@ const PalmInputForm = () => {
         setCategory(persistedData.category || '');
         setLeftPalmPreview(persistedData.leftPalmPreview || null);
         setRightPalmPreview(persistedData.rightPalmPreview || null);
-        // Note: File objects (leftPalmImage, rightPalmImage) are not restored here.
+        // File objects (leftPalmImage, rightPalmImage) are not restored here.
         // Auto-submission will use the persisted Data URIs (leftPalmPreview, rightPalmPreview).
 
         if (
           persistedData.leftPalmPreview &&
           persistedData.rightPalmPreview &&
           persistedData.dateOfBirth &&
-          persistedData.placeOfBirth &&
+          persistedData.placeOfBirth && // Not checking timeOfBirth as it's optional
           persistedData.dominantHand &&
           persistedData.category
         ) {
@@ -168,22 +179,27 @@ const PalmInputForm = () => {
           } catch (error) {
             console.error("Error auto-generating palm reading:", error);
             toast({ title: "Auto-Generation Error", description: "Failed to auto-generate. Please verify details and submit manually.", variant: "destructive" });
-          } finally {
+             // Stop loading on error so user can interact with the form
             stopLoading();
-          }
+          } 
+          // No finally here for stopLoading, as successful navigation means component unmounts.
+          // Error case handles stopLoading. If more logic added, reconsider.
         } else {
-          toast({ title: "Payment Successful", description: "Please complete any missing fields (especially images if not auto-filled) and submit." });
+          toast({ title: "Payment Successful", description: "Please complete any missing fields (images will need re-upload if not previously selected) and submit." });
+          // User needs to manually submit, isLoading should be false.
+          if (isLoading) stopLoading(); 
         }
       } else {
         toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
+         if (isLoading) stopLoading();
       }
     }
-  }, [searchParams, hasPaid, router, toast, clearReport, startLoading, stopLoading, generateNewReport, 
+  }, [searchParams, hasPaid, router, toast, clearReport, startLoading, stopLoading, generateNewReport, isLoading,
       setDateOfBirth, setPlaceOfBirth, setTimeOfBirth, setDominantHand, setCategory, setLeftPalmPreview, setRightPalmPreview]);
 
   useEffect(() => {
     attemptAutoSubmit();
-  }, [attemptAutoSubmit]); // Dependencies are handled by useCallback for attemptAutoSubmit
+  }, [attemptAutoSubmit]);
 
   const renderImagePreview = (previewUrl: string | null, palmName: string, dataAiHint: string) => (
     <div className="w-full h-48 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50 relative overflow-hidden">
