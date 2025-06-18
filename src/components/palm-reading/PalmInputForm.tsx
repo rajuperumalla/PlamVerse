@@ -1,18 +1,18 @@
 
 "use client";
-import { useState, type ChangeEvent, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, type ChangeEvent, type FormEvent, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea'; // Using Textarea for Place of Birth as it might be longer
+import { Textarea } from '@/components/ui/textarea';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { generatePalmReading, type GeneratePalmReadingInput } from '@/ai/flows/generate-palm-reading';
-import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles } from 'lucide-react';
+import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard } from 'lucide-react';
 
 const PalmInputForm = () => {
   const [leftPalmImage, setLeftPalmImage] = useState<File | null>(null);
@@ -26,8 +26,26 @@ const PalmInputForm = () => {
   const [category, setCategory] = useState('');
 
   const router = useRouter();
-  const { setReport, startLoading, stopLoading, isLoading } = useAppContext();
+  const searchParams = useSearchParams();
+  const { setReportContent, startLoading, stopLoading, isLoading, hasPaid, clearReport } = useAppContext();
   const { toast } = useToast();
+
+  // If returning from payment, and it was successful, try to submit.
+  useEffect(() => {
+    if (searchParams.get('payment_success') === 'true' && hasPaid) {
+        // Attempt to resubmit the form, assumes data is still in state.
+        // A more robust solution would temporarily store form data (e.g. sessionStorage)
+        // before redirecting to payment.
+        const canSubmit = leftPalmImage && rightPalmImage && dateOfBirth && placeOfBirth && dominantHand && category;
+        if (canSubmit) {
+            toast({ title: "Payment Successful", description: "Generating your report..." });
+            handleSubmit(new Event('submit') as unknown as FormEvent, true); // bypass payment check
+        } else {
+            toast({ title: "Payment Successful", description: "Please re-fill any missing fields and submit again." });
+        }
+    }
+  }, [searchParams, hasPaid]);
+
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setImage: (file: File | null) => void, setPreview: (url: string | null) => void) => {
     if (e.target.files && e.target.files[0]) {
@@ -53,13 +71,23 @@ const PalmInputForm = () => {
     });
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent, bypassPaymentCheck = false) => {
     e.preventDefault();
     if (!leftPalmImage || !rightPalmImage || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
       toast({ title: "Missing Information", description: "Please fill all required fields and upload both palm images.", variant: "destructive" });
       return;
     }
 
+    if (!hasPaid && !bypassPaymentCheck) {
+      // Store form data if needed, then redirect
+      // For simplicity, we're not storing form data across redirects here. User will need to re-fill.
+      // A real app would store this temporarily (e.g., session storage).
+      toast({ title: "Payment Required", description: "Please complete payment to generate your report."});
+      router.push('/payment'); // Pass current form data as query params if small, or store in context/sessionStorage
+      return;
+    }
+    
+    clearReport(); // Clear any previous report before generating a new one
     startLoading();
     try {
       const leftPalmDataUri = await fileToDataUri(leftPalmImage);
@@ -70,14 +98,14 @@ const PalmInputForm = () => {
         rightPalmDataUri,
         dateOfBirth,
         placeOfBirth,
-        timeOfBirth: timeOfBirth || "Not specified", // Handle optional time of birth
+        timeOfBirth: timeOfBirth || "Not specified",
         dominantHand,
         category,
       };
 
       const result = await generatePalmReading(input);
-      setReport(result.report);
-      toast({ title: "Palm Reading Generated!", description: "Your personalized report is ready." });
+      setReportContent(result.report);
+      toast({ title: "Palm Reading Generated!", description: "Your report is now pending expert review." });
       router.push('/report');
     } catch (error) {
       console.error("Error generating palm reading:", error);
@@ -86,7 +114,7 @@ const PalmInputForm = () => {
       stopLoading();
     }
   };
-
+  
   const renderImagePreview = (previewUrl: string | null, palmName: string, dataAiHint: string) => (
     <div className="w-full h-48 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50 relative overflow-hidden">
       {previewUrl ? (
@@ -178,14 +206,14 @@ const PalmInputForm = () => {
               {isLoading ? (
                 <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Generating Report...</>
               ) : (
-                <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</>
+                hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
               )}
             </Button>
           </form>
         </CardContent>
          <CardFooter className="mt-4">
           <p className="text-xs text-muted-foreground text-center w-full">
-            Your information is used solely for generating your palm reading.
+            Your information is used solely for generating your palm reading. Payment is required.
           </p>
         </CardFooter>
       </Card>

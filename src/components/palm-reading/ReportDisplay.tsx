@@ -6,24 +6,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { FileText, RefreshCw, ArrowLeft, MessageSquarePlus, Send, Loader2 } from 'lucide-react';
+import { FileText, RefreshCw, ArrowLeft, MessageSquarePlus, Send, Loader2, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { processUserReportFeedback } from '@/ai/flows/process-user-report-feedback';
 
 interface ReportDisplayProps {
-  report: string;
+  reportContent: string; // Renamed from 'report' to 'reportContent' for clarity
 }
 
-const ReportDisplay = ({ report }: ReportDisplayProps) => {
+const ReportDisplay = ({ reportContent }: ReportDisplayProps) => {
   const router = useRouter();
   const { toast } = useToast();
-  const { isLoading, startLoading, stopLoading } = useAppContext();
+  const { isLoading: contextIsLoading, startLoading, stopLoading, clearReport, setHasPaid } = useAppContext(); // Renamed isLoading to contextIsLoading
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
 
-  const reportParagraphs = report.split('\n').filter(p => p.trim() !== '');
+  const reportParagraphs = reportContent.split('\n').filter(p => p.trim() !== '');
 
   const handleFeedbackSubmit = async () => {
     if (!feedbackText.trim()) {
@@ -37,7 +37,7 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
     startLoading();
     try {
       const result = await processUserReportFeedback({
-        originalReport: report,
+        originalReport: reportContent,
         userFeedback: feedbackText,
       });
       toast({
@@ -58,15 +58,21 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
     }
   };
 
+  const handleStartNewReading = () => {
+    clearReport();
+    setHasPaid(false); // Reset payment status for a new reading
+    router.push('/palm-input');
+  }
+
   return (
     <div className="flex justify-center items-center py-8">
       <Card className="w-full max-w-3xl shadow-xl animate-fade-in">
         <CardHeader className="text-center">
-          <div className="mx-auto bg-accent/10 p-3 rounded-full w-fit mb-4">
-            <FileText className="h-10 w-10 text-accent" />
+          <div className="mx-auto bg-green-100 p-3 rounded-full w-fit mb-4">
+            <ShieldCheck className="h-10 w-10 text-green-600" />
           </div>
-          <CardTitle className="font-headline text-3xl">Your Palm Reading Report</CardTitle>
-          <CardDescription>Insights from the lines on your hands.</CardDescription>
+          <CardTitle className="font-headline text-3xl">Your Approved Palm Reading</CardTitle>
+          <CardDescription>Insights from your hands, reviewed by our experts.</CardDescription>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[400px] w-full rounded-md border p-6 bg-background shadow-inner">
@@ -100,14 +106,14 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={handleFeedbackSubmit} disabled={isLoading} className="w-full sm:w-auto">
-                    {isLoading ? (
+                  <Button onClick={handleFeedbackSubmit} disabled={contextIsLoading} className="w-full sm:w-auto">
+                    {contextIsLoading ? (
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
                     ) : (
                       <><Send className="mr-2 h-4 w-4" /> Submit Feedback</>
                     )}
                   </Button>
-                  <Button variant="ghost" onClick={() => setShowFeedbackForm(false)} disabled={isLoading}>
+                  <Button variant="ghost" onClick={() => setShowFeedbackForm(false)} disabled={contextIsLoading}>
                     Cancel
                   </Button>
                 </div>
@@ -116,10 +122,10 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col sm:flex-row justify-center gap-4 mt-6">
-          <Button onClick={() => router.push('/palm-input')} variant="outline" className="w-full sm:w-auto">
+          <Button onClick={handleStartNewReading} variant="outline" className="w-full sm:w-auto">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Input
           </Button>
-          <Button onClick={() => router.push('/palm-input')} className="w-full sm:w-auto">
+          <Button onClick={handleStartNewReading} className="w-full sm:w-auto">
             <RefreshCw className="mr-2 h-4 w-4" /> Start New Reading
           </Button>
         </CardFooter>

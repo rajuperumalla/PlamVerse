@@ -1,24 +1,24 @@
 
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import PalmInputForm from '@/components/palm-reading/PalmInputForm';
 import { useAppContext } from '@/context/AppContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function PalmInputPage() {
-  const { isAuthenticated, isLoading: contextIsLoading } = useAppContext(); // Renamed to avoid conflict
+// It's good practice to wrap components that use useSearchParams in Suspense
+function PalmInputPageComponent() {
+  const { isAuthenticated, isLoading: contextIsLoading, hasPaid } = useAppContext();
   const router = useRouter();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
-    // Give context a moment to load persisted auth state
     const timer = setTimeout(() => {
         if (!isAuthenticated) {
             router.push('/');
         }
         setIsCheckingAuth(false);
-    }, 100); // Adjust delay if needed, or use a more robust auth check
+    }, 100); 
     return () => clearTimeout(timer);
   }, [isAuthenticated, router]);
 
@@ -38,8 +38,13 @@ export default function PalmInputPage() {
     );
   }
 
+  return <PalmInputForm />;
+}
 
+export default function PalmInputPage() {
   return (
-    <PalmInputForm />
+    <Suspense fallback={<div>Loading payment status...</div>}> {/* Suspense for useSearchParams */}
+      <PalmInputPageComponent />
+    </Suspense>
   );
 }

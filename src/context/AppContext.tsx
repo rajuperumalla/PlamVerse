@@ -4,48 +4,65 @@ import type { ReactNode } from 'react';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
+interface ReportData {
+  content: string;
+  status: 'pending_review' | 'approved';
+}
+
 interface AppState {
   isAuthenticated: boolean;
-  report: string | null;
-  userName: string | null; // Store user's mobile number as name for now
+  userName: string | null;
+  reportData: ReportData | null;
   isLoading: boolean;
+  hasPaid: boolean;
 }
 
 interface AppContextType extends AppState {
   login: (name: string) => void;
   logout: () => void;
-  setReport: (report: string | null) => void;
+  setReportContent: (content: string) => void; // Renamed to reflect it sets content, status is internal
+  approveReport: () => void;
   startLoading: () => void;
   stopLoading: () => void;
+  setHasPaid: (paid: boolean) => void;
+  clearReport: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [report, setReport] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasPaid, setHasPaidState] = useState(false); // Renamed to avoid conflict
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    // Basic check for auth state, could be expanded with localStorage/sessionStorage
-    // For this scaffold, we reset auth on refresh unless we persist it.
-    // Let's try a simple session storage persistence for isAuthenticated and userName
     const storedAuth = sessionStorage.getItem('palmverse_isAuthenticated');
     const storedName = sessionStorage.getItem('palmverse_userName');
+    const storedPaid = sessionStorage.getItem('palmverse_hasPaid');
+    const storedReportData = sessionStorage.getItem('palmverse_reportData');
+
     if (storedAuth === 'true' && storedName) {
       setIsAuthenticated(true);
       setUserName(storedName);
-    } else {
-      // If not authenticated and not on the login page, redirect to login
-      if (pathname !== '/') {
-        // router.push('/'); // This can cause hydration issues if run on server.
-                           // Client-side navigation is better.
+    }
+    if (storedPaid === 'true') {
+      setHasPaidState(true);
+    }
+    if (storedReportData) {
+      try {
+        setReportData(JSON.parse(storedReportData));
+      } catch (e) {
+        console.error("Failed to parse stored report data", e);
+        sessionStorage.removeItem('palmverse_reportData');
       }
     }
-  }, [pathname, router]);
+    
+    // Redirect logic handled by individual pages now to avoid premature redirection
+  }, []);
 
 
   const login = (name: string) => {
@@ -57,18 +74,59 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     setIsAuthenticated(false);
-    setReport(null);
     setUserName(null);
+    setReportData(null);
+    setHasPaidState(false);
     sessionStorage.removeItem('palmverse_isAuthenticated');
     sessionStorage.removeItem('palmverse_userName');
+    sessionStorage.removeItem('palmverse_hasPaid');
+    sessionStorage.removeItem('palmverse_reportData');
     router.push('/');
   };
   
+  const setReportContent = (content: string) => {
+    const newReportData = { content, status: 'pending_review' as const };
+    setReportData(newReportData);
+    sessionStorage.setItem('palmverse_reportData', JSON.stringify(newReportData));
+  };
+
+  const approveReport = () => {
+    if (reportData) {
+      const approvedReportData = { ...reportData, status: 'approved' as const };
+      setReportData(approvedReportData);
+      sessionStorage.setItem('palmverse_reportData', JSON.stringify(approvedReportData));
+    }
+  };
+  
+  const clearReport = () => {
+    setReportData(null);
+    sessionStorage.removeItem('palmverse_reportData');
+  }
+
   const startLoading = () => setIsLoading(true);
   const stopLoading = () => setIsLoading(false);
 
+  const setHasPaid = (paid: boolean) => {
+    setHasPaidState(paid);
+    sessionStorage.setItem('palmverse_hasPaid', paid ? 'true' : 'false');
+  };
+
   return (
-    <AppContext.Provider value={{ isAuthenticated, login, logout, report, setReport, userName, isLoading, startLoading, stopLoading }}>
+    <AppContext.Provider value={{ 
+      isAuthenticated, 
+      login, 
+      logout, 
+      reportData, 
+      setReportContent,
+      approveReport, 
+      userName, 
+      isLoading, 
+      startLoading, 
+      stopLoading,
+      hasPaid,
+      setHasPaid,
+      clearReport
+    }}>
       {children}
     </AppContext.Provider>
   );
