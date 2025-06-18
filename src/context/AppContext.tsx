@@ -33,7 +33,7 @@ interface AppState {
   isOperationInProgress: boolean;
   hasPaid: boolean;
   isEditor: boolean;
-  isAdmin: boolean; 
+  isAdmin: boolean;
   isInitializing: boolean;
 }
 
@@ -149,7 +149,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (storedIsEditor === 'true') {
         setIsEditor(true);
       }
-      if (storedIsAdmin === 'true') { 
+      if (storedIsAdmin === 'true') {
         setIsAdmin(true);
       }
     }
@@ -187,7 +187,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setIsAdmin(false);
       sessionStorage.setItem('palmverse_isEditor', 'true');
       sessionStorage.setItem('palmverse_isAdmin', 'false');
-    } else if (name === 'admin_user') { 
+    } else if (name === 'admin_user') {
       setIsAdmin(true);
       setIsEditor(false);
       sessionStorage.setItem('palmverse_isAdmin', 'true');
@@ -205,13 +205,13 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUserName(null);
     setHasPaidState(false);
     setIsEditor(false);
-    setIsAdmin(false); 
+    setIsAdmin(false);
 
     sessionStorage.removeItem('palmverse_isAuthenticated');
     sessionStorage.removeItem('palmverse_userName');
     sessionStorage.removeItem('palmverse_hasPaid');
     sessionStorage.removeItem('palmverse_isEditor');
-    sessionStorage.removeItem('palmverse_isAdmin'); 
+    sessionStorage.removeItem('palmverse_isAdmin');
 
     router.push('/');
   };
@@ -219,7 +219,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const createInitialReportPlaceholder = (inputData: ReportPalmInputDetails): string => {
     const newReportId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const currentDate = new Date().toISOString();
-    
+
     // Filter out existing 'submitted_for_generation' or 'generation_failed' reports for THIS user
     const reportsToKeep = reports.filter(r => {
         return !(r.userName === userName && (r.status === 'submitted_for_generation' || r.status === 'generation_failed'));
@@ -235,7 +235,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       category: inputData.category,
       inputDetails: inputData,
     };
-    
+
     const updatedReports = [...reportsToKeep, newReport];
     persistReports(updatedReports);
     return newReportId;
@@ -247,7 +247,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return {
           ...report,
           content: aiContent,
-          status: 'pending_review' as 'pending_review',
+          status: 'approved' as 'approved', // Directly set to approved
           lastUpdateDate: new Date().toISOString(),
         };
       }
@@ -315,7 +315,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             return reportsWithStatus[0];
         }
     }
-    
+
     return userReports.sort((a,b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime())[0];
   }, [reports, userName]);
 
@@ -358,7 +358,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setHasPaid,
       clearCurrentUserReportStorage,
       isEditor,
-      isAdmin, 
+      isAdmin,
       loadSampleReports,
       updateReportContent,
       isInitializing,
