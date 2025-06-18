@@ -14,7 +14,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { LayoutDashboard, PanelLeft, Package, Briefcase, Users, Settings, ShieldCheck, ShoppingBag, Tag, Palette, Boxes, Upload, MessageSquareText } from 'lucide-react';
+import { LayoutDashboard, PanelLeft, Package, Briefcase, Users, Settings, ShieldCheck, ShoppingCart, Tag, Palette, Boxes, Upload, MessageSquareText, Info, MailCheck } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -74,6 +74,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   const productSubmenuActive = pathname.startsWith('/admin/products');
+  const ecommerceSubmenuActive = pathname.startsWith('/admin/products') || pathname === '/admin/site-info' || pathname === '/admin/subscribers';
 
   return (
     <SidebarProvider defaultOpen>
@@ -101,42 +102,70 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </SidebarMenuItem>
               
               <SidebarMenuItem>
-                <Accordion type="single" collapsible className="w-full" defaultValue={productSubmenuActive ? "products-menu" : undefined}>
-                  <AccordionItem value="products-menu" className="border-none">
+                <Accordion type="single" collapsible className="w-full" defaultValue={ecommerceSubmenuActive ? "ecommerce-menu" : undefined}>
+                  <AccordionItem value="ecommerce-menu" className="border-none">
                     <SidebarMenuButton 
                       asChild 
                       variant="ghost" 
                       className="p-0 w-full h-auto"
-                      tooltip={{ children: 'Products', side: 'right', className: "md:block hidden" }}
-                      isActive={productSubmenuActive}
+                      tooltip={{ children: 'Ecommerce', side: 'right', className: "md:block hidden" }}
+                      isActive={ecommerceSubmenuActive}
                     >
                       <AccordionTrigger 
                         className="flex items-center justify-between w-full py-2 px-2 rounded-md text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                       >
                         <div className="flex items-center gap-2">
-                          <Package />
-                          <span className="group-data-[collapsible=icon]:hidden">Products</span>
+                          <ShoppingCart />
+                          <span className="group-data-[collapsible=icon]:hidden">Ecommerce</span>
                         </div>
                       </AccordionTrigger>
                     </SidebarMenuButton>
                     <AccordionContent className="pt-1 pl-4 group-data-[collapsible=icon]:hidden">
-                        <SidebarMenuButton asChild isActive={pathname === '/admin/products'} className="w-full justify-start h-8 mb-1 text-xs">
-                            <Link href="/admin/products"><ShoppingBag className="mr-2 h-3.5 w-3.5"/>All Products</Link>
+                        <Accordion type="single" collapsible className="w-full" defaultValue={productSubmenuActive ? "products-submenu" : undefined}>
+                          <AccordionItem value="products-submenu" className="border-none">
+                            <SidebarMenuButton 
+                              asChild 
+                              variant="ghost" 
+                              className="p-0 w-full h-auto"
+                              tooltip={{ children: 'Products', side: 'right', className: "md:block hidden" }}
+                              isActive={productSubmenuActive}
+                            >
+                              <AccordionTrigger 
+                                className="flex items-center justify-between w-full py-2 px-2 rounded-md text-xs hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Package />
+                                  <span className="group-data-[collapsible=icon]:hidden">Products</span>
+                                </div>
+                              </AccordionTrigger>
+                            </SidebarMenuButton>
+                            <AccordionContent className="pt-1 pl-4 group-data-[collapsible=icon]:hidden">
+                                <SidebarMenuButton asChild isActive={pathname === '/admin/products'} className="w-full justify-start h-8 mb-1 text-xs">
+                                    <Link href="/admin/products"><ShoppingBag className="mr-2 h-3.5 w-3.5"/>All Products</Link>
+                                </SidebarMenuButton>
+                                <SidebarMenuButton asChild isActive={pathname === '/admin/products/variants'} className="w-full justify-start h-8 mb-1 text-xs">
+                                    <Link href="/admin/products/variants"><Palette className="mr-2 h-3.5 w-3.5"/>Variants</Link>
+                                </SidebarMenuButton>
+                                <SidebarMenuButton asChild isActive={pathname === '/admin/products/inventory'} className="w-full justify-start h-8 mb-1 text-xs">
+                                    <Link href="/admin/products/inventory"><Boxes className="mr-2 h-3.5 w-3.5"/>Inventory</Link>
+                                </SidebarMenuButton>
+                                <SidebarMenuButton asChild isActive={pathname === '/admin/products/bulk-upload'} className="w-full justify-start h-8 mb-1 text-xs">
+                                    <Link href="/admin/products/bulk-upload"><Upload className="mr-2 h-3.5 w-3.5"/>Bulk Upload</Link>
+                                </SidebarMenuButton>
+                                <SidebarMenuButton asChild isActive={pathname === '/admin/products/reviews'} className="w-full justify-start h-8 text-xs">
+                                    <Link href="/admin/products/reviews"><MessageSquareText className="mr-2 h-3.5 w-3.5"/>Reviews</Link>
+                                </SidebarMenuButton>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                        <SidebarMenuButton asChild isActive={pathname === '/admin/products/categories'} className="w-full justify-start h-9 my-0.5 text-xs">
+                            <Link href="/admin/products/categories"><Tag className="mr-2 h-4 w-4"/>Categories</Link>
                         </SidebarMenuButton>
-                        <SidebarMenuButton asChild isActive={pathname === '/admin/products/categories'} className="w-full justify-start h-8 mb-1 text-xs">
-                            <Link href="/admin/products/categories"><Tag className="mr-2 h-3.5 w-3.5"/>Categories</Link>
+                        <SidebarMenuButton asChild isActive={pathname === '/admin/site-info'} className="w-full justify-start h-9 my-0.5 text-xs">
+                            <Link href="/admin/site-info"><Info className="mr-2 h-4 w-4"/>Site Info</Link>
                         </SidebarMenuButton>
-                        <SidebarMenuButton asChild isActive={pathname === '/admin/products/variants'} className="w-full justify-start h-8 mb-1 text-xs">
-                            <Link href="/admin/products/variants"><Palette className="mr-2 h-3.5 w-3.5"/>Variants</Link>
-                        </SidebarMenuButton>
-                        <SidebarMenuButton asChild isActive={pathname === '/admin/products/inventory'} className="w-full justify-start h-8 mb-1 text-xs">
-                            <Link href="/admin/products/inventory"><Boxes className="mr-2 h-3.5 w-3.5"/>Inventory</Link>
-                        </SidebarMenuButton>
-                         <SidebarMenuButton asChild isActive={pathname === '/admin/products/bulk-upload'} className="w-full justify-start h-8 mb-1 text-xs">
-                            <Link href="/admin/products/bulk-upload"><Upload className="mr-2 h-3.5 w-3.5"/>Bulk Upload</Link>
-                        </SidebarMenuButton>
-                         <SidebarMenuButton asChild isActive={pathname === '/admin/products/reviews'} className="w-full justify-start h-8 text-xs">
-                            <Link href="/admin/products/reviews"><MessageSquareText className="mr-2 h-3.5 w-3.5"/>Reviews</Link>
+                        <SidebarMenuButton asChild isActive={pathname === '/admin/subscribers'} className="w-full justify-start h-9 my-0.5 text-xs">
+                            <Link href="/admin/subscribers"><Users className="mr-2 h-4 w-4"/>Subscribers</Link>
                         </SidebarMenuButton>
                     </AccordionContent>
                   </AccordionItem>
@@ -223,4 +252,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
+    
+
     
