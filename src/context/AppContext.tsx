@@ -18,7 +18,7 @@ export interface ReportPalmInputDetails {
 export interface ReportData {
   id: string;
   content: string; // Holds AI content or error messages for generation_failed
-  status: 'submitted_for_generation' | 'generation_failed' | 'pending_review' | 'approved' | 'completed';
+  status: 'submitted_for_generation' | 'generation_failed' | 'pending_review' | 'approved'; // Removed 'completed'
   userName: string | null; // User who submitted
   submissionDate: string; // Date of initial submission, ISO string
   lastUpdateDate: string; // Tracks last status change, ISO string
@@ -50,7 +50,6 @@ interface AppContextType extends AppState {
   clearCurrentUserReportStorage: () => void; 
   loadSampleReports: () => void; 
   updateReportContent: (reportId: string, newContent: string) => void; 
-  // We might add a function like markReportAsCompleted(reportId: string) later if needed
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -60,17 +59,17 @@ const REPORTS_STORAGE_KEY = 'palmverse_reports_array';
 // Sample reports generator
 const createSampleReport = (idSuffix: number, category: string, userName: string, status: ReportData['status']): ReportData => {
   const baseDate = new Date();
-  baseDate.setDate(baseDate.getDate() - (idSuffix * 2)); // Ensure submission dates are in the past
+  baseDate.setDate(baseDate.getDate() - (idSuffix * 2)); 
 
   const submissionDate = new Date(baseDate);
   
-  let lastUpdateDate = new Date(baseDate); // Start with submission date
-  if (status === 'approved' || status === 'completed' || status === 'pending_review') {
-    // If it's further along, last update should be more recent than submission
-    lastUpdateDate.setDate(lastUpdateDate.getDate() + idSuffix); 
+  let lastUpdateDate = new Date(baseDate);
+  if (status === 'approved' || status === 'pending_review') {
+    lastUpdateDate.setDate(lastUpdateDate.getDate() + idSuffix + 1); 
   }
-  if (status === 'completed') { // Make completed reports even older in terms of last update for differentiation
-      lastUpdateDate.setDate(lastUpdateDate.getDate() - (7 + idSuffix)); // e.g., updated a week or more ago
+  // For approved reports, ensure lastUpdateDate is somewhat recent but distinct
+  if (status === 'approved') {
+      lastUpdateDate.setDate(lastUpdateDate.getDate() + idSuffix + 2);
   }
 
 
@@ -79,8 +78,7 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
     case 'submitted_for_generation': content = "Report generation in progress for this sample."; break;
     case 'generation_failed': content = "Sample report generation failed."; break;
     case 'pending_review': content = `This is a sample AI-generated report for ${category}, pending expert review. Lorem ipsum dolor sit amet.`; break;
-    case 'approved': content = `This is a sample APPROVED AI-generated report for ${category}. Lorem ipsum dolor sit amet, consectetur adipiscing elit.`; break;
-    case 'completed': content = `This is a sample COMPLETED report for ${category}. It has been fully processed and delivered. Lorem ipsum.`; break;
+    case 'approved': content = `This is a sample APPROVED AI-generated report for ${category}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. This report is considered final and available to the user.`; break;
   }
 
   return {
@@ -126,8 +124,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       createSampleReport(4, 'General Personality', 'user_delta@example.com', 'submitted_for_generation'),
       createSampleReport(5, 'Career and Finances', 'user_epsilon@example.com', 'generation_failed'),
       createSampleReport(6, 'Love and Relationships', 'user_zeta@example.com', 'approved'),
-      createSampleReport(7, 'General Personality', 'user_eta@example.com', 'completed'),
-      createSampleReport(8, 'Health and Wellness', 'user_theta@example.com', 'completed'),
+      createSampleReport(7, 'General Personality', 'user_eta@example.com', 'approved'), // Was 'completed'
+      createSampleReport(8, 'Health and Wellness', 'user_theta@example.com', 'approved'), // Was 'completed'
     ];
     persistReports(samples);
   }, []); 
@@ -152,9 +150,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     if (storedReports) {
       try {
         const parsedReports = JSON.parse(storedReports) as ReportData[];
-        // Validate that parsedReports is an array and its elements conform to ReportData structure if needed
         if (Array.isArray(parsedReports) && parsedReports.length > 0) {
-             // Simple check for one property, more robust checks can be added
             if (parsedReports.every(r => typeof r.id === 'string' && typeof r.status === 'string')) {
                 setReports(parsedReports);
             } else {
@@ -209,7 +205,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const currentDate = new Date().toISOString();
     const newReport: ReportData = {
       id: newReportId,
-      content: "Report generation initiated...", // Placeholder content
+      content: "Report generation initiated...", 
       status: 'submitted_for_generation',
       userName: userName, 
       submissionDate: currentDate,
@@ -217,7 +213,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       category: inputData.category,
       inputDetails: inputData,
     };
-    // Remove any previous 'submitted_for_generation' or 'generation_failed' report for this user.
     const filteredReports = reports.filter(r => !(r.userName === userName && (r.status === 'submitted_for_generation' || r.status === 'generation_failed')));
     const updatedReports = [...filteredReports, newReport];
     persistReports(updatedReports);
@@ -244,7 +239,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       if (report.id === reportId) {
         return {
           ...report,
-          content: errorMessage, // Store error message in content
+          content: errorMessage, 
           status: 'generation_failed' as 'generation_failed',
           lastUpdateDate: new Date().toISOString(),
         };
@@ -260,7 +255,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return {
           ...report,
           content: newContent || report.content,
-          status: 'approved' as 'approved', // Changed to 'approved' specifically
+          status: 'approved' as 'approved', 
           lastUpdateDate: new Date().toISOString(),
         };
       }
@@ -269,21 +264,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     persistReports(updatedReports);
   };
   
-  // Function to move a report to 'completed' (example - could be triggered by other logic)
-  // const markReportAsCompleted = (reportId: string) => {
-  //   const updatedReports = reports.map(report => {
-  //     if (report.id === reportId && report.status === 'approved') {
-  //       return {
-  //         ...report,
-  //         status: 'completed' as 'completed',
-  //         lastUpdateDate: new Date().toISOString(),
-  //       };
-  //     }
-  //     return report;
-  //   });
-  //   persistReports(updatedReports);
-  // };
-
   const updateReportContent = (reportId: string, newContent: string) => {
     const updatedReports = reports.map(report => {
       if (report.id === reportId) {
@@ -300,11 +280,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const getCurrentUserReport = useCallback((): ReportData | undefined => {
     if (!userName) return undefined;
-    // Prioritize active states, then approved, then older ones.
     const userReports = reports.filter(report => report.userName === userName);
     if (userReports.length === 0) return undefined;
 
-    const priorityStatus: ReportData['status'][] = ['submitted_for_generation', 'generation_failed', 'pending_review', 'approved', 'completed'];
+    // Priority: active generation/failure states, then pending, then approved (final state for user)
+    const priorityStatus: ReportData['status'][] = ['submitted_for_generation', 'generation_failed', 'pending_review', 'approved'];
     
     for (const status of priorityStatus) {
         const reportsWithStatus = userReports
@@ -314,7 +294,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             return reportsWithStatus[0];
         }
     }
-    // Fallback to most recently updated if no priority status found
+    // Fallback if no specific priority status is found (should ideally not happen if user has any reports)
     return userReports.sort((a,b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime())[0];
   }, [reports, userName]);
 

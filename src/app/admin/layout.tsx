@@ -13,7 +13,7 @@ import {
   SidebarTrigger, 
   SidebarInset, 
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, ListChecks, Hand, PanelLeft } from 'lucide-react';
+import { LayoutDashboard, ListChecks, Hand, PanelLeft, FileCheck2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider defaultOpen>
-      <div className="flex h-[calc(100vh-var(--header-height,0px)-var(--footer-height,0px))]"> {/* Adjust height to fit within RootLayout */}
+      <div className="flex h-[calc(100vh-var(--header-height,0px)-var(--footer-height,0px))]">
         <Sidebar className="border-r hidden md:flex flex-shrink-0"> 
           <SidebarContent>
             <SidebarHeader className="p-4">
@@ -57,17 +57,26 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/admin/approved'}
+                  tooltip={{ children: 'Approved Reports', side: 'right', className: "md:block hidden" }}
+                >
+                  <Link href="/admin/approved">
+                    <FileCheck2 />
+                    <span>Approved Reports</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
         </Sidebar>
         
-        {/* Mobile Sidebar Trigger (using Sidebar's built-in Sheet functionality) */}
-        {/* The <Sidebar> component above becomes a Sheet on mobile when triggered by SidebarTrigger */}
-
         <SidebarInset className="flex-1 flex flex-col overflow-hidden">
           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 md:hidden">
             <SidebarTrigger asChild>
-              <Button size="icon" variant="outline" className="md:hidden"> {/* Changed sm:hidden to md:hidden */}
+              <Button size="icon" variant="outline" className="md:hidden">
                 <PanelLeft className="h-5 w-5" />
                 <span className="sr-only">Toggle Menu</span>
               </Button>
@@ -77,16 +86,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </div>
           </header>
           
-          <main className="flex-1 overflow-y-auto p-4 md:p-6"> {/* Adjusted padding for consistency */}
+          <main className="flex-1 overflow-y-auto p-4 md:p-6">
             {children}
           </main>
         </SidebarInset>
       </div>
-      {/* Define CSS variables for header/footer height if they are fixed and consuming viewport space */}
       <style jsx global>{`
         :root {
-          --header-height: 68px; /* Adjust to your actual header height */
-          --footer-height: 77px; /* Adjust to your actual footer height */
+          --header-height: 68px; 
+          --footer-height: 77px; 
         }
       `}</style>
     </SidebarProvider>
