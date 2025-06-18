@@ -163,9 +163,14 @@ const PalmInputForm = () => {
         setLeftPalmPreview(persistedData.leftPalmDataUri || null);
         setRightPalmPreview(persistedData.rightPalmDataUri || null);
         
+        // Check if image files were also stored as Data URIs and can be "rehydrated" for submission
+        // For this example, we assume if previews are there, they are from actual files or previous Data URIs.
+        // A more robust solution might involve storing File objects if possible or re-prompting for files if only URIs from placeholders were saved.
+        // For auto-submit, we need actual image data, not just placeholders.
+
         if (
-          persistedData.leftPalmDataUri &&
-          persistedData.rightPalmDataUri &&
+          persistedData.leftPalmDataUri && // Assuming these URIs are from actual files
+          persistedData.rightPalmDataUri && // or were previously validated.
           persistedData.dateOfBirth &&
           persistedData.placeOfBirth &&
           persistedData.dominantHand &&
@@ -198,7 +203,7 @@ const PalmInputForm = () => {
                markReportAsGenerationFailed(initialReportId, "Failed to auto-generate palm reading after payment.");
              }
             toast({ title: "Auto-Generation Error", description: "Failed to auto-generate. Please verify details and submit manually.", variant: "destructive" });
-            router.push('/report');
+            // Don't redirect immediately to /report if auto-gen fails, let user see form.
           } finally {
             if(isOperationInProgress) stopOperation();
           }
@@ -352,3 +357,5 @@ const PalmInputForm = () => {
 };
 
 export default PalmInputForm;
+
+    
