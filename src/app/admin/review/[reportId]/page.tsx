@@ -10,9 +10,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { refinePalmReadingReport } from '@/ai/flows/refine-palm-reading-report';
+import { generatePalmReading } from '@/ai/flows/generate-palm-reading';
 import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, ThumbsUp } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, ThumbsUp, Brain } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function AdminReviewReportPage() {
@@ -29,14 +29,14 @@ export default function AdminReviewReportPage() {
   } = useAppContext();
   const { toast } = useToast();
 
-  const [report, setReport] = useState<ReportData | null | undefined>(null); // null for loading, undefined for not found
+  const [report, setReport] = useState<ReportData | null | undefined>(null); 
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
-  const [adminSuggestion, setAdminSuggestion] = useState('');
+  const [expertAnalysisNotes, setExpertAnalysisNotes] = useState('');
   const [adminGuidanceForSuggestions, setAdminGuidanceForSuggestions] = useState('');
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
   const [isAiSuggestionLoading, setIsAiSuggestionLoading] = useState(false);
-  const [provisionallyRefinedContent, setProvisionallyRefinedContent] = useState<string | null>(null);
+  const [generatedReportPreview, setGeneratedReportPreview] = useState<string | null>(null);
 
   useEffect(() => {
      if (!isAuthenticated) {
@@ -47,9 +47,13 @@ export default function AdminReviewReportPage() {
     } else {
       const foundReport = getReportById(reportId);
       setReport(foundReport);
+      if (foundReport && foundReport.content && !expertAnalysisNotes) {
+        // Pre-fill expert notes if report already has content (e.g. if admin revisits)
+        // This is optional, admin can overwrite
+      }
     }
     setAuthCheckComplete(true);
-  }, [isAuthenticated, isAdmin, reportId, getReportById, router, toast]);
+  }, [isAuthenticated, isAdmin, reportId, getReportById, router, toast, expertAnalysisNotes]);
 
   const handleGetAiSuggestions = async () => {
     if (!report) return;
@@ -57,7 +61,7 @@ export default function AdminReviewReportPage() {
     setAiSuggestion(null);
     try {
       const result = await suggestReportImprovements({ 
-        report: report.content,
+        report: report.content, // Suggest improvements based on the *initial* AI report
         adminGuidance: adminGuidanceForSuggestions 
       });
       setAiSuggestion(result.suggestions);
@@ -71,37 +75,38 @@ export default function AdminReviewReportPage() {
     }
   };
 
-  const handlePreviewAiRefinement = async () => {
-    if (!report || !adminSuggestion.trim()) {
-      toast({ title: "Missing Input", description: "Please provide refinement suggestions for the AI to process.", variant: "destructive" });
+  const handleGenerateWithExpertAnalysis = async () => {
+    if (!report || !expertAnalysisNotes.trim()) {
+      toast({ title: "Missing Input", description: "Please provide your expert analysis and directives.", variant: "destructive" });
       return;
     }
     startLoading();
-    setProvisionallyRefinedContent(null);
+    setGeneratedReportPreview(null);
     try {
-      const refinedResult = await refinePalmReadingReport({
-        originalReport: report.content,
-        adminSuggestions: adminSuggestion,
+      const result = await generatePalmReading({
+        ...report.inputDetails, // Spread all original input details
+        category: report.category, // Ensure category is passed
+        expertAnalysis: expertAnalysisNotes,
       });
-      setProvisionallyRefinedContent(refinedResult.refinedReport);
-      toast({ title: "AI Refinement Preview Ready", description: "Review the AI-refined content below before final approval." });
+      setGeneratedReportPreview(result.report);
+      toast({ title: "AI Report Generated", description: "Review the AI-generated report based on your analysis below." });
     } catch (error) {
-      console.error("Error previewing AI refinement:", error);
-      toast({ title: "Refinement Preview Error", description: `Failed to get AI refinement preview. Please try again.`, variant: "destructive" });
+      console.error("Error generating report with expert analysis:", error);
+      toast({ title: "Generation Error", description: `Failed to generate report with your analysis. Please try again.`, variant: "destructive" });
     } finally {
       stopLoading();
     }
   };
 
   const handleFinalApproveForCustomer = async () => {
-    if (!report || !provisionallyRefinedContent) {
-      toast({ title: "Missing Content", description: "No refined content to approve.", variant: "destructive" });
+    if (!report || !generatedReportPreview) {
+      toast({ title: "Missing Content", description: "No AI-generated report (from your analysis) to approve.", variant: "destructive" });
       return;
     }
     startLoading();
     try {
-      approveReport(report.id, provisionallyRefinedContent); 
-      toast({ title: "Report Approved & Live", description: `Report ID ${report.id.substring(0,10)}... has been approved.` });
+      approveReport(report.id, generatedReportPreview); 
+      toast({ title: "Report Approved & Live", description: `Report ID ${report.id.substring(0,10)}... has been approved with your guided content.` });
       router.push('/admin'); 
     } catch (error) {
       console.error("Error during final approval:", error);
@@ -111,16 +116,17 @@ export default function AdminReviewReportPage() {
     }
   };
 
-  const handleApproveAsIs = () => {
+  const handleApproveOriginalAsIs = () => {
     if (!report) return;
     startLoading();
-    approveReport(report.id); 
-    toast({ title: "Report Approved As-Is", description: `Report ID ${report.id.substring(0,10)}... has been approved.` });
+    // Approves the report.content which is the initial AI generation
+    approveReport(report.id, report.content); 
+    toast({ title: "Original Report Approved As-Is", description: `Report ID ${report.id.substring(0,10)}... (initial AI version) has been approved.` });
     router.push('/admin');
     stopLoading(); 
   };
 
-  if (!authCheckComplete || contextIsLoading) {
+  if (!authCheckComplete || contextIsLoading && !report) {
     return (
       <div className="flex flex-col justify-center items-center min-h-[calc(100vh-200px)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
@@ -151,7 +157,6 @@ export default function AdminReviewReportPage() {
     );
   }
 
-
   return (
     <div className="container mx-auto py-8 max-w-4xl">
       <Button onClick={() => router.push('/admin')} variant="outline" className="mb-6">
@@ -162,7 +167,7 @@ export default function AdminReviewReportPage() {
         <CardHeader>
           <CardTitle className="text-2xl font-headline">Review Report: {report.id.substring(0,10)}...</CardTitle>
           <CardDescription>
-            Category: {report.category} | Submitted by: {report.userName || 'N/A'} on {new Date(report.submissionDate).toLocaleDateString()}
+            Category: {report.category} | Submitted by: {report.userName || 'N/A'} on {report.submissionDate ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -182,21 +187,22 @@ export default function AdminReviewReportPage() {
           </div>
 
           <div>
-            <Label className="font-semibold text-lg">Original AI Generated Content:</Label>
-            <ScrollArea className="h-[200px] w-full rounded-md border p-4 mt-1 bg-muted/20 text-sm shadow-inner">
+            <Label className="font-semibold text-lg">Initial AI Generated Content (From User Submission):</Label>
+            <ScrollArea className="h-[150px] w-full rounded-md border p-4 mt-1 bg-muted/20 text-sm shadow-inner">
               {report.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
                 <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
               ))}
             </ScrollArea>
           </div>
-
+          
+          {/* Helper: AI Suggestions for Admin */}
           <div className="space-y-3 border-t pt-6">
-              <Label htmlFor="adminGuidanceForSuggestions" className="text-md font-medium flex items-center gap-1.5"><MessageCircleQuestion className="h-5 w-5 text-primary"/>Your Guidance for AI Suggestions (Optional)</Label>
+              <Label htmlFor="adminGuidanceForSuggestions" className="text-md font-medium flex items-center gap-1.5"><MessageCircleQuestion className="h-5 w-5 text-primary"/>Your Guidance for AI Suggestions (Optional Helper)</Label>
               <Textarea
                   id="adminGuidanceForSuggestions"
                   value={adminGuidanceForSuggestions}
                   onChange={(e) => setAdminGuidanceForSuggestions(e.target.value)}
-                  placeholder="e.g., 'Focus on career aspects', 'Check clarity on relationships', 'Is the tone appropriate?'"
+                  placeholder="e.g., 'Focus on career aspects for initial suggestions', 'Check clarity on relationships'"
                   rows={2}
                   className="text-sm"
                   disabled={contextIsLoading || isAiSuggestionLoading}
@@ -209,16 +215,16 @@ export default function AdminReviewReportPage() {
                   disabled={contextIsLoading || isAiSuggestionLoading}
               >
                   {isAiSuggestionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Get AI Suggestions for Refinement
+                  Get AI Suggestions (to help formulate your analysis)
               </Button>
               <p className="text-xs text-muted-foreground mt-1 text-center">
-                You can revise your guidance above and click again to get new suggestions.
+                You can revise your guidance above and click again to get new suggestions. These suggestions are for your reference.
               </p>
 
               {aiSuggestion && (
               <Alert variant={aiSuggestion.startsWith("Error:") ? "destructive" : "default"} className="text-sm">
                   <Sparkles className="h-4 w-4" />
-                  <AlertTitle className="text-md">AI Generated Suggestions</AlertTitle>
+                  <AlertTitle className="text-md">AI Generated Suggestions (for your reference)</AlertTitle>
                   <AlertDescription>
                   <ScrollArea className="h-[100px]">
                       {aiSuggestion.split('\n').map((line, i) => <p key={i} className="mb-1">{line}</p>)}
@@ -227,44 +233,45 @@ export default function AdminReviewReportPage() {
                    {aiSuggestion && !aiSuggestion.startsWith("Error:") && (
                       <Button 
                           onClick={() => {
-                              setAdminSuggestion((prev) => prev + (prev ? '\n\n--- AI Suggestions ---\n' : '--- AI Suggestions ---\n') + aiSuggestion);
-                              toast({title: "AI Suggestions Appended", description: "Suggestions appended to your refinement notes."})
+                              setExpertAnalysisNotes((prev) => prev + (prev ? '\n\n--- Suggestions for consideration ---\n' : '--- Suggestions for consideration ---\n') + aiSuggestion);
+                              toast({title: "AI Suggestions Appended", description: "Suggestions appended to your main analysis notes."})
                           }}
                           variant="link" size="sm" className="p-0 h-auto text-xs mt-2">
-                          Append to Final Refinement Notes
+                          Append to My Expert Analysis Notes
                       </Button>
                   )}
               </Alert>
               )}
           </div>
           
+          {/* Main Admin Input Area */}
           <div className="space-y-2 border-t pt-6">
-            <Label htmlFor="adminSuggestions" className="text-md font-medium flex items-center gap-1.5"><Edit3 className="h-5 w-5 text-primary"/>Your Final Refinement Notes & Edits</Label>
+            <Label htmlFor="expertAnalysisNotes" className="text-md font-medium flex items-center gap-1.5"><Brain className="h-5 w-5 text-primary"/>Admin's Expert Analysis & Directives for AI</Label>
             <Textarea
-              id="adminSuggestions"
-              value={adminSuggestion}
-              onChange={(e) => setAdminSuggestion(e.target.value)}
-              placeholder="Enter your comprehensive suggestions and edits here. This will be used by AI to generate the final report."
-              rows={5}
+              id="expertAnalysisNotes"
+              value={expertAnalysisNotes}
+              onChange={(e) => setExpertAnalysisNotes(e.target.value)}
+              placeholder="Enter your comprehensive analysis, interpretations, and directives here. The AI will use this as the primary basis for generating the report."
+              rows={8}
               className="text-sm"
               disabled={contextIsLoading}
             />
              <Button 
-                  onClick={handlePreviewAiRefinement} 
-                  disabled={contextIsLoading || !adminSuggestion.trim()} 
+                  onClick={handleGenerateWithExpertAnalysis} 
+                  disabled={contextIsLoading || !expertAnalysisNotes.trim()} 
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2 py-3 text-base"
-                  title="AI will process your notes above to generate a refined report preview."
+                  title="AI will use your analysis above to generate a new report version."
               >
-                  {contextIsLoading && adminSuggestion.trim() && !provisionallyRefinedContent ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                  Preview AI Refinement
+                  {contextIsLoading && expertAnalysisNotes.trim() && !generatedReportPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                  Generate Report using My Analysis
               </Button>
           </div>
 
-          {provisionallyRefinedContent && (
+          {generatedReportPreview && (
             <div className="space-y-2 border-t pt-6">
-              <Label className="font-semibold text-green-700 flex items-center gap-1.5 text-lg"><FileCheck2 className="h-5 w-5"/>Preview of AI-Refined Report for Customer:</Label>
+              <Label className="font-semibold text-green-700 flex items-center gap-1.5 text-lg"><FileCheck2 className="h-5 w-5"/>AI-Generated Report (Based on Your Analysis):</Label>
               <ScrollArea className="h-[200px] w-full rounded-md border p-4 bg-green-50/50 text-sm shadow-inner">
-                {provisionallyRefinedContent.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
+                {generatedReportPreview.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
                   <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
                 ))}
               </ScrollArea>
@@ -274,17 +281,17 @@ export default function AdminReviewReportPage() {
                 className="w-full bg-green-600 hover:bg-green-700 text-white mt-2 py-3 text-base"
               >
                 {contextIsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                Confirm & Approve for Customer
+                Confirm & Approve This Version
               </Button>
             </div>
           )}
         </CardContent>
         <CardFooter className="border-t pt-6 flex flex-col sm:flex-row justify-end gap-3">
             <Button 
-                onClick={handleApproveAsIs} 
+                onClick={handleApproveOriginalAsIs} 
                 variant="secondary" 
-                disabled={contextIsLoading || !!provisionallyRefinedContent} 
-                title={provisionallyRefinedContent ? "A refined preview exists. Clear it or approve it first." : "Approve the original AI report without admin refinements."}
+                disabled={contextIsLoading || !!generatedReportPreview} 
+                title={generatedReportPreview ? "A new version based on your analysis exists. Approve that or clear it first." : "Approve the initial AI report (from user submission) without your direct analysis."}
                 className="w-full sm:w-auto py-3 text-base"
             >
                 <ThumbsUp className="mr-2 h-4 w-4" /> Approve Original As-Is
@@ -294,6 +301,3 @@ export default function AdminReviewReportPage() {
     </div>
   );
 }
-
-
-    

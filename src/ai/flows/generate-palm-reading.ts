@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -27,6 +28,7 @@ const GeneratePalmReadingInputSchema = z.object({
   timeOfBirth: z.string().describe('The time of birth of the user.'),
   dominantHand: z.string().describe('The dominant hand of the user.'),
   category: z.string().describe('The category for the palm reading report: General Personality, Health and Wellness, Love and relationships, Career and Finances,etc.'),
+  expertAnalysis: z.string().optional().describe('Detailed analysis and interpretation notes provided by a human expert. This should guide the AI generation if present.'),
 });
 export type GeneratePalmReadingInput = z.infer<typeof GeneratePalmReadingInputSchema>;
 
@@ -43,7 +45,25 @@ const prompt = ai.definePrompt({
   name: 'generatePalmReadingPrompt',
   input: {schema: GeneratePalmReadingInputSchema},
   output: {schema: GeneratePalmReadingOutputSchema},
-  prompt: `You are an expert palm reader. Analyze the user's palms and provide a detailed report based on the information provided.
+  prompt: `You are an expert palm reader.
+  {{#if expertAnalysis}}
+  A human expert palm reader has provided the following analysis and directives. Use this as the PRIMARY basis for your report. Integrate the user's details and palm images as supporting information or for aspects not explicitly covered by the expert.
+
+  Expert Analysis & Directives:
+  {{{expertAnalysis}}}
+
+  User Details for context:
+  Left Palm: {{media url=leftPalmDataUri}}
+  Right Palm: {{media url=rightPalmDataUri}}
+  Date of Birth: {{{dateOfBirth}}}
+  Place of Birth: {{{placeOfBirth}}}
+  Time of Birth: {{{timeOfBirth}}}
+  Dominant Hand: {{{dominantHand}}}
+  Category: {{{category}}}
+
+  Generate a comprehensive palm reading report based PRIMARILY on the expert's analysis. Ensure it aligns with the specified category and incorporates the user's details where relevant and not contradictory to the expert's input. The final report should be well-structured, insightful, and directly address the user.
+  {{else}}
+  Analyze the user's palms and provide a detailed report based on the information provided.
 
   Left Palm: {{media url=leftPalmDataUri}}
   Right Palm: {{media url=rightPalmDataUri}}
@@ -54,6 +74,7 @@ const prompt = ai.definePrompt({
   Category: {{{category}}}
 
   Based on the palm images and the provided information, generate a comprehensive palm reading report, focusing on the specified category. The report should be detailed and insightful.
+  {{/if}}
   `,
 });
 
@@ -68,3 +89,4 @@ const generatePalmReadingFlow = ai.defineFlow(
     return output!;
   }
 );
+
