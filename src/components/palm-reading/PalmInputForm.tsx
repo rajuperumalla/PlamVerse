@@ -39,7 +39,6 @@ const PalmInputForm = () => {
     createInitialReportPlaceholder,
     updateReportWithGeneratedContent,
     markReportAsGenerationFailed,
-    // isInitializing is used by the parent page, not directly here for the form logic
   } = useAppContext();
   const { toast } = useToast();
 
@@ -249,93 +248,104 @@ const PalmInputForm = () => {
 
   return (
     <div className="flex justify-center items-center py-8">
-      <Card className="w-full max-w-2xl shadow-xl animate-fade-in">
-        <CardHeader className="text-center">
-           <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
-            <Hand className="h-10 w-10 text-primary" />
-          </div>
-          <CardTitle className="font-headline text-3xl">Enter Your Palm Details</CardTitle>
-          <CardDescription>Provide your information to generate a personalized palm reading.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onFormSubmit} className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="leftPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Left Palm Image *</Label>
-                {renderImagePreview(leftPalmPreview, "Left Palm", "palm hand")}
-                <Input id="leftPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setLeftPalmImageFile, setLeftPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress}/>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="rightPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Right Palm Image *</Label>
-                {renderImagePreview(rightPalmPreview, "Right Palm", "palm hand")}
-                <Input id="rightPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setRightPalmImageFile, setRightPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress}/>
-              </div>
+      <Card className="w-full max-w-2xl shadow-xl animate-fade-in relative overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
+            <Image
+            src="https://placehold.co/800x1000.png"
+            alt="Subtle Geometry Background"
+            layout="fill"
+            objectFit="cover"
+            data-ai-hint="mandala pattern"
+            />
+        </div>
+        <div className="relative z-10">
+            <CardHeader className="text-center">
+            <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
+                <Hand className="h-10 w-10 text-primary" />
             </div>
+            <CardTitle className="font-headline text-3xl">Enter Your Palm Details</CardTitle>
+            <CardDescription>Provide your information to generate a personalized palm reading.</CardDescription>
+            </CardHeader>
+            <CardContent>
+            <form onSubmit={onFormSubmit} className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <Label htmlFor="leftPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Left Palm Image *</Label>
+                    {renderImagePreview(leftPalmPreview, "Left Palm", "palm hand")}
+                    <Input id="leftPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setLeftPalmImageFile, setLeftPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress}/>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="rightPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Right Palm Image *</Label>
+                    {renderImagePreview(rightPalmPreview, "Right Palm", "palm hand")}
+                    <Input id="rightPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setRightPalmImageFile, setRightPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress}/>
+                </div>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="dob" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Date of Birth *</Label>
-                <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} disabled={isOperationInProgress} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth (Optional)</Label>
-                <Input id="tob" type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} disabled={isOperationInProgress}/>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth *</Label>
-              <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} />
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <Label htmlFor="dob" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Date of Birth *</Label>
+                    <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} disabled={isOperationInProgress} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth (Optional)</Label>
+                    <Input id="tob" type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} disabled={isOperationInProgress}/>
+                </div>
+                </div>
+                
+                <div className="space-y-2">
+                <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth *</Label>
+                <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} />
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="dominantHand" className="text-base flex items-center gap-2"><UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *</Label>
-                <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress}>
-                  <SelectTrigger id="dominantHand">
-                    <SelectValue placeholder="Select your dominant hand" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Left">Left</SelectItem>
-                    <SelectItem value="Right">Right</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
-                <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress}>
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="General Personality">General Personality</SelectItem>
-                    <SelectItem value="Health and Wellness">Health and Wellness</SelectItem>
-                    <SelectItem value="Love and relationships">Love and Relationships</SelectItem>
-                    <SelectItem value="Career and Finances">Career and Finances</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full text-lg py-6 mt-8" 
-              disabled={isOperationInProgress || (hasPaid && !isReadyForManualSubmit) || (!hasPaid && !isReadyForPayment)}
-            >
-              {isOperationInProgress && (hasPaid || (!hasPaid && isReadyForPayment)) ? ( // Show loader only if an operation is relevant to current step
-                <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
-              ) : (
-                hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
-              )}
-            </Button>
-            <p className="text-xs text-muted-foreground text-center">* Required fields</p>
-          </form>
-        </CardContent>
-         <CardFooter className="mt-4">
-          <p className="text-xs text-muted-foreground text-center w-full">
-            Your information is used solely for generating your palm reading. Payment is required for report generation.
-          </p>
-        </CardFooter>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <Label htmlFor="dominantHand" className="text-base flex items-center gap-2"><UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *</Label>
+                    <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress}>
+                    <SelectTrigger id="dominantHand">
+                        <SelectValue placeholder="Select your dominant hand" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Left">Left</SelectItem>
+                        <SelectItem value="Right">Right</SelectItem>
+                    </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
+                    <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress}>
+                    <SelectTrigger id="category">
+                        <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="General Personality">General Personality</SelectItem>
+                        <SelectItem value="Health and Wellness">Health and Wellness</SelectItem>
+                        <SelectItem value="Love and relationships">Love and Relationships</SelectItem>
+                        <SelectItem value="Career and Finances">Career and Finances</SelectItem>
+                    </SelectContent>
+                    </Select>
+                </div>
+                </div>
+                
+                <Button 
+                type="submit" 
+                className="w-full text-lg py-6 mt-8" 
+                disabled={isOperationInProgress || (hasPaid && !isReadyForManualSubmit) || (!hasPaid && !isReadyForPayment)}
+                >
+                {isOperationInProgress && (hasPaid || (!hasPaid && isReadyForPayment)) ? ( 
+                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
+                ) : (
+                    hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
+                )}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">* Required fields</p>
+            </form>
+            </CardContent>
+            <CardFooter className="mt-4">
+            <p className="text-xs text-muted-foreground text-center w-full">
+                Your information is used solely for generating your palm reading. Payment is required for report generation.
+            </p>
+            </CardFooter>
+        </div>
       </Card>
     </div>
   );
