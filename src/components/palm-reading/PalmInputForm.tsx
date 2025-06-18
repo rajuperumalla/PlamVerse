@@ -1,6 +1,6 @@
 
 "use client";
-import { useState, type ChangeEvent, type FormEvent, useEffect } from 'react';
+import { useState, type ChangeEvent, type FormEvent, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { generatePalmReading, type GeneratePalmReadingInput } from '@/ai/flows/generate-palm-reading';
 import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard } from 'lucide-react';
+
+const SESSION_STORAGE_KEY = 'palmVerseCheckoutForm';
 
 const PalmInputForm = () => {
   const [leftPalmImage, setLeftPalmImage] = useState<File | null>(null);
@@ -27,21 +29,15 @@ const PalmInputForm = () => {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { generateNewReport, startLoading, stopLoading, isLoading, hasPaid, clearReport } = useAppContext();
+  const { 
+    generateNewReport, 
+    startLoading, 
+    stopLoading, 
+    isLoading, 
+    hasPaid, 
+    clearReport 
+  } = useAppContext();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (searchParams.get('payment_success') === 'true' && hasPaid) {
-        const canSubmit = leftPalmImage && rightPalmImage && dateOfBirth && placeOfBirth && dominantHand && category;
-        if (canSubmit) {
-            toast({ title: "Payment Successful", description: "Generating your report..." });
-            handleSubmit(new Event('submit') as unknown as FormEvent, true); 
-        } else {
-            toast({ title: "Payment Successful", description: "Please re-fill any missing fields and submit again." });
-        }
-    }
-  }, [searchParams, hasPaid]);
-
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setImage: (file: File | null) => void, setPreview: (url: string | null) => void) => {
     if (e.target.files && e.target.files[0]) {
@@ -67,14 +63,25 @@ const PalmInputForm = () => {
     });
   };
 
-  const handleSubmit = async (e: FormEvent, bypassPaymentCheck = false) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!leftPalmImage || !rightPalmImage || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
       toast({ title: "Missing Information", description: "Please fill all required fields and upload both palm images.", variant: "destructive" });
       return;
     }
 
-    if (!hasPaid && !bypassPaymentCheck) {
+    if (!hasPaid) {
+      const formDataToPersist = {
+        dateOfBirth,
+        placeOfBirth,
+        timeOfBirth,
+        dominantHand,
+        category,
+        leftPalmPreview, 
+        rightPalmPreview,
+      };
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(formDataToPersist));
+      
       toast({ title: "Payment Required", description: "Please complete payment to generate your report."});
       router.push('/payment'); 
       return;
@@ -83,12 +90,12 @@ const PalmInputForm = () => {
     clearReport(); 
     startLoading();
     try {
-      const leftPalmDataUri = await fileToDataUri(leftPalmImage);
-      const rightPalmDataUri = await fileToDataUri(rightPalmImage);
+      const leftPalmDataUriFromFile = await fileToDataUri(leftPalmImage);
+      const rightPalmDataUriFromFile = await fileToDataUri(rightPalmImage);
 
       const input: GeneratePalmReadingInput = {
-        leftPalmDataUri,
-        rightPalmDataUri,
+        leftPalmDataUri: leftPalmDataUriFromFile,
+        rightPalmDataUri: rightPalmDataUriFromFile,
         dateOfBirth,
         placeOfBirth,
         timeOfBirth: timeOfBirth || "Not specified",
@@ -97,7 +104,7 @@ const PalmInputForm = () => {
       };
 
       const result = await generatePalmReading(input);
-      generateNewReport(result.report); // Use generateNewReport here
+      generateNewReport(result.report); 
       toast({ title: "Palm Reading Generated!", description: "Your report is now pending expert review." });
       router.push('/report');
     } catch (error) {
@@ -107,7 +114,77 @@ const PalmInputForm = () => {
       stopLoading();
     }
   };
-  
+
+  const attemptAutoSubmit = useCallback(async () => {
+    if (searchParams.get('payment_success') === 'true' && hasPaid) {
+      const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      
+      // Remove the query param to prevent re-triggering on refresh if not navigating away
+      const newParams = new URLSearchParams(searchParams.toString());
+      newParams.delete('payment_success');
+      router.replace(`${router.pathname}?${newParams.toString()}`, { scroll: false });
+
+
+      if (persistedFormDataJson) {
+        const persistedData = JSON.parse(persistedFormDataJson);
+        sessionStorage.removeItem(SESSION_STORAGE_KEY); 
+
+        // Restore form state for UI consistency
+        setDateOfBirth(persistedData.dateOfBirth || '');
+        setPlaceOfBirth(persistedData.placeOfBirth || '');
+        setTimeOfBirth(persistedData.timeOfBirth || '');
+        setDominantHand(persistedData.dominantHand || '');
+        setCategory(persistedData.category || '');
+        setLeftPalmPreview(persistedData.leftPalmPreview || null);
+        setRightPalmPreview(persistedData.rightPalmPreview || null);
+        // Note: File objects (leftPalmImage, rightPalmImage) are not restored here.
+        // Auto-submission will use the persisted Data URIs (leftPalmPreview, rightPalmPreview).
+
+        if (
+          persistedData.leftPalmPreview &&
+          persistedData.rightPalmPreview &&
+          persistedData.dateOfBirth &&
+          persistedData.placeOfBirth &&
+          persistedData.dominantHand &&
+          persistedData.category
+        ) {
+          toast({ title: "Payment Successful", description: "Generating your report..." });
+          clearReport();
+          startLoading();
+          try {
+            const input: GeneratePalmReadingInput = {
+              leftPalmDataUri: persistedData.leftPalmPreview,
+              rightPalmDataUri: persistedData.rightPalmPreview,
+              dateOfBirth: persistedData.dateOfBirth,
+              placeOfBirth: persistedData.placeOfBirth,
+              timeOfBirth: persistedData.timeOfBirth || "Not specified",
+              dominantHand: persistedData.dominantHand,
+              category: persistedData.category,
+            };
+
+            const result = await generatePalmReading(input);
+            generateNewReport(result.report);
+            router.push('/report');
+          } catch (error) {
+            console.error("Error auto-generating palm reading:", error);
+            toast({ title: "Auto-Generation Error", description: "Failed to auto-generate. Please verify details and submit manually.", variant: "destructive" });
+          } finally {
+            stopLoading();
+          }
+        } else {
+          toast({ title: "Payment Successful", description: "Please complete any missing fields (especially images if not auto-filled) and submit." });
+        }
+      } else {
+        toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
+      }
+    }
+  }, [searchParams, hasPaid, router, toast, clearReport, startLoading, stopLoading, generateNewReport, 
+      setDateOfBirth, setPlaceOfBirth, setTimeOfBirth, setDominantHand, setCategory, setLeftPalmPreview, setRightPalmPreview]);
+
+  useEffect(() => {
+    attemptAutoSubmit();
+  }, [attemptAutoSubmit]); // Dependencies are handled by useCallback for attemptAutoSubmit
+
   const renderImagePreview = (previewUrl: string | null, palmName: string, dataAiHint: string) => (
     <div className="w-full h-48 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50 relative overflow-hidden">
       {previewUrl ? (
@@ -140,19 +217,19 @@ const PalmInputForm = () => {
               <div className="space-y-2">
                 <Label htmlFor="leftPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Left Palm Image</Label>
                 {renderImagePreview(leftPalmPreview, "Left Palm", "palm hand")}
-                <Input id="leftPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setLeftPalmImage, setLeftPalmPreview)} required className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
+                <Input id="leftPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setLeftPalmImage, setLeftPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rightPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Right Palm Image</Label>
                 {renderImagePreview(rightPalmPreview, "Right Palm", "palm hand")}
-                <Input id="rightPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setRightPalmImage, setRightPalmPreview)} required className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
+                <Input id="rightPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setRightPalmImage, setRightPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="dob" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Date of Birth</Label>
-                <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required />
+                <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)}  />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth (Optional)</Label>
@@ -162,14 +239,14 @@ const PalmInputForm = () => {
             
             <div className="space-y-2">
               <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth</Label>
-              <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" required />
+              <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country"  />
             </div>
 
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="dominantHand" className="text-base flex items-center gap-2"><UserCircle className="h-5 w-5 text-primary"/>Dominant Hand</Label>
-                <Select onValueChange={setDominantHand} value={dominantHand} required>
+                <Select onValueChange={setDominantHand} value={dominantHand} >
                   <SelectTrigger id="dominantHand">
                     <SelectValue placeholder="Select your dominant hand" />
                   </SelectTrigger>
@@ -181,7 +258,7 @@ const PalmInputForm = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category</Label>
-                <Select onValueChange={setCategory} value={category} required>
+                <Select onValueChange={setCategory} value={category} >
                   <SelectTrigger id="category">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
