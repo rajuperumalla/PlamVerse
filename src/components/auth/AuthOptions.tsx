@@ -54,7 +54,7 @@ const AuthOptions = () => {
   return (
     <Card className="w-full max-w-md shadow-xl animate-fade-in flex-shrink-0 bg-card/95 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl md:text-3xl">Login or Register</CardTitle>
+        <CardTitle className="font-headline text-2xl md:text-3xl">Login / Register for Palm Reading</CardTitle>
         <CardDescription>to access your AI Palm Reading.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">

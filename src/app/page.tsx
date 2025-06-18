@@ -3,9 +3,9 @@
 
 import AuthOptions from '@/components/auth/AuthOptions';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Handshake, Edit } from 'lucide-react';
+import { Sparkles, ArrowRight, Handshake } from 'lucide-react';
 
 const productCategories = [
   { name: "Crystal Bracelets", description: "Harness the energy of natural crystals for balance and healing.", imageUrl: "https://placehold.co/400x300.png", imageHint: "crystal bracelet", link: "#shop/bracelets" },
@@ -94,24 +94,24 @@ export default function LandingPage() {
                     <CardContent className="p-3 pt-0 flex-grow">
                       <p className="text-muted-foreground text-sm line-clamp-2">{category.description}</p>
                     </CardContent>
-                    <div className="p-3 border-t border-border">
+                    <CardFooter className="p-3 border-t border-border">
                       <Button variant="outline" className="w-full group text-sm py-2" disabled>
                         Explore
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                        <p className="text-xs text-center mt-1.5 text-amber-700 dark:text-amber-500 font-semibold">Coming Soon!</p>
-                    </div>
+                    </CardFooter>
                   </Card>
                 ))}
               </div>
             </CardContent>
             {productCategories.length > 2 && (
-                 <div className="p-4 text-center border-t">
+                 <CardFooter className="p-4 text-center border-t">
                      <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground text-md py-3 px-6" disabled>
                         Visit Our Full Shop <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                     <p className="text-sm text-center mt-2 text-amber-700 dark:text-amber-500 font-semibold">More products coming soon!</p>
-                 </div>
+                 </CardFooter>
             )}
           </Card>
         </div>
