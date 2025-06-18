@@ -10,15 +10,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertTriangle, LogIn, Eye, ShieldQuestion, Columns, Archive, FileCheck2, Edit, FileSearch, ArrowLeft } from 'lucide-react';
+import { Loader2, AlertTriangle, LogIn, Eye, ShieldQuestion, Columns, Archive, FileCheck2, Edit, FileSearch } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Textarea } from '@/components/ui/textarea';
-import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { refinePalmReadingReport } from '@/ai/flows/refine-palm-reading-report';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Sparkles, Send, CheckCircle, ThumbsUp, MessageCircleQuestion } from 'lucide-react';
-
 
 export default function AdminPage() {
   const { 
@@ -27,9 +21,6 @@ export default function AdminPage() {
     reports, 
     isLoading: contextIsLoading, 
     loadSampleReports,
-    approveReport,
-    startLoading,
-    stopLoading,
   } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
@@ -131,7 +122,16 @@ export default function AdminPage() {
                     <TableBody>
                       {pendingReviewReports.map((report) => (
                         <TableRow key={report.id}>
-                          <TableCell className="font-medium text-xs">{report.id.substring(0,10)}...</TableCell><TableCell className="text-xs">{report.userName || 'N/A'}</TableCell><TableCell className="text-xs">{report.category}</TableCell><TableCell className="text-xs">{new Date(report.submissionDate).toLocaleDateString()}</TableCell><TableCell className="text-right">
+                          <TableCell className="font-medium text-xs">{report.id.substring(0,10)}...</TableCell>
+                          <TableCell className="text-xs">{report.userName || 'N/A'}</TableCell>
+                          <TableCell className="text-xs">{report.category}</TableCell>
+                          <TableCell className="text-xs">
+                            {report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? 
+                              new Date(report.submissionDate).toLocaleDateString() : 
+                              'N/A'
+                            }
+                          </TableCell>
+                          <TableCell className="text-right">
                             <Button asChild variant="outline" size="sm">
                               <Link href={`/admin/review/${report.id}`}>
                                 <Edit className="mr-2 h-4 w-4"/> Review
@@ -185,7 +185,16 @@ export default function AdminPage() {
                     <TableBody>
                       {approvedReports.map((report) => (
                         <TableRow key={report.id}>
-                          <TableCell className="font-medium text-xs text-green-700">{report.id.substring(0,10)}...</TableCell><TableCell className="text-xs">{report.userName || 'N/A'}</TableCell><TableCell className="text-xs">{report.category}</TableCell><TableCell className="text-xs">{new Date(report.lastUpdateDate).toLocaleDateString()}</TableCell><TableCell className="text-right">
+                          <TableCell className="font-medium text-xs text-green-700">{report.id.substring(0,10)}...</TableCell>
+                          <TableCell className="text-xs">{report.userName || 'N/A'}</TableCell>
+                          <TableCell className="text-xs">{report.category}</TableCell>
+                          <TableCell className="text-xs">
+                            {report.lastUpdateDate && !isNaN(new Date(report.lastUpdateDate).getTime()) ? 
+                              new Date(report.lastUpdateDate).toLocaleDateString() : 
+                              'N/A'
+                            }
+                          </TableCell>
+                          <TableCell className="text-right">
                             <Button variant="ghost" size="sm" onClick={() => openViewApprovedDialog(report)} className="text-green-600 hover:bg-green-500/10">
                               <FileSearch className="mr-2 h-4 w-4"/> View
                             </Button>
@@ -243,6 +252,4 @@ export default function AdminPage() {
     </div>
   );
 }
-    
-
     
