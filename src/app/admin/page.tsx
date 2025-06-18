@@ -2,20 +2,16 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link'; // Import Link
 import Image from 'next/image';
 import { useAppContext, type ReportData } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input'; 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { refinePalmReadingReport } from '@/ai/flows/refine-palm-reading-report';
-import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, ShieldQuestion, ThumbsUp, LogIn, Eye, Sparkles, FileSearch, MessageCircleQuestion, Columns, Archive, FileCheck2, Edit } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, AlertTriangle, LogIn, Eye, ShieldQuestion, Columns, Archive, FileCheck2, Edit, FileSearch } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function AdminPage() {
@@ -24,26 +20,14 @@ export default function AdminPage() {
     isAdmin,
     reports, 
     isLoading: contextIsLoading, 
-    startLoading, 
-    stopLoading, 
-    approveReport,
     loadSampleReports,
   } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
   
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
-
-  const [selectedReport, setSelectedReport] = useState<ReportData | null>(null);
-  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+  const [selectedReportForView, setSelectedReportForView] = useState<ReportData | null>(null);
   const [isViewApprovedDialogOpen, setIsViewApprovedDialogOpen] = useState(false);
-  
-  const [adminSuggestionForDialog, setAdminSuggestionForDialog] = useState('');
-  const [adminGuidanceForSuggestions, setAdminGuidanceForSuggestions] = useState('');
-  const [aiSuggestionForDialog, setAiSuggestionForDialog] = useState<string | null>(null);
-  const [isAiSuggestionLoadingInDialog, setIsAiSuggestionLoadingInDialog] = useState(false);
-  const [provisionallyRefinedContent, setProvisionallyRefinedContent] = useState<string | null>(null);
-
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -58,93 +42,10 @@ export default function AdminPage() {
   const pendingReviewReports = reports.filter(report => report.status === 'pending_review');
   const approvedReports = reports.filter(report => report.status === 'approved');
 
-  const openReviewDialog = (report: ReportData) => {
-    setSelectedReport(report);
-    setAdminSuggestionForDialog(''); 
-    setAiSuggestionForDialog(null);
-    setAdminGuidanceForSuggestions('');
-    setProvisionallyRefinedContent(null); 
-    setIsReviewDialogOpen(true);
-  };
-
   const openViewApprovedDialog = (report: ReportData) => {
-    setSelectedReport(report);
+    setSelectedReportForView(report);
     setIsViewApprovedDialogOpen(true);
   };
-
-  const handleGetAiSuggestionsInDialog = async () => {
-    if (!selectedReport) return;
-    setIsAiSuggestionLoadingInDialog(true);
-    setAiSuggestionForDialog(null); 
-    try {
-      const result = await suggestReportImprovements({ 
-        report: selectedReport.content,
-        adminGuidance: adminGuidanceForSuggestions 
-      });
-      setAiSuggestionForDialog(result.suggestions);
-      toast({ title: "AI Suggestions Ready", description: `AI-powered suggestions generated for Report ID ${selectedReport.id.substring(0,10)}...`});
-    } catch (error) {
-      console.error("Error getting AI suggestions:", error);
-      setAiSuggestionForDialog("Error: Could not fetch suggestions.");
-      toast({ title: "Suggestion Error", description: `Failed to get AI suggestions for Report ID ${selectedReport.id.substring(0,10)}...`, variant: "destructive" });
-    } finally {
-      setIsAiSuggestionLoadingInDialog(false);
-    }
-  };
-
-  const handlePreviewAiRefinement = async () => {
-    if (!selectedReport || !adminSuggestionForDialog.trim()) {
-      toast({ title: "Missing Input", description: "Please provide refinement suggestions for the AI to process.", variant: "destructive" });
-      return;
-    }
-    startLoading();
-    setProvisionallyRefinedContent(null);
-    try {
-      const refinedResult = await refinePalmReadingReport({
-        originalReport: selectedReport.content,
-        adminSuggestions: adminSuggestionForDialog,
-      });
-      setProvisionallyRefinedContent(refinedResult.refinedReport);
-      toast({ title: "AI Refinement Preview Ready", description: "Review the AI-refined content below before final approval for the customer." });
-    } catch (error) {
-      console.error("Error previewing AI refinement:", error);
-      toast({ title: "Refinement Preview Error", description: `Failed to get AI refinement preview for Report ID ${selectedReport.id.substring(0,10)}... Please try again.`, variant: "destructive" });
-    } finally {
-      stopLoading();
-    }
-  };
-
-  const handleFinalApproveForCustomer = async () => {
-    if (!selectedReport || !provisionallyRefinedContent) {
-      toast({ title: "Missing Content", description: "No refined content to approve.", variant: "destructive" });
-      return;
-    }
-    startLoading();
-    try {
-      approveReport(selectedReport.id, provisionallyRefinedContent); 
-      toast({ title: "Report Approved & Live", description: `Report ID ${selectedReport.id.substring(0,10)}... has been approved and is now available to the customer.` });
-      setIsReviewDialogOpen(false);
-      setSelectedReport(null);
-      setProvisionallyRefinedContent(null);
-    } catch (error) {
-      console.error("Error during final approval:", error);
-      toast({ title: "Final Approval Error", description: `Failed to approve report ID ${selectedReport.id.substring(0,10)}... Please try again.`, variant: "destructive" });
-    } finally {
-      stopLoading();
-    }
-  };
-
-  const handleApproveAsIsInDialog = () => {
-    if (!selectedReport) return;
-    startLoading();
-    approveReport(selectedReport.id); 
-    toast({ title: "Report Approved As-Is", description: `Report ID ${selectedReport.id.substring(0,10)}... has been approved and is now available to the customer.` });
-    setIsReviewDialogOpen(false);
-    setSelectedReport(null);
-    setProvisionallyRefinedContent(null);
-    stopLoading();
-  };
-
 
   if (!authCheckComplete || !isAuthenticated || !isAdmin) {
     return (
@@ -226,8 +127,10 @@ export default function AdminPage() {
                           <TableCell className="text-xs">{report.category}</TableCell>
                           <TableCell className="text-xs">{new Date(report.submissionDate).toLocaleDateString()}</TableCell>
                           <TableCell className="text-right">
-                            <Button variant="outline" size="sm" onClick={() => openReviewDialog(report)}>
-                              <Edit className="mr-2 h-4 w-4"/> Review
+                            <Button asChild variant="outline" size="sm">
+                              <Link href={`/admin/review/${report.id}`}>
+                                <Edit className="mr-2 h-4 w-4"/> Review
+                              </Link>
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -280,7 +183,7 @@ export default function AdminPage() {
                           <TableCell className="font-medium text-xs text-green-700">{report.id.substring(0,10)}...</TableCell>
                           <TableCell className="text-xs">{report.userName || 'N/A'}</TableCell>
                           <TableCell className="text-xs">{report.category}</TableCell>
-                          <TableCell className="text-xs">{new Date(report.submissionDate).toLocaleDateString()}</TableCell>
+                          <TableCell className="text-xs">{new Date(report.lastUpdateDate).toLocaleDateString()}</TableCell> {/* Use lastUpdateDate for approved date */}
                           <TableCell className="text-right">
                             <Button variant="ghost" size="sm" onClick={() => openViewApprovedDialog(report)} className="text-green-600 hover:bg-green-500/10">
                               <FileSearch className="mr-2 h-4 w-4"/> View
@@ -303,163 +206,30 @@ export default function AdminPage() {
         </p>
       </CardFooter>
 
-      {selectedReport && isReviewDialogOpen && (
-        <Dialog open={isReviewDialogOpen} onOpenChange={(open) => { setIsReviewDialogOpen(open); if (!open) setSelectedReport(null); }}>
+      {selectedReportForView && isViewApprovedDialogOpen && (
+         <Dialog open={isViewApprovedDialogOpen} onOpenChange={(open) => { setIsViewApprovedDialogOpen(open); if (!open) setSelectedReportForView(null); }}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Review Report: {selectedReport.id.substring(0,10)}...</DialogTitle>
-              <DialogDescription>Category: {selectedReport.category} | Submitted by: {selectedReport.userName || 'N/A'} on {new Date(selectedReport.submissionDate).toLocaleDateString()}</DialogDescription>
-            </DialogHeader>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
-              {selectedReport.inputDetails.leftPalmDataUri && 
-                <div className="text-center">
-                  <Image src={selectedReport.inputDetails.leftPalmDataUri} alt="Left Palm" width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand" />
-                  <p className="text-xs text-muted-foreground mt-1">Left Palm</p>
-                </div>
-              }
-              {selectedReport.inputDetails.rightPalmDataUri && 
-                 <div className="text-center">
-                  <Image src={selectedReport.inputDetails.rightPalmDataUri} alt="Right Palm" width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand" />
-                  <p className="text-xs text-muted-foreground mt-1">Right Palm</p>
-                </div>
-              }
-            </div>
-
-            <Label className="font-semibold">Original AI Generated Content:</Label>
-            <ScrollArea className="h-[150px] w-full rounded-md border p-4 mt-1 bg-muted/10 text-sm">
-              {selectedReport.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
-                <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
-              ))}
-            </ScrollArea>
-
-            <div className="mt-4 space-y-3 border-t pt-4">
-                <Label htmlFor="adminGuidanceForSuggestions" className="text-sm font-medium flex items-center gap-1.5"><MessageCircleQuestion className="h-4 w-4 text-primary"/>Your Guidance for AI Suggestions (Optional)</Label>
-                <Textarea
-                    id="adminGuidanceForSuggestions"
-                    value={adminGuidanceForSuggestions}
-                    onChange={(e) => setAdminGuidanceForSuggestions(e.target.value)}
-                    placeholder="e.g., 'Focus on career aspects', 'Check clarity on relationships', 'Is the tone appropriate?'"
-                    rows={2}
-                    className="text-sm"
-                    disabled={contextIsLoading || isAiSuggestionLoadingInDialog}
-                />
-                <Button 
-                    onClick={handleGetAiSuggestionsInDialog} 
-                    variant="outline" 
-                    size="sm"
-                    className="w-full"
-                    disabled={contextIsLoading || isAiSuggestionLoadingInDialog}
-                >
-                    {isAiSuggestionLoadingInDialog ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                    Get AI Suggestions for Refinement
-                </Button>
-                <p className="text-xs text-muted-foreground mt-1 text-center">
-                  You can revise your guidance above and click again to get new suggestions.
-                </p>
-
-                {aiSuggestionForDialog && (
-                <Alert variant={aiSuggestionForDialog.startsWith("Error:") ? "destructive" : "default"} className="text-xs">
-                    <Sparkles className="h-4 w-4" />
-                    <AlertTitle className="text-sm">AI Generated Suggestions</AlertTitle>
-                    <AlertDescription>
-                    <ScrollArea className="h-[80px]">
-                        {aiSuggestionForDialog.split('\n').map((line, i) => <p key={i} className="mb-1">{line}</p>)}
-                    </ScrollArea>
-                    </AlertDescription>
-                     {aiSuggestionForDialog && !aiSuggestionForDialog.startsWith("Error:") && (
-                        <Button 
-                            onClick={() => {
-                                setAdminSuggestionForDialog((prev) => prev + (prev ? '\n\n--- AI Suggestions ---\n' : '--- AI Suggestions ---\n') + aiSuggestionForDialog);
-                                toast({title: "AI Suggestions Appended", description: "Suggestions appended to your refinement notes."})
-                            }}
-                            variant="link" size="sm" className="p-0 h-auto text-xs mt-1">
-                            Append to Final Refinement Notes
-                        </Button>
-                    )}
-                </Alert>
-                )}
-            </div>
-            
-            <div className="mt-4 space-y-2 border-t pt-4">
-              <Label htmlFor="adminDialogSuggestions" className="text-sm font-medium flex items-center gap-1.5"><Edit3 className="h-4 w-4 text-primary"/>Your Final Refinement Notes & Edits</Label>
-              <Textarea
-                id="adminDialogSuggestions"
-                value={adminSuggestionForDialog}
-                onChange={(e) => setAdminSuggestionForDialog(e.target.value)}
-                placeholder="Enter your comprehensive suggestions and edits here. This will be used by AI to generate the final report."
-                rows={4}
-                className="text-sm"
-                disabled={contextIsLoading}
-              />
-               <Button 
-                    onClick={handlePreviewAiRefinement} 
-                    disabled={contextIsLoading || !adminSuggestionForDialog.trim()} 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2"
-                    title="AI will process your notes above to generate a refined report preview."
-                >
-                    {contextIsLoading && adminSuggestionForDialog.trim() && !provisionallyRefinedContent ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                    Preview AI Refinement
-                </Button>
-            </div>
-
-            {provisionallyRefinedContent && (
-              <div className="mt-4 space-y-2 border-t pt-4">
-                <Label className="font-semibold text-green-700 flex items-center gap-1.5"><FileCheck2 className="h-4 w-4"/>Preview of AI-Refined Report for Customer:</Label>
-                <ScrollArea className="h-[150px] w-full rounded-md border p-4 bg-green-50/50 text-sm">
-                  {provisionallyRefinedContent.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
-                    <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
-                  ))}
-                </ScrollArea>
-                <Button 
-                  onClick={handleFinalApproveForCustomer} 
-                  disabled={contextIsLoading}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white mt-2"
-                >
-                  {contextIsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                  Confirm & Approve for Customer
-                </Button>
-              </div>
-            )}
-
-            <DialogFooter className="mt-6 gap-2 sm:gap-0">
-                <Button 
-                    onClick={handleApproveAsIsInDialog} 
-                    variant="secondary" 
-                    disabled={contextIsLoading || !!provisionallyRefinedContent} 
-                    title={provisionallyRefinedContent ? "A refined preview exists. Clear it or approve it first." : "Approve the original AI report without admin refinements."}
-                >
-                    <ThumbsUp className="mr-2 h-4 w-4" /> Approve Original As-Is
-                </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {selectedReport && isViewApprovedDialogOpen && (
-         <Dialog open={isViewApprovedDialogOpen} onOpenChange={(open) => { setIsViewApprovedDialogOpen(open); if (!open) setSelectedReport(null); }}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Approved Report: {selectedReport.id.substring(0,10)}...</DialogTitle>
-              <DialogDescription>Category: {selectedReport.category} | Submitted by: {selectedReport.userName || 'N/A'}</DialogDescription>
+              <DialogTitle>Approved Report: {selectedReportForView.id.substring(0,10)}...</DialogTitle>
+              <DialogDescription>Category: {selectedReportForView.category} | Submitted by: {selectedReportForView.userName || 'N/A'}</DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
-              {selectedReport.inputDetails.leftPalmDataUri && 
+              {selectedReportForView.inputDetails.leftPalmDataUri && 
                   <div className="text-center">
-                  <Image src={selectedReport.inputDetails.leftPalmDataUri} alt="Left Palm" width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand" />
+                  <Image src={selectedReportForView.inputDetails.leftPalmDataUri} alt="Left Palm" width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand" />
                   <p className="text-xs text-muted-foreground mt-1">Left Palm</p>
                 </div>
               }
-              {selectedReport.inputDetails.rightPalmDataUri && 
+              {selectedReportForView.inputDetails.rightPalmDataUri && 
                 <div className="text-center">
-                  <Image src={selectedReport.inputDetails.rightPalmDataUri} alt="Right Palm" width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand" />
+                  <Image src={selectedReportForView.inputDetails.rightPalmDataUri} alt="Right Palm" width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand" />
                   <p className="text-xs text-muted-foreground mt-1">Right Palm</p>
                 </div>
               }
             </div>
             <Label className="font-semibold">Approved Report Content:</Label>
             <ScrollArea className="h-[250px] w-full rounded-md border p-4 mt-1 bg-muted/10 text-sm">
-              {selectedReport.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
+              {selectedReportForView.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
                 <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
               ))}
             </ScrollArea>
@@ -472,4 +242,6 @@ export default function AdminPage() {
     </div>
   );
 }
+    
+
     
