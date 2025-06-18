@@ -1,37 +1,25 @@
 
 "use client";
+// This page is effectively replaced by /admin/settings/core/page.tsx
+// and the accordion structure in the layout.
+// It can be kept as a redirect or a very minimal placeholder if direct access to /admin/settings is possible.
+// For now, let's make it redirect to the first sub-item, core settings.
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings } from "lucide-react";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
-export default function AdminSettingsPage() {
+export default function AdminSettingsRedirectPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/admin/settings/core');
+  }, [router]);
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Settings className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold font-headline">Store Settings</h1>
-      </div>
-      <CardDescription>
-        Configure core store settings, payment gateways, shipping, and taxes.
-      </CardDescription>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Settings Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Here you will be able to configure general store settings (name, currency, timezone),
-            set up payment gateways, define shipping zones and rates, manage tax configurations,
-            and customize email templates.
-          </p>
-          <p className="mt-4 text-sm text-primary">
-            Further development for store settings features is planned.
-          </p>
-        </CardContent>
-      </Card>
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+      <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+      <p className="text-muted-foreground">Redirecting to Core Settings...</p>
     </div>
   );
 }
-
-    

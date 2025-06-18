@@ -14,7 +14,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { LayoutDashboard, PanelLeft, Package, Briefcase, Users, Settings, ShieldCheck, ShoppingCart, Tag, Palette, Boxes, Upload, MessageSquareText, Info, MailCheck, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, PanelLeft, Package, Briefcase, Users, Settings, ShieldCheck, ShoppingCart, Tag, Upload, MessageSquareText, Info, ShoppingBag, Settings2, CreditCard, Truck, Percent } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -74,7 +74,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }
 
   const productSubmenuActive = pathname.startsWith('/admin/products');
-  const ecommerceSubmenuActive = pathname.startsWith('/admin/products') || pathname === '/admin/site-info' || pathname === '/admin/subscribers';
+  const settingsSubmenuActive = pathname.startsWith('/admin/settings/'); // Note the trailing slash
+  const ecommerceSubmenuActive = productSubmenuActive || pathname === '/admin/site-info' || pathname === '/admin/subscribers';
 
   return (
     <SidebarProvider defaultOpen>
@@ -190,17 +191,42 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/admin/settings'}
-                  tooltip={{ children: 'Store Settings', side: 'right', className: "md:block hidden" }}
-                >
-                  <Link href="/admin/settings">
-                    <Settings />
-                    <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-                  </Link>
-                </SidebarMenuButton>
+                <Accordion type="single" collapsible className="w-full" defaultValue={settingsSubmenuActive ? "settings-menu" : undefined}>
+                  <AccordionItem value="settings-menu" className="border-none">
+                    <SidebarMenuButton 
+                      asChild 
+                      variant="ghost" 
+                      className="p-0 w-full h-auto"
+                      tooltip={{ children: 'Store Settings', side: 'right', className: "md:block hidden" }}
+                      isActive={settingsSubmenuActive || pathname === '/admin/settings'}
+                    >
+                      <AccordionTrigger 
+                        className="flex items-center justify-between w-full py-2 px-2 rounded-md text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Settings />
+                          <span className="group-data-[collapsible=icon]:hidden">Settings</span>
+                        </div>
+                      </AccordionTrigger>
+                    </SidebarMenuButton>
+                    <AccordionContent className="pt-1 pl-4 group-data-[collapsible=icon]:hidden">
+                        <SidebarMenuButton asChild isActive={pathname === '/admin/settings/core'} className="w-full justify-start h-9 my-0.5 text-xs">
+                            <Link href="/admin/settings/core"><Settings2 className="mr-2 h-4 w-4"/>Core Settings</Link>
+                        </SidebarMenuButton>
+                        <SidebarMenuButton asChild isActive={pathname === '/admin/settings/payment-gateways'} className="w-full justify-start h-9 my-0.5 text-xs">
+                            <Link href="/admin/settings/payment-gateways"><CreditCard className="mr-2 h-4 w-4"/>Payment Gateways</Link>
+                        </SidebarMenuButton>
+                        <SidebarMenuButton asChild isActive={pathname === '/admin/settings/shipping'} className="w-full justify-start h-9 my-0.5 text-xs">
+                            <Link href="/admin/settings/shipping"><Truck className="mr-2 h-4 w-4"/>Shipping</Link>
+                        </SidebarMenuButton>
+                        <SidebarMenuButton asChild isActive={pathname === '/admin/settings/taxes'} className="w-full justify-start h-9 my-0.5 text-xs">
+                            <Link href="/admin/settings/taxes"><Percent className="mr-2 h-4 w-4"/>Taxes</Link>
+                        </SidebarMenuButton>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
