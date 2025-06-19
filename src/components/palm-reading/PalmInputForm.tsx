@@ -141,10 +141,11 @@ const PalmInputForm = () => {
   };
 
   const attemptAutoSubmitAfterPayment = useCallback(async () => {
-    if (searchParams.get('payment_success') === 'true' && hasPaid && userName) {
+    if (searchParams && searchParams.get('payment_success') === 'true' && hasPaid && userName) {
       const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
       
-      const newParams = new URLSearchParams(searchParams.toString());
+      const currentSearchParamsString = searchParams.toString();
+      const newParams = new URLSearchParams(currentSearchParamsString);
       newParams.delete('payment_success');
       router.replace(`/palm-input?${newParams.toString()}`, { scroll: false });
 
@@ -193,7 +194,7 @@ const PalmInputForm = () => {
             if (initialReportId) {
                markReportAsGenerationFailed(initialReportId, `Auto-generation failed after payment: ${errorMessage}`);
             }
-            toast({ title: "Auto-Generation Error", description: "An issue occurred while automatically preparing your report. Please try submitting your details again from the palm input page.", variant: "destructive" });
+            toast({ title: "Auto-Generation Error", description: `An issue occurred while automatically preparing your report. Details: ${errorMessage}. Please try submitting your details again from the palm input page.`, variant: "destructive" });
             router.push('/'); 
           } finally {
             if(isOperationInProgress) stopOperation();
@@ -350,5 +351,7 @@ const PalmInputForm = () => {
 };
 
 export default PalmInputForm;
+
+    
 
     
