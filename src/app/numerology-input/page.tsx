@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAppContext, type ReportNumerologyInputDetails_Business, type ReportNumerologyInputDetails_BabyName, type ReportNumerologyInputDetails_PersonalReport } from '@/context/AppContext';
-import { Loader2, Calculator, Search } from 'lucide-react'; // Removed nav-specific icons
+import { Loader2, Calculator, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import BusinessNumerologyForm from '@/components/numerology/BusinessNumerologyForm';
@@ -26,6 +26,7 @@ const SESSION_STORAGE_KEYS = {
   'business-name-calculator': 'palmVerseBusinessNumerologyCheckoutForm',
   'baby-name-numerology': 'palmVerseBabyNameNumerologyCheckoutForm',
   'life-path-report': 'palmVersePersonalLifePathCheckoutForm',
+  // Add other keys as new forms are implemented
 };
 
 
@@ -83,7 +84,7 @@ function NumerologyInputPageComponent() {
           canAutoSubmit = !!(data.businessName && data.founderFullName && data.founderDOB);
         } else if (serviceQuery === 'baby-name-numerology') {
           const data = persistedData as ReportNumerologyInputDetails_BabyName;
-          const proposedNamesArray = Array.isArray(data.proposedNames) ? data.proposedNames : (typeof data.proposedNames === 'string' ? data.proposedNames.split('\n').map(name => name.trim()).filter(name => name.length > 0) : []);
+          const proposedNamesArray = Array.isArray(data.proposedNames) ? data.proposedNames : (typeof data.proposedNames === 'string' ? data.proposedNames.split('\\n').map(name => name.trim()).filter(name => name.length > 0) : []);
           canAutoSubmit = !!(proposedNamesArray.length > 0 && data.childDOB);
         } else if (serviceQuery === 'life-path-report') {
           const data = persistedData as ReportNumerologyInputDetails_PersonalReport;
@@ -130,7 +131,7 @@ function NumerologyInputPageComponent() {
   const renderForm = () => {
     if (!selectedService) {
       return (
-        <div className="text-center py-10 md:py-16"> {/* Removed mt-8 */}
+        <div className="text-center py-10 md:py-16">
           <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
             <CardHeader className="items-center">
               <div className="p-3 bg-primary/10 rounded-full mb-3">
@@ -145,7 +146,7 @@ function NumerologyInputPageComponent() {
             </CardHeader>
             <CardContent className="space-y-6">
               <p className="text-muted-foreground text-md md:text-lg">
-                Please select a specific numerology service from the "Numerology" menu above to get started.
+                Please select a specific numerology service from the main "Numerology" menu above to get started.
               </p>
             </CardContent>
             <CardFooter>
@@ -167,7 +168,7 @@ function NumerologyInputPageComponent() {
         return <PersonalLifePathReportForm serviceDescription={selectedService.description} />;
       default:
         return (
-          <div className="text-center py-10 md:py-16"> {/* Removed mt-8 */}
+          <div className="text-center py-10 md:py-16">
             <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
               <CardHeader className="items-center">
                 <div className="p-3 bg-primary/10 rounded-full mb-3">
@@ -209,17 +210,9 @@ function NumerologyInputPageComponent() {
 
   return (
     <div className="relative space-y-8 md:space-y-10">
-      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
-        <Image
-          src="https://placehold.co/1920x1080.png"
-          alt="Sacred Geometry Page Background"
-          layout="fill"
-          objectFit="cover"
-          data-ai-hint="sacred geometry background"
-        />
-      </div>
+      {/* Background image removed */}
       <div className="relative z-10">
-        {/* Navigation menu has been moved to SubHeaderNavigation.tsx and included via RootLayout */}
+        {/* Navigation menu has been moved to Header.tsx and SubHeaderNavigation is removed */}
         {renderForm()}
       </div>
     </div>
@@ -238,3 +231,5 @@ export default function NumerologyInputPage() {
     </Suspense>
   );
 }
+
+    

@@ -6,17 +6,17 @@ import Link from 'next/link';
 import Image from 'next/image';
 import PalmInputForm from '@/components/palm-reading/PalmInputForm';
 import { useAppContext } from '@/context/AppContext';
-import { Loader2, Sparkles, ArrowRight, Search, Info } from 'lucide-react'; // Removed nav-specific icons
+import { Loader2, Sparkles, ArrowRight, Search, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 
 
 const productCategories = [
-  { name: "Crystal Bracelets", description: "Harness the energy of natural crystals for balance and healing.", imageUrl: "https://placehold.co/400x300.png", imageHint: "crystal bracelet", link: "#products/crystal-bracelets" },
-  { name: "Gemstones", description: "Discover the power of authentic gemstones for well-being.", imageUrl: "https://placehold.co/400x300.png", imageHint: "gemstone collection", link: "#products/gemstones" },
-  { name: "Pooja Essentials", description: "All you need for your sacred rituals and pooja.", imageUrl: "https://placehold.co/400x300.png", imageHint: "pooja items", link: "#products/pooja-essentials" },
-  { name: "Rudrakshas", description: "Authentic Rudraksha beads for spiritual well-being.", imageUrl: "https://placehold.co/400x300.png", imageHint: "rudraksha beads", link: "#products/rudrakshas" },
-  { name: "Yantras", description: "Invite prosperity and protection with sacred geometric yantras.", imageUrl: "https://placehold.co/400x300.png", imageHint: "sacred yantra", link: "#products/yantras" },
+  { name: "Crystal Bracelets", description: "Harness the energy of natural crystals for balance and healing.", imageUrl: "https://placehold.co/400x300.png", imageHint: "crystal bracelet", link: "/products#crystal-bracelets" },
+  { name: "Gemstones", description: "Discover the power of authentic gemstones for well-being.", imageUrl: "https://placehold.co/400x300.png", imageHint: "gemstone collection", link: "/products#gemstones" },
+  { name: "Pooja Essentials", description: "All you need for your sacred rituals and pooja.", imageUrl: "https://placehold.co/400x300.png", imageHint: "pooja items", link: "/products#pooja-essentials" },
+  { name: "Rudrakshas", description: "Authentic Rudraksha beads for spiritual well-being.", imageUrl: "https://placehold.co/400x300.png", imageHint: "rudraksha beads", link: "/products#rudrakshas" },
+  { name: "Yantras", description: "Invite prosperity and protection with sacred geometric yantras.", imageUrl: "https://placehold.co/400x300.png", imageHint: "sacred yantra", link: "/products#yantras" },
 ];
 
 const readingTypes = [
@@ -65,16 +65,9 @@ function PalmInputPageComponent() {
 
   return (
     <div className="relative space-y-8 md:space-y-10">
-      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
-        <Image
-          src="https://placehold.co/1920x1080.png"
-          alt="Sacred Geometry Page Background"
-          layout="fill"
-          objectFit="cover"
-          data-ai-hint="sacred geometry pattern"
-        />
-      </div>
+      {/* Background Image removed as it's too much with integrated nav potentially */}
       <div className="relative z-10">
+        {/* Navigation menu has been moved to Header.tsx and SubHeaderNavigation is removed */}
         {isValidCategorySelected ? (
           <>
             <PalmInputForm categoryDescription={categoryDescription} />
@@ -127,7 +120,7 @@ function PalmInputPageComponent() {
             </div>
           </>
         ) : (
-          <div className="text-center py-10 md:py-16"> {/* Removed mt-8 as spacing is handled by SubHeaderNavigation */}
+          <div className="text-center py-10 md:py-16">
             <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
               <CardHeader className="items-center">
                 <div className="p-3 bg-primary/10 rounded-full mb-3">
@@ -140,7 +133,7 @@ function PalmInputPageComponent() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <p className="text-muted-foreground text-md md:text-lg">
-                  Select a specific reading type from the "Palmistry" menu or a service from the "Numerology" menu to provide your details and receive personalized insights.
+                  Select a specific reading type from the "Palmistry" menu or a service from the "Numerology" menu in the main header to provide your details and receive personalized insights.
                 </p>
                 <div className="w-full max-w-lg mx-auto">
                   <Image
@@ -158,7 +151,7 @@ function PalmInputPageComponent() {
               </CardContent>
               <CardFooter>
                 <p className="text-xs text-muted-foreground text-center w-full">
-                    Choose a category from the menu to proceed.
+                    Choose a category from the main header menu to proceed.
                 </p>
               </CardFooter>
             </Card>
@@ -181,3 +174,5 @@ export default function PalmInputPage() {
     </Suspense>
   );
 }
+
+    

@@ -5,7 +5,7 @@ import { AppProvider } from '@/context/AppContext';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
-import SubHeaderNavigation from '@/components/shared/SubHeaderNavigation';
+// Removed SubHeaderNavigation import
 
 export const metadata: Metadata = {
   title: 'PalmVerse - AI Palm Reading',
@@ -28,8 +28,8 @@ export default function RootLayout({
       <body className="font-body antialiased flex flex-col min-h-screen">
         <AppProvider>
           <Header />
+          {/* SubHeaderNavigation component removed from here */}
           <main className="flex-grow container mx-auto px-4 py-8">
-            <SubHeaderNavigation />
             {children}
           </main>
           <Footer />
@@ -39,3 +39,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+    
