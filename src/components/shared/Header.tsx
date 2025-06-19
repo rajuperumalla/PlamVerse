@@ -108,6 +108,12 @@ const Header = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           
+          {isAuthenticated && (
+            <Link href="/report" className={getLinkClassName(isReportPageActive)}>
+              <BookOpen className="mr-1.5 h-4 w-4" /> My Reading
+            </Link>
+          )}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className={getDropdownTriggerClassName(isProductsPageActive)} disabled>
@@ -155,13 +161,7 @@ const Header = () => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-primary-foreground/20"/>
-                {(!isEditor && !isAdmin && isAuthenticated) && (
-                  <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                    <Link href="/report">
-                      <BookOpen className="mr-2 h-4 w-4" /> My Reading
-                    </Link>
-                  </DropdownMenuItem>
-                )}
+                {/* "My Reading" link removed from here */}
                 {isEditor && (
                   <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
                     <Link href="/editor">
@@ -176,7 +176,7 @@ const Header = () => {
                     </Link>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuSeparator className="bg-primary-foreground/20"/>
+                {(isEditor || isAdmin) && <DropdownMenuSeparator className="bg-primary-foreground/20"/>}
                 <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-300 hover:!bg-red-500/50 focus:!bg-red-500/50 hover:!text-white">
                   <LogOut className="mr-2 h-4 w-4" /> Logout
                 </DropdownMenuItem>
