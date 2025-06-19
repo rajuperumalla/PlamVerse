@@ -50,21 +50,7 @@ export default function HomePage() {
 
   const renderAuthenticatedView = () => (
     <div className="w-full max-w-5xl space-y-10">
-      <Card className="shadow-xl animate-fade-in bg-card/95 backdrop-blur-sm border border-primary/20">
-        <CardHeader>
-          <CardTitle className="font-headline text-3xl md:text-4xl text-primary">Welcome Back, {userName}!</CardTitle>
-          <CardDescription className="text-lg">Ready to explore further or revisit your insights?</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col sm:flex-row gap-3">
-          <Button asChild className="w-full sm:w-auto text-base py-3">
-            <Link href="/report"><BookOpen className="mr-2 h-5 w-5" /> View My Reading</Link>
-          </Button>
-          <Button asChild variant="secondary" className="w-full sm:w-auto text-base py-3">
-            <Link href="/palm-input"><RefreshCw className="mr-2 h-5 w-5" /> Start New Reading</Link>
-          </Button>
-        </CardContent>
-      </Card>
-
+      {/* Removed Welcome Back Card */}
       <section>
         <h2 className="font-headline text-3xl font-bold text-center mb-6 text-foreground">Explore Our Services</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
