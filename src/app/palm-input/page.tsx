@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import PalmInputForm from '@/components/palm-reading/PalmInputForm';
 import { useAppContext } from '@/context/AppContext';
-import { Loader2, Handshake, BookOpen, Sparkles, ArrowRight, ChevronDown, SearchHeart } from 'lucide-react';
+import { Loader2, Handshake, BookOpen, Sparkles, ArrowRight, ChevronDown, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import {
@@ -38,7 +38,7 @@ function PalmInputPageComponent() {
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
   const categoryFromQuery = searchParams ? searchParams.get('category') : null;
-  const isValidCategorySelected = categoryFromQuery && readingTypes.some(rc => rc.value === categoryFromQuery);
+  const isValidCategorySelected = categoryFromQuery && readingTypes.some(rc => rc.query === categoryFromQuery);
 
   useEffect(() => {
     if (searchParams) {
@@ -185,7 +185,7 @@ function PalmInputPageComponent() {
             <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
               <CardHeader className="items-center">
                 <div className="p-3 bg-primary/10 rounded-full mb-3">
-                    <SearchHeart className="h-12 w-12 text-primary" />
+                    <Search className="h-12 w-12 text-primary" />
                 </div>
                 <CardTitle className="font-headline text-3xl md:text-4xl text-primary">Explore the World of Palmistry</CardTitle>
                 <CardDescription className="text-lg text-muted-foreground mt-2">

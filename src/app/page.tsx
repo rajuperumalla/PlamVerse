@@ -55,7 +55,7 @@ export default function LandingPage() {
                 width={600}
                 height={400}
                 className="rounded-lg shadow-lg border border-border object-cover"
-                data-ai-hint="annotated palm lines"
+                data-ai-hint="palmistry chart"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
