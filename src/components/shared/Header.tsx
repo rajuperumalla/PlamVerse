@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import ClientOnly from './ClientOnly'; // Import the ClientOnly component
+import ClientOnly from './ClientOnly'; 
 
 const readingTypes = [
   { name: "General Personality", query: "General Personality" },
@@ -47,11 +47,11 @@ const Header = () => {
   const palmCategoryFromQuery = searchParams ? searchParams.get('category') : null;
   const numeroServiceFromQuery = searchParams ? searchParams.get('service') : null;
 
+  const isHomePageActive = pathname === '/';
   const isPalmInputPageActive = pathname === '/palm-input' && !!readingTypes.find(rt => rt.query === palmCategoryFromQuery);
   const isNumerologyInputPageActive = pathname === '/numerology-input' && !!numerologyServicesConst.find(ns => ns.query === numeroServiceFromQuery);
-  const isProductsPageActive = pathname.startsWith('/products');
   const isReportPageActive = pathname === '/report';
-  const isHomePageActive = pathname === '/';
+  const isProductsPageActive = pathname.startsWith('/products');
 
 
   const getLinkClassName = (isActive: boolean) => {
@@ -118,7 +118,7 @@ const Header = () => {
           <ClientOnly>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className={getDropdownTriggerClassName(isProductsPageActive)} disabled>
+                <Button variant="ghost" className={getDropdownTriggerClassName(isProductsPageActive)} > {/* Removed disabled prop */}
                   <ShoppingBag className="mr-1.5 h-4 w-4" /> Products <ChevronDown className="ml-1 h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
