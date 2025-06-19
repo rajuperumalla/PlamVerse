@@ -24,18 +24,27 @@ export interface ReportNumerologyInputDetails_Business {
   founderTOB?: string;
 }
 
+export interface ReportNumerologyInputDetails_BabyName {
+  serviceQuery: 'baby-name-numerology';
+  proposedNames: string[]; // Store as an array of strings
+  childDOB: string;
+  childTOB?: string;
+  parent1FullName: string;
+  parent1DOB: string;
+  parent2FullName?: string;
+  parent2DOB?: string;
+}
+
+
 // Add other numerology input types here as needed, e.g.:
-// export interface ReportNumerologyInputDetails_BabyName {
-//   serviceQuery: 'baby-name-numerology';
-//   potentialNames: string[];
-//   parent1FullName: string;
-//   parent1DOB: string;
-//   parent2FullName?: string;
-//   parent2DOB?: string;
-//   babyDOB: string;
+// export interface ReportNumerologyInputDetails_PersonalReport {
+//   serviceQuery: 'life-path-report';
+//   fullName: string;
+//   dateOfBirth: string;
+//   timeOfBirth?: string;
 // }
 
-export type ReportInputDetails = ReportPalmInputDetails | ReportNumerologyInputDetails_Business; // Add other numerology types to this union
+export type ReportInputDetails = ReportPalmInputDetails | ReportNumerologyInputDetails_Business | ReportNumerologyInputDetails_BabyName; // Add other numerology types to this union
 
 export interface ReportData {
   id: string;
@@ -45,7 +54,7 @@ export interface ReportData {
   submissionDate: string;
   lastUpdateDate: string;
   reportType: 'palmistry' | 'numerology';
-  category: string; // For palmistry: "General Personality", etc. For numerology: "business-name-calculator", etc.
+  category: string; // For palmistry: "General Personality", etc. For numerology: "business-name-calculator", "baby-name-numerology", etc.
   inputDetails: ReportInputDetails;
 }
 
@@ -64,7 +73,7 @@ interface AppContextType extends AppState {
   login: (name: string) => void;
   logout: () => void;
   createInitialReportPlaceholder: (inputData: ReportPalmInputDetails) => string;
-  createInitialNumerologyReportPlaceholder: (inputData: ReportNumerologyInputDetails_Business, serviceQuery: string) => string; // Or a more generic numerology input type
+  createInitialNumerologyReportPlaceholder: (inputData: ReportNumerologyInputDetails_Business | ReportNumerologyInputDetails_BabyName, serviceQuery: string) => string;
   updateReportWithGeneratedContent: (reportId: string, aiContent: string) => void;
   markReportAsGenerationFailed: (reportId: string, errorMessage?: string) => void;
   approveReport: (reportId: string, newContent?: string) => void;
@@ -114,13 +123,27 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
     };
   } else { // Numerology
     content += ` It provides insights based on numerological calculations for ${category}.`;
-    // Assuming 'business-name-calculator' for sample numerology reports
-    specificInputDetails = {
-      serviceQuery: 'business-name-calculator',
-      businessName: `Sample Business ${idSuffix}`,
-      founderFullName: `Founder ${userName.split('@')[0]} ${idSuffix}`,
-      founderDOB: `19${70 + idSuffix}-0${(idSuffix % 9) + 1}-1${idSuffix % 9}`,
-    } as ReportNumerologyInputDetails_Business;
+    if (category === 'business-name-calculator') {
+        specificInputDetails = {
+          serviceQuery: 'business-name-calculator',
+          businessName: `Sample Business ${idSuffix}`,
+          founderFullName: `Founder ${userName.split('@')[0]} ${idSuffix}`,
+          founderDOB: `19${70 + idSuffix}-0${(idSuffix % 9) + 1}-1${idSuffix % 9}`,
+        } as ReportNumerologyInputDetails_Business;
+    } else if (category === 'baby-name-numerology') {
+        specificInputDetails = {
+            serviceQuery: 'baby-name-numerology',
+            proposedNames: [`BabyName Alpha ${idSuffix}`, `BabyName Beta ${idSuffix}`],
+            childDOB: `2024-0${(idSuffix % 9) + 1}-1${idSuffix % 9}`,
+            parent1FullName: `Parent One ${idSuffix}`,
+            parent1DOB: `19${85 + idSuffix % 5}-0${(idSuffix % 9) + 1}-0${(idSuffix % 2) + 1}${idSuffix % 9 +1}`,
+        } as ReportNumerologyInputDetails_BabyName;
+    } else { // Fallback for other numerology types if samples are extended
+        specificInputDetails = { // This is a generic placeholder, adjust if other numerology types are added
+            serviceQuery: category,
+            // Add some generic fields or leave it minimal
+        } as any; 
+    }
   }
 
 
@@ -162,7 +185,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       createSampleReport(2, 'Marriage & Relationships', 'user_beta@example.com', 'pending_review', 'palmistry'),
       createSampleReport(3, 'Health & Wellness', 'user_gamma@example.com', 'approved', 'palmistry'),
       createSampleReport(4, 'business-name-calculator', 'user_delta@example.com', 'pending_review', 'numerology'),
-      createSampleReport(5, 'life-path-report', 'user_epsilon@example.com', 'approved', 'numerology'),
+      createSampleReport(5, 'baby-name-numerology', 'user_epsilon@example.com', 'pending_review', 'numerology'),
+      createSampleReport(6, 'life-path-report', 'user_zeta@example.com', 'approved', 'numerology'),
     ];
     persistReports(samples);
   }, []);
@@ -276,7 +300,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return newReportId;
   };
 
-  const createInitialNumerologyReportPlaceholder = (inputData: ReportNumerologyInputDetails_Business, serviceQuery: string): string => {
+  const createInitialNumerologyReportPlaceholder = (inputData: ReportNumerologyInputDetails_Business | ReportNumerologyInputDetails_BabyName, serviceQuery: string): string => {
     const newReportId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const currentDate = new Date().toISOString();
 

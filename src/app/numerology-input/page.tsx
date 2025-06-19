@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useAppContext } from '@/context/AppContext';
+import { useAppContext, type ReportNumerologyInputDetails_Business, type ReportNumerologyInputDetails_BabyName } from '@/context/AppContext';
 import { Loader2, Handshake, BookOpen, Calculator, ChevronDown, Search, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -14,7 +14,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import BusinessNumerologyForm from '@/components/numerology/BusinessNumerologyForm'; // Import the new form
+import BusinessNumerologyForm from '@/components/numerology/BusinessNumerologyForm';
+import BabyNameNumerologyForm from '@/components/numerology/BabyNameNumerologyForm'; // Import the new form
+import { useToast } from '@/hooks/use-toast';
 
 const readingTypes = [
   { name: "General Personality", query: "General Personality" },
@@ -40,10 +42,27 @@ const productMenuItems = [
   { name: "Yantras", link: "#products/yantras" },
 ];
 
+const SESSION_STORAGE_KEYS = {
+  'business-name-calculator': 'palmVerseBusinessNumerologyCheckoutForm',
+  'baby-name-numerology': 'palmVerseBabyNameNumerologyCheckoutForm',
+  // Add other keys as new forms are implemented
+};
+
+
 function NumerologyInputPageComponent() {
-  const { isAuthenticated, isInitializing, hasPaid, userName } = useAppContext();
+  const { 
+    isAuthenticated, 
+    isInitializing, 
+    hasPaid, 
+    userName, 
+    startOperation, 
+    stopOperation, 
+    isOperationInProgress, 
+    createInitialNumerologyReportPlaceholder 
+  } = useAppContext();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
   const serviceQuery = searchParams ? searchParams.get('service') : null;
@@ -61,6 +80,61 @@ function NumerologyInputPageComponent() {
     }
   }, [isAuthenticated, router, isInitializing]);
 
+  const attemptAutoSubmitAfterPayment = useCallback(async () => {
+    if (searchParams && searchParams.get('payment_success') === 'true' && hasPaid && userName && serviceQuery) {
+      const storageKey = SESSION_STORAGE_KEYS[serviceQuery as keyof typeof SESSION_STORAGE_KEYS];
+      if (!storageKey) {
+        toast({ title: "Error", description: "Invalid service type for auto-submission.", variant: "destructive" });
+        return;
+      }
+      const persistedFormDataJson = sessionStorage.getItem(storageKey);
+      
+      const currentSearchParamsString = searchParams.toString();
+      const newParams = new URLSearchParams(currentSearchParamsString);
+      newParams.delete('payment_success'); // Clean up URL
+      router.replace(`/numerology-input?${newParams.toString()}`, { scroll: false });
+
+      if (persistedFormDataJson) {
+        const persistedData = JSON.parse(persistedFormDataJson); // Type assertion will happen inside form or based on serviceQuery
+        
+        let canAutoSubmit = false;
+        if (serviceQuery === 'business-name-calculator') {
+          const data = persistedData as ReportNumerologyInputDetails_Business;
+          canAutoSubmit = !!(data.businessName && data.founderFullName && data.founderDOB);
+        } else if (serviceQuery === 'baby-name-numerology') {
+          const data = persistedData as ReportNumerologyInputDetails_BabyName;
+          canAutoSubmit = !!(data.proposedNames && data.proposedNames.length > 0 && data.childDOB && data.parent1FullName && data.parent1DOB);
+        }
+        // Add more conditions for other forms
+
+        if (canAutoSubmit) {
+          sessionStorage.removeItem(storageKey);
+          startOperation();
+          try {
+            createInitialNumerologyReportPlaceholder(persistedData, serviceQuery); // Pass the correct type
+            toast({ title: "Numerology Request Received", description: "Your report is being prepared and will be available under 'My Reading'. Redirecting to Home...", duration: 5000 });
+            router.push('/');
+          } catch (error) {
+            console.error(`Error auto-submitting ${serviceQuery} request:`, error);
+            toast({ title: "Auto-Submission Error", description: "Failed to automatically submit your request. Please review and submit manually.", variant: "destructive" });
+          } finally {
+            if(isOperationInProgress) stopOperation();
+          }
+        } else {
+          toast({ title: "Payment Successful", description: "Please complete any missing fields and then click 'Generate Report'." });
+           // Pre-fill logic would be handled by individual forms if they are mounted
+        }
+      } else {
+        toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
+      }
+    }
+  }, [searchParams, hasPaid, userName, serviceQuery, router, toast, startOperation, stopOperation, createInitialNumerologyReportPlaceholder, isOperationInProgress]);
+
+  useEffect(() => {
+    attemptAutoSubmitAfterPayment();
+  }, [attemptAutoSubmitAfterPayment]);
+
+
   if (isInitializing || !authCheckComplete) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
@@ -71,6 +145,62 @@ function NumerologyInputPageComponent() {
   }
 
   const isNumerologyActive = !!selectedService;
+
+  const renderForm = () => {
+    switch(serviceQuery) {
+      case 'business-name-calculator':
+        return <BusinessNumerologyForm />;
+      case 'baby-name-numerology':
+        return <BabyNameNumerologyForm />;
+      default:
+        return (
+          <div className="text-center py-10 md:py-16 mt-8">
+            <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
+              <CardHeader className="items-center">
+                <div className="p-3 bg-primary/10 rounded-full mb-3">
+                    <Calculator className="h-12 w-12 text-primary" />
+                </div>
+                <CardTitle className="font-headline text-3xl md:text-4xl text-primary">
+                  {selectedService ? selectedService.name : "Numerology Services"}
+                </CardTitle>
+                <CardDescription className="text-lg text-muted-foreground mt-2">
+                  {selectedService ? selectedService.description : "Unlock insights through the power of numbers."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {selectedService ? (
+                  <>
+                    <p className="text-muted-foreground text-md md:text-lg">
+                      The input form for {selectedService.name} will be implemented soon.
+                    </p>
+                    <div className="w-full max-w-lg mx-auto">
+                      <Image 
+                        src="https://placehold.co/600x400.png" 
+                        alt={`${selectedService.name} illustration`}
+                        width={600} 
+                        height={400} 
+                        className="rounded-lg shadow-lg border border-border object-cover"
+                        data-ai-hint={selectedService.query === 'business-name-calculator' ? "business chart graph" : (selectedService.query === 'baby-name-numerology' ? "baby stars moon" : "numerology chart symbols")}
+                      />
+                    </div>
+                  </>
+                ) : (
+                   <p className="text-muted-foreground text-md md:text-lg">
+                    Please select a specific numerology service from the "Numerology" menu above to get started.
+                  </p>
+                )}
+              </CardContent>
+              <CardFooter>
+                <p className="text-xs text-muted-foreground text-center w-full">
+                  Numerology services provide guidance based on ancient numerical wisdom.
+                </p>
+              </CardFooter>
+            </Card>
+          </div>
+        );
+    }
+  };
+
 
   return (
     <div className="relative space-y-8 md:space-y-10">
@@ -168,53 +298,7 @@ function NumerologyInputPageComponent() {
         </nav>
 
         {/* Content Area */}
-        {serviceQuery === 'business-name-calculator' ? (
-          <BusinessNumerologyForm />
-        ) : (
-          <div className="text-center py-10 md:py-16 mt-8">
-            <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
-              <CardHeader className="items-center">
-                <div className="p-3 bg-primary/10 rounded-full mb-3">
-                    <Calculator className="h-12 w-12 text-primary" />
-                </div>
-                <CardTitle className="font-headline text-3xl md:text-4xl text-primary">
-                  {selectedService ? selectedService.name : "Numerology Services"}
-                </CardTitle>
-                <CardDescription className="text-lg text-muted-foreground mt-2">
-                  {selectedService ? selectedService.description : "Unlock insights through the power of numbers."}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {selectedService ? (
-                  <>
-                    <p className="text-muted-foreground text-md md:text-lg">
-                      The input form for {selectedService.name} will be implemented soon.
-                    </p>
-                    <div className="w-full max-w-lg mx-auto">
-                      <Image 
-                        src="https://placehold.co/600x400.png" 
-                        alt={`${selectedService.name} illustration`}
-                        width={600} 
-                        height={400} 
-                        className="rounded-lg shadow-lg border border-border object-cover"
-                        data-ai-hint={selectedService.query === 'business-name-calculator' ? "business chart graph" : "numerology chart symbols"}
-                      />
-                    </div>
-                  </>
-                ) : (
-                   <p className="text-muted-foreground text-md md:text-lg">
-                    Please select a specific numerology service from the "Numerology" menu above to get started.
-                  </p>
-                )}
-              </CardContent>
-              <CardFooter>
-                <p className="text-xs text-muted-foreground text-center w-full">
-                  Numerology services provide guidance based on ancient numerical wisdom.
-                </p>
-              </CardFooter>
-            </Card>
-          </div>
-        )}
+        {renderForm()}
       </div>
     </div>
   );
