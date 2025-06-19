@@ -64,10 +64,9 @@ const Header = () => {
 
   return (
     <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-40">
-      {/* Removed mx-auto from the div below to align content to the left */}
       <div className="container px-4 py-3 flex items-center">
         <Link href="/" className="flex-shrink-0 flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <Hand className="h-7 w-7 sm:h-8 sm:w-8" />
+          <Handshake className="h-7 w-7 sm:h-8 sm:w-8" />
           <h1 className="text-xl sm:text-2xl font-headline font-bold">PalmVerse</h1>
         </Link>
 
@@ -79,7 +78,7 @@ const Header = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className={getDropdownTriggerClassName(isPalmInputPageActive)}>
-                <Handshake className="mr-1.5 h-4 w-4" /> Palmistry <ChevronDown className="ml-1 h-3 w-3" />
+                <Hand className="mr-1.5 h-4 w-4" /> Palmistry <ChevronDown className="ml-1 h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
@@ -110,11 +109,13 @@ const Header = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          {isAuthenticated && (
-            <Link href="/report" className={getLinkClassName(isReportPageActive)}>
-              <BookOpen className="mr-1.5 h-4 w-4" /> My Reading
-            </Link>
-          )}
+          <ClientOnly>
+            {isAuthenticated && (
+              <Link href="/report" className={getLinkClassName(isReportPageActive)}>
+                <BookOpen className="mr-1.5 h-4 w-4" /> My Reading
+              </Link>
+            )}
+          </ClientOnly>
           
           <ClientOnly>
             <DropdownMenu>
@@ -143,49 +144,51 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center gap-2 ml-auto">
-          {isAuthenticated && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="rounded-full h-9 w-9 p-0 sm:h-10 sm:w-10 hover:bg-primary/80">
-                  <UserCircle className="h-6 w-6 sm:h-7 sm:w-7" />
-                  <span className="sr-only">Open user menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-primary border-primary-foreground/20 text-primary-foreground w-48">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {isEditor ? "Editor" : isAdmin ? "Admin" : (userName || "User")}
-                    </p>
-                    {!(isEditor || isAdmin) && userName && (
-                        <p className="text-xs leading-none text-primary-foreground/80">
-                        {userName.includes('@') ? userName : `${userName.substring(0,10)}...`}
-                        </p>
-                    )}
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-primary-foreground/20"/>
-                {isEditor && (
-                  <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                    <Link href="/editor">
-                      <Edit className="mr-2 h-4 w-4" /> Editor Panel
-                    </Link>
+          <ClientOnly>
+            {isAuthenticated && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="rounded-full h-9 w-9 p-0 sm:h-10 sm:w-10 hover:bg-primary/80">
+                    <UserCircle className="h-6 w-6 sm:h-7 sm:w-7" />
+                    <span className="sr-only">Open user menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-primary border-primary-foreground/20 text-primary-foreground w-48">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {isEditor ? "Editor" : isAdmin ? "Admin" : (userName || "User")}
+                      </p>
+                      {!(isEditor || isAdmin) && userName && (
+                          <p className="text-xs leading-none text-primary-foreground/80">
+                          {userName.includes('@') ? userName : `${userName.substring(0,10)}...`}
+                          </p>
+                      )}
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-primary-foreground/20"/>
+                  {isEditor && (
+                    <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
+                      <Link href="/editor">
+                        <Edit className="mr-2 h-4 w-4" /> Editor Panel
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {isAdmin && (
+                    <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
+                      <Link href="/admin">
+                        <ShieldCheck className="mr-2 h-4 w-4" /> Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {(isEditor || isAdmin) && <DropdownMenuSeparator className="bg-primary-foreground/20"/>}
+                  <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-300 hover:!bg-red-500/50 focus:!bg-red-500/50 hover:!text-white">
+                    <LogOut className="mr-2 h-4 w-4" /> Logout
                   </DropdownMenuItem>
-                )}
-                {isAdmin && (
-                  <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                    <Link href="/admin">
-                      <ShieldCheck className="mr-2 h-4 w-4" /> Admin Panel
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {(isEditor || isAdmin) && <DropdownMenuSeparator className="bg-primary-foreground/20"/>}
-                <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-300 hover:!bg-red-500/50 focus:!bg-red-500/50 hover:!text-white">
-                  <LogOut className="mr-2 h-4 w-4" /> Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </ClientOnly>
           {/* Mobile Menu Trigger (placeholder, functionality to be added if requested) */}
           <Button variant="ghost" className="md:hidden h-9 w-9 p-0 sm:h-10 sm:w-10 hover:bg-primary/80">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
