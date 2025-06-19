@@ -1,7 +1,7 @@
 
 "use client";
 import Link from 'next/link';
-import { Hand, LogOut, Edit, ShieldCheck, BookOpen, Calculator, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap, Handshake } from 'lucide-react';
+import { Handshake, LogOut, Edit, ShieldCheck, BookOpen, Calculator, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -64,11 +64,14 @@ const Header = () => {
 
   return (
     <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-40">
+      {/* Removed mx-auto from the div below to align content to the left */}
       <div className="container px-4 py-3 flex items-center">
-        <Link href="/" className="flex-shrink-0 flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <Handshake className="h-7 w-7 sm:h-8 sm:w-8" />
-          <h1 className="text-xl sm:text-2xl font-headline font-bold">PalmVerse</h1>
-        </Link>
+        <ClientOnly>
+          <Link href="/" className="flex-shrink-0 flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Handshake className="h-7 w-7 sm:h-8 sm:w-8" />
+            <h1 className="text-xl sm:text-2xl font-headline font-bold">PalmVerse</h1>
+          </Link>
+        </ClientOnly>
 
         <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-6 flex-grow">
           <Link href="/" className={getLinkClassName(isHomePageActive)}>
@@ -78,7 +81,7 @@ const Header = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className={getDropdownTriggerClassName(isPalmInputPageActive)}>
-                <Hand className="mr-1.5 h-4 w-4" /> Palmistry <ChevronDown className="ml-1 h-3 w-3" />
+                <Handshake className="mr-1.5 h-4 w-4" /> Palmistry <ChevronDown className="ml-1 h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
@@ -108,7 +111,7 @@ const Header = () => {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          
+
           <ClientOnly>
             {isAuthenticated && (
               <Link href="/report" className={getLinkClassName(isReportPageActive)}>
