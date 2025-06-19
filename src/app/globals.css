@@ -4,98 +4,98 @@
 
 @layer base {
   :root {
-    /* PalmVerse Theme based on PRD */
-    --background: 248 100% 97%; /* Light Lavender #F4F2FF */
-    --foreground: 270 25% 30%; /* Dark Purple for text, for readability */
+    /* Warm Spiritual Theme */
+    --background: 40 100% 97%; /* Very Light Warm Peach/Cream */
+    --foreground: 30 30% 25%; /* Dark Warm Brown for text */
 
-    --card: 240 60% 99%; /* Very Light, slightly bluer white for cards */
-    --card-foreground: 270 25% 30%;
+    --card: 40 80% 95%; /* Light Warm Peach */
+    --card-foreground: 30 30% 25%;
 
-    --popover: 240 60% 99%;
-    --popover-foreground: 270 25% 30%;
+    --popover: 40 80% 95%;
+    --popover-foreground: 30 30% 25%;
 
-    --primary: 270 34% 76%; /* Mystic Purple #A084CA */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 30 70% 60%; /* Terracotta/Warm Orange */
+    --primary-foreground: 30 100% 98%; /* Very Light Warm Cream */
 
-    --secondary: 270 30% 85%; /* Lighter Mystic Purple */
-    --secondary-foreground: 270 40% 40%; /* Darker Purple for text on secondary */
+    --secondary: 35 65% 75%; /* Lighter Warm Orange/Peach */
+    --secondary-foreground: 30 40% 30%; /* Darker Warm Brown for text on secondary */
 
-    --muted: 248 60% 93%; /* Muted Lavender */
-    --muted-foreground: 270 20% 50%; /* Muted Purple/Gray text */
+    --muted: 40 70% 93%; /* Muted Warm Peach */
+    --muted-foreground: 30 25% 50%; /* Muted Warm Brown/Gray text */
 
-    --accent: 185 24% 65%; /* Serene Blue #8CB9BD */
-    --accent-foreground: 0 0% 100%; /* White */
+    --accent: 45 80% 65%; /* Warm Gold/Amber */
+    --accent-foreground: 30 30% 20%; /* Dark Warm Brown */
 
     --destructive: 0 70% 60%; /* Standard Red */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 20% 88%; /* Light Purple/Gray border */
-    --input: 248 80% 95%; /* Light Lavender input background */
-    --ring: 270 34% 76%; /* Primary color for rings */
+    --border: 35 50% 88%; /* Light Warm Peach/Gray border */
+    --input: 40 90% 95%; /* Light Warm Peach input background */
+    --ring: 30 70% 60%; /* Primary color for rings */
 
-    --chart-1: 270 40% 70%;
-    --chart-2: 185 30% 60%;
-    --chart-3: 290 35% 65%;
-    --chart-4: 210 30% 70%;
-    --chart-5: 240 30% 75%;
+    --chart-1: 30 70% 60%; /* Terracotta */
+    --chart-2: 45 80% 65%; /* Gold */
+    --chart-3: 20 70% 65%; /* Warm Coral */
+    --chart-4: 50 70% 70%; /* Light Gold */
+    --chart-5: 35 60% 80%; /* Pale Peach */
     
     --radius: 0.5rem;
 
-    /* Sidebar variables (keep consistent with the new theme) */
-    --sidebar-background: 270 20% 25%; /* Dark Purple for sidebar */
-    --sidebar-foreground: 248 100% 97%; /* Light Lavender text on sidebar */
-    --sidebar-primary: 270 34% 76%; /* Mystic Purple */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 185 24% 65%; /* Serene Blue */
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 270 20% 35%;
-    --sidebar-ring: 270 34% 76%;
+    /* Sidebar variables (consistent with warm theme) */
+    --sidebar-background: 30 25% 28%; /* Dark Warm Brown for sidebar */
+    --sidebar-foreground: 40 100% 97%; /* Light Warm Peach text on sidebar */
+    --sidebar-primary: 30 70% 60%; /* Terracotta */
+    --sidebar-primary-foreground: 30 100% 98%;
+    --sidebar-accent: 45 80% 65%; /* Warm Gold */
+    --sidebar-accent-foreground: 30 30% 20%;
+    --sidebar-border: 30 20% 40%;
+    --sidebar-ring: 30 70% 60%;
   }
 
   .dark {
-    /* Dark Mode: Complementary to the new light theme */
-    --background: 270 15% 15%; /* Very Dark Purple */
-    --foreground: 248 80% 90%; /* Light Lavender text */
+    /* Dark Mode: Complementary to the new warm theme */
+    --background: 30 15% 15%; /* Very Dark Warm Brown */
+    --foreground: 40 80% 90%; /* Light Warm Peach text */
 
-    --card: 270 18% 20%; /* Darker Purple for cards */
-    --card-foreground: 248 80% 90%;
+    --card: 30 18% 20%; /* Darker Warm Brown for cards */
+    --card-foreground: 40 80% 90%;
 
-    --popover: 270 18% 20%;
-    --popover-foreground: 248 80% 90%;
+    --popover: 30 18% 20%;
+    --popover-foreground: 40 80% 90%;
 
-    --primary: 270 40% 80%; /* Slightly brighter Mystic Purple for dark mode */
-    --primary-foreground: 270 15% 10%; /* Very Dark Purple text on primary */
+    --primary: 30 60% 70%; /* Slightly brighter Terracotta for dark mode */
+    --primary-foreground: 30 15% 10%; /* Very Dark Warm Brown text on primary */
 
-    --secondary: 270 25% 35%; /* Darker shade of secondary purple */
-    --secondary-foreground: 248 70% 85%;
+    --secondary: 30 25% 35%; /* Darker shade of secondary warm brown */
+    --secondary-foreground: 40 70% 85%;
 
-    --muted: 270 15% 28%;
-    --muted-foreground: 248 60% 70%;
+    --muted: 30 15% 28%;
+    --muted-foreground: 40 60% 70%;
 
-    --accent: 185 30% 70%; /* Adjusted Serene Blue for dark mode */
-    --accent-foreground: 185 15% 15%;
+    --accent: 45 70% 75%; /* Adjusted Warm Gold for dark mode */
+    --accent-foreground: 45 15% 15%;
 
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 15% 35%;
-    --input: 270 15% 25%;
-    --ring: 270 40% 80%;
+    --border: 30 15% 35%;
+    --input: 30 15% 25%;
+    --ring: 30 60% 70%;
 
-    --chart-1: 270 45% 75%;
-    --chart-2: 185 35% 65%;
-    --chart-3: 290 40% 70%;
-    --chart-4: 210 35% 75%;
-    --chart-5: 240 35% 80%;
+    --chart-1: 30 60% 70%;
+    --chart-2: 45 70% 75%;
+    --chart-3: 20 60% 70%;
+    --chart-4: 50 60% 75%;
+    --chart-5: 35 50% 80%;
     
-    --sidebar-background: 270 15% 15%;
-    --sidebar-foreground: 248 80% 90%;
-    --sidebar-primary: 270 40% 80%;
-    --sidebar-primary-foreground: 270 15% 10%;
-    --sidebar-accent: 185 30% 70%;
-    --sidebar-accent-foreground: 185 15% 15%;
-    --sidebar-border: 270 15% 35%;
-    --sidebar-ring: 270 40% 80%;
+    --sidebar-background: 30 15% 15%;
+    --sidebar-foreground: 40 80% 90%;
+    --sidebar-primary: 30 60% 70%;
+    --sidebar-primary-foreground: 30 15% 10%;
+    --sidebar-accent: 45 70% 75%;
+    --sidebar-accent-foreground: 45 15% 15%;
+    --sidebar-border: 30 15% 35%;
+    --sidebar-ring: 30 60% 70%;
   }
 }
 
