@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ClientOnly from './ClientOnly'; // Import the ClientOnly component
 
 const readingTypes = [
   { name: "General Personality", query: "General Personality" },
@@ -113,25 +114,27 @@ const Header = () => {
               <BookOpen className="mr-1.5 h-4 w-4" /> My Reading
             </Link>
           )}
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className={getDropdownTriggerClassName(isProductsPageActive)} disabled>
-                <ShoppingBag className="mr-1.5 h-4 w-4" /> Products <ChevronDown className="ml-1 h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
-              {productMenuItems.map((item) => (
-                <DropdownMenuItem key={item.name} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                  <Link href={item.link} className="w-full">
-                    {item.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-               <DropdownMenuSeparator className="bg-primary-foreground/20"/>
-               <DropdownMenuItem disabled className="opacity-70 italic">More coming soon!</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          
+          <ClientOnly>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className={getDropdownTriggerClassName(isProductsPageActive)} disabled>
+                  <ShoppingBag className="mr-1.5 h-4 w-4" /> Products <ChevronDown className="ml-1 h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
+                {productMenuItems.map((item) => (
+                  <DropdownMenuItem key={item.name} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
+                    <Link href={item.link} className="w-full">
+                      {item.name}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator className="bg-primary-foreground/20"/>
+                <DropdownMenuItem disabled className="opacity-70 italic">More coming soon!</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </ClientOnly>
 
           <Link href="#remedies" className={getLinkClassName(false) + " opacity-70 cursor-not-allowed"} onClick={(e) => e.preventDefault()}>
             <Zap className="mr-1.5 h-4 w-4" /> Remedies
@@ -161,7 +164,6 @@ const Header = () => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-primary-foreground/20"/>
-                {/* "My Reading" link removed from here */}
                 {isEditor && (
                   <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
                     <Link href="/editor">
