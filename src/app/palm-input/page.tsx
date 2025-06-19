@@ -6,15 +6,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import PalmInputForm from '@/components/palm-reading/PalmInputForm';
 import { useAppContext } from '@/context/AppContext';
-import { Loader2, Handshake, BookOpen, Sparkles, ArrowRight, ChevronDown, Search, ShoppingBag, Calculator } from 'lucide-react';
+import { Loader2, Sparkles, ArrowRight, Search, Info } from 'lucide-react'; // Removed nav-specific icons
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 
 const productCategories = [
   { name: "Crystal Bracelets", description: "Harness the energy of natural crystals for balance and healing.", imageUrl: "https://placehold.co/400x300.png", imageHint: "crystal bracelet", link: "#products/crystal-bracelets" },
@@ -32,28 +27,11 @@ const readingTypes = [
   { name: "Comprehensive Analysis", query: "Comprehensive Analysis", description: "Receive a holistic view combining insights from all major areas of life, including personality, career, health, and relationships." },
 ];
 
-const productMenuItems = [
-  { name: "Crystal Bracelets", link: "#products/crystal-bracelets" },
-  { name: "Gemstones", link: "#products/gemstones" },
-  { name: "Pooja Essentials", link: "#products/pooja-essentials" },
-  { name: "Rudrakshas", link: "#products/rudrakshas" },
-  { name: "Yantras", link: "#products/yantras" },
-];
-
-const numerologyServices = [
-  { name: "Business Name Numerology Calculator", query: "business-name-calculator" },
-  { name: "Baby Name Numerology", query: "baby-name-numerology" },
-  { name: "Personal Life Path & Destiny Report", query: "life-path-report" },
-  { name: "Name Correction & Compatibility Checker", query: "name-correction" },
-  { name: "House Number / Address Compatibility", query: "address-compatibility" },
-];
-
 
 function PalmInputPageComponent() {
   const { isAuthenticated, isInitializing } = useAppContext();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [currentPathname, setCurrentPathname] = useState("/palm-input");
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
   const categoryFromQuery = searchParams ? searchParams.get('category') : null;
@@ -61,13 +39,6 @@ function PalmInputPageComponent() {
   const isValidCategorySelected = !!selectedReadingType;
   const categoryDescription = selectedReadingType?.description;
 
-  useEffect(() => {
-    if (searchParams) {
-      const category = searchParams.get('category');
-      const path = category ? `/palm-input?category=${encodeURIComponent(category)}` : "/palm-input";
-      setCurrentPathname(path);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     if (!isInitializing) {
@@ -91,9 +62,6 @@ function PalmInputPageComponent() {
     );
   }
 
-  const isPalmistryActive = currentPathname.startsWith('/palm-input') && isValidCategorySelected;
-  const isMyReadingActive = currentPathname === '/report';
-
 
   return (
     <div className="relative space-y-8 md:space-y-10">
@@ -103,93 +71,10 @@ function PalmInputPageComponent() {
           alt="Sacred Geometry Page Background"
           layout="fill"
           objectFit="cover"
-          data-ai-hint="sacred geometry background"
+          data-ai-hint="sacred geometry pattern"
         />
       </div>
       <div className="relative z-10">
-        <nav aria-label="Main navigation after login">
-          <ul className="flex justify-center items-center space-x-1 sm:space-x-2 md:space-x-4 py-3 bg-primary/10 backdrop-blur-sm rounded-lg shadow-md border border-primary/30 text-xs sm:text-sm">
-            <li>
-              <Link href="/" className="text-foreground hover:text-primary transition-colors px-2 py-1 rounded-md">
-                Home
-              </Link>
-            </li>
-            <li>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={`transition-colors px-2 py-1 rounded-md flex items-center hover:bg-primary/5 focus:bg-primary/10 ${isPalmistryActive ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent animate-shimmer bg-[length:200%_100%] ring-1 ring-primary/50 bg-primary/10' : 'text-foreground hover:text-primary'}`}
-                  >
-                    <Handshake className="inline-block mr-1 h-4 w-4 align-middle" /> Palmistry <ChevronDown className="ml-1 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
-                  {readingTypes.map((type) => (
-                    <DropdownMenuItem key={type.query} asChild className="cursor-pointer hover:bg-primary/10">
-                      <Link href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="w-full text-foreground">
-                        {type.name}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </li>
-            <li>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={`transition-colors px-2 py-1 rounded-md flex items-center text-foreground hover:text-primary hover:bg-primary/5 focus:bg-primary/10`}
-                  >
-                    <Calculator className="inline-block mr-1 h-4 w-4 align-middle" /> Numerology <ChevronDown className="ml-1 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
-                  {numerologyServices.map((service) => (
-                    <DropdownMenuItem key={service.query} asChild className="cursor-pointer hover:bg-primary/10">
-                      <Link href={`/numerology-input?service=${encodeURIComponent(service.query)}`} className="w-full text-foreground">
-                        {service.name}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </li>
-            <li>
-              <Link href="/report" className={`transition-colors px-2 py-1 rounded-md ${isMyReadingActive ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent animate-shimmer bg-[length:200%_100%] ring-1 ring-primary/50 bg-primary/10' : 'text-foreground hover:text-primary'}`}>
-                <BookOpen className="inline-block mr-1 h-4 w-4 align-middle" /> My Reading
-              </Link>
-            </li>
-            <li>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="text-foreground hover:text-primary transition-colors px-2 py-1 rounded-md flex items-center hover:bg-primary/5 focus:bg-primary/10"
-                  >
-                    <ShoppingBag className="inline-block mr-1 h-4 w-4 align-middle" /> Products <ChevronDown className="ml-1 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
-                  {productMenuItems.map((item) => (
-                    <DropdownMenuItem key={item.name} asChild className="cursor-pointer hover:bg-primary/10">
-                      <Link href={item.link} className="w-full text-foreground">
-                        {item.name}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </li>
-            <li>
-              <Link href="#remedies" className="text-foreground hover:text-primary transition-colors px-2 py-1 rounded-md">
-                Remedies
-              </Link>
-            </li>
-          </ul>
-        </nav>
-
         {isValidCategorySelected ? (
           <>
             <PalmInputForm categoryDescription={categoryDescription} />
@@ -242,7 +127,7 @@ function PalmInputPageComponent() {
             </div>
           </>
         ) : (
-          <div className="text-center py-10 md:py-16 mt-8">
+          <div className="text-center py-10 md:py-16"> {/* Removed mt-8 as spacing is handled by SubHeaderNavigation */}
             <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
               <CardHeader className="items-center">
                 <div className="p-3 bg-primary/10 rounded-full mb-3">
@@ -264,7 +149,7 @@ function PalmInputPageComponent() {
                     width={600}
                     height={400}
                     className="rounded-lg shadow-lg border border-border object-cover"
-                    data-ai-hint="palmistry hand lines"
+                    data-ai-hint="palm hand"
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">

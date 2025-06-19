@@ -5,27 +5,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAppContext, type ReportNumerologyInputDetails_Business, type ReportNumerologyInputDetails_BabyName, type ReportNumerologyInputDetails_PersonalReport } from '@/context/AppContext';
-import { Loader2, Handshake, BookOpen, Calculator, ChevronDown, Search, ShoppingBag } from 'lucide-react';
+import { Loader2, Calculator, Search } from 'lucide-react'; // Removed nav-specific icons
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import BusinessNumerologyForm from '@/components/numerology/BusinessNumerologyForm';
 import BabyNameNumerologyForm from '@/components/numerology/BabyNameNumerologyForm'; 
 import PersonalLifePathReportForm from '@/components/numerology/PersonalLifePathReportForm';
 import { useToast } from '@/hooks/use-toast';
 
-const readingTypes = [
-  { name: "General Personality", query: "General Personality" },
-  { name: "Career & Finance", query: "Career & Finance" },
-  { name: "Health & Wellness", query: "Health & Wellness" },
-  { name: "Marriage & Relationships", query: "Marriage & Relationships" },
-  { name: "Comprehensive Analysis", query: "Comprehensive Analysis" },
-];
 
 const numerologyServicesConst = [
   { name: "Business Name Numerology Calculator", query: "business-name-calculator", description: "Helps entrepreneurs choose or correct business names for success, financial growth, and brand attraction." },
@@ -35,19 +22,10 @@ const numerologyServicesConst = [
   { name: "House Number / Address Compatibility", query: "address-compatibility", description: "Checks if your home or flat number supports your personal energy; offers remedies if it doesn't." },
 ];
 
-const productMenuItems = [
-  { name: "Crystal Bracelets", link: "#products/crystal-bracelets" },
-  { name: "Gemstones", link: "#products/gemstones" },
-  { name: "Pooja Essentials", link: "#products/pooja-essentials" },
-  { name: "Rudrakshas", link: "#products/rudrakshas" },
-  { name: "Yantras", link: "#products/yantras" },
-];
-
 const SESSION_STORAGE_KEYS = {
   'business-name-calculator': 'palmVerseBusinessNumerologyCheckoutForm',
   'baby-name-numerology': 'palmVerseBabyNameNumerologyCheckoutForm',
   'life-path-report': 'palmVersePersonalLifePathCheckoutForm',
-  // Add other keys as new forms are implemented
 };
 
 
@@ -111,7 +89,6 @@ function NumerologyInputPageComponent() {
           const data = persistedData as ReportNumerologyInputDetails_PersonalReport;
           canAutoSubmit = !!(data.fullName && data.dateOfBirth);
         }
-        // Add more conditions for other forms
 
         if (canAutoSubmit) {
           sessionStorage.removeItem(storageKey);
@@ -149,12 +126,11 @@ function NumerologyInputPageComponent() {
     );
   }
 
-  const isNumerologyActive = !!selectedService;
 
   const renderForm = () => {
     if (!selectedService) {
       return (
-        <div className="text-center py-10 md:py-16 mt-8">
+        <div className="text-center py-10 md:py-16"> {/* Removed mt-8 */}
           <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
             <CardHeader className="items-center">
               <div className="p-3 bg-primary/10 rounded-full mb-3">
@@ -191,7 +167,7 @@ function NumerologyInputPageComponent() {
         return <PersonalLifePathReportForm serviceDescription={selectedService.description} />;
       default:
         return (
-          <div className="text-center py-10 md:py-16 mt-8">
+          <div className="text-center py-10 md:py-16"> {/* Removed mt-8 */}
             <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
               <CardHeader className="items-center">
                 <div className="p-3 bg-primary/10 rounded-full mb-3">
@@ -239,93 +215,11 @@ function NumerologyInputPageComponent() {
           alt="Sacred Geometry Page Background"
           layout="fill"
           objectFit="cover"
-          data-ai-hint="sacred geometry patterns"
+          data-ai-hint="sacred geometry background"
         />
       </div>
       <div className="relative z-10">
-        <nav aria-label="Main navigation">
-          <ul className="flex justify-center items-center space-x-1 sm:space-x-2 md:space-x-4 py-3 bg-primary/10 backdrop-blur-sm rounded-lg shadow-md border border-primary/30 text-xs sm:text-sm">
-            <li>
-              <Link href="/" className="text-foreground hover:text-primary transition-colors px-2 py-1 rounded-md">
-                Home
-              </Link>
-            </li>
-            <li>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={`transition-colors px-2 py-1 rounded-md flex items-center text-foreground hover:text-primary hover:bg-primary/5 focus:bg-primary/10`}
-                  >
-                    <Handshake className="inline-block mr-1 h-4 w-4 align-middle" /> Palmistry <ChevronDown className="ml-1 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
-                  {readingTypes.map((type) => (
-                    <DropdownMenuItem key={type.query} asChild className="cursor-pointer hover:bg-primary/10 w-full">
-                      <Link href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="w-full text-foreground">
-                        {type.name}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </li>
-            <li>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={`transition-colors px-2 py-1 rounded-md flex items-center hover:bg-primary/5 focus:bg-primary/10 ${isNumerologyActive ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent animate-shimmer bg-[length:200%_100%] ring-1 ring-primary/50 bg-primary/10' : 'text-foreground hover:text-primary'}`}
-                  >
-                    <Calculator className="inline-block mr-1 h-4 w-4 align-middle" /> Numerology <ChevronDown className="ml-1 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
-                  {numerologyServicesConst.map((service) => (
-                    <DropdownMenuItem key={service.query} asChild className="cursor-pointer hover:bg-primary/10 w-full">
-                      <Link href={`/numerology-input?service=${encodeURIComponent(service.query)}`} className="w-full text-foreground">
-                        {service.name}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </li>
-            <li>
-              <Link href="/report" className={`transition-colors px-2 py-1 rounded-md text-foreground hover:text-primary`}>
-                <BookOpen className="inline-block mr-1 h-4 w-4 align-middle" /> My Reading
-              </Link>
-            </li>
-            <li>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="text-foreground hover:text-primary transition-colors px-2 py-1 rounded-md flex items-center hover:bg-primary/5 focus:bg-primary/10"
-                  >
-                    <ShoppingBag className="inline-block mr-1 h-4 w-4 align-middle" /> Products <ChevronDown className="ml-1 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
-                  {productMenuItems.map((item) => (
-                    <DropdownMenuItem key={item.name} asChild className="cursor-pointer hover:bg-primary/10 w-full">
-                      <Link href={item.link} className="w-full text-foreground">
-                        {item.name}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </li>
-            <li>
-              <Link href="#remedies" className="text-foreground hover:text-primary transition-colors px-2 py-1 rounded-md">
-                Remedies
-              </Link>
-            </li>
-          </ul>
-        </nav>
-
+        {/* Navigation menu has been moved to SubHeaderNavigation.tsx and included via RootLayout */}
         {renderForm()}
       </div>
     </div>
@@ -344,4 +238,3 @@ export default function NumerologyInputPage() {
     </Suspense>
   );
 }
-

@@ -1,9 +1,11 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { AppProvider } from '@/context/AppContext';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
+import SubHeaderNavigation from '@/components/shared/SubHeaderNavigation';
 
 export const metadata: Metadata = {
   title: 'PalmVerse - AI Palm Reading',
@@ -27,6 +29,7 @@ export default function RootLayout({
         <AppProvider>
           <Header />
           <main className="flex-grow container mx-auto px-4 py-8">
+            <SubHeaderNavigation />
             {children}
           </main>
           <Footer />
