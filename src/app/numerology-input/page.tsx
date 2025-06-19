@@ -105,7 +105,8 @@ function NumerologyInputPageComponent() {
           canAutoSubmit = !!(data.businessName && data.founderFullName && data.founderDOB);
         } else if (serviceQuery === 'baby-name-numerology') {
           const data = persistedData as ReportNumerologyInputDetails_BabyName;
-          canAutoSubmit = !!(data.proposedNames && data.proposedNames.length > 0 && data.childDOB);
+          const proposedNamesArray = Array.isArray(data.proposedNames) ? data.proposedNames : (typeof data.proposedNames === 'string' ? data.proposedNames.split('\n').map(name => name.trim()).filter(name => name.length > 0) : []);
+          canAutoSubmit = !!(proposedNamesArray.length > 0 && data.childDOB);
         } else if (serviceQuery === 'life-path-report') {
           const data = persistedData as ReportNumerologyInputDetails_PersonalReport;
           canAutoSubmit = !!(data.fullName && data.dateOfBirth);
@@ -151,13 +152,43 @@ function NumerologyInputPageComponent() {
   const isNumerologyActive = !!selectedService;
 
   const renderForm = () => {
-    switch(serviceQuery) {
+    if (!selectedService) {
+      return (
+        <div className="text-center py-10 md:py-16 mt-8">
+          <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
+            <CardHeader className="items-center">
+              <div className="p-3 bg-primary/10 rounded-full mb-3">
+                <Calculator className="h-12 w-12 text-primary" />
+              </div>
+              <CardTitle className="font-headline text-3xl md:text-4xl text-primary">
+                Numerology Services
+              </CardTitle>
+              <CardDescription className="text-lg text-muted-foreground mt-2">
+                Unlock insights through the power of numbers.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <p className="text-muted-foreground text-md md:text-lg">
+                Please select a specific numerology service from the "Numerology" menu above to get started.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <p className="text-xs text-muted-foreground text-center w-full">
+                Numerology services provide guidance based on ancient numerical wisdom.
+              </p>
+            </CardFooter>
+          </Card>
+        </div>
+      );
+    }
+
+    switch(selectedService.query) {
       case 'business-name-calculator':
-        return <BusinessNumerologyForm />;
+        return <BusinessNumerologyForm serviceDescription={selectedService.description} />;
       case 'baby-name-numerology':
-        return <BabyNameNumerologyForm />;
+        return <BabyNameNumerologyForm serviceDescription={selectedService.description} />;
       case 'life-path-report':
-        return <PersonalLifePathReportForm />;
+        return <PersonalLifePathReportForm serviceDescription={selectedService.description} />;
       default:
         return (
           <div className="text-center py-10 md:py-16 mt-8">
@@ -167,34 +198,26 @@ function NumerologyInputPageComponent() {
                     <Calculator className="h-12 w-12 text-primary" />
                 </div>
                 <CardTitle className="font-headline text-3xl md:text-4xl text-primary">
-                  {selectedService ? selectedService.name : "Numerology Services"}
+                  {selectedService.name}
                 </CardTitle>
                 <CardDescription className="text-lg text-muted-foreground mt-2">
-                  {selectedService ? selectedService.description : "Unlock insights through the power of numbers."}
+                  {selectedService.description}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {selectedService ? (
-                  <>
-                    <p className="text-muted-foreground text-md md:text-lg">
-                      The input form for {selectedService.name} will be implemented soon.
-                    </p>
-                    <div className="w-full max-w-lg mx-auto">
-                      <Image 
-                        src="https://placehold.co/600x400.png" 
-                        alt={`${selectedService.name} illustration`}
-                        width={600} 
-                        height={400} 
-                        className="rounded-lg shadow-lg border border-border object-cover"
-                        data-ai-hint={selectedService.query === 'business-name-calculator' ? "business chart graph" : (selectedService.query === 'baby-name-numerology' ? "baby stars moon" : (selectedService.query === 'life-path-report' ? "spiritual journey path" : "numerology chart symbols"))}
-                      />
-                    </div>
-                  </>
-                ) : (
-                   <p className="text-muted-foreground text-md md:text-lg">
-                    Please select a specific numerology service from the "Numerology" menu above to get started.
-                  </p>
-                )}
+                <p className="text-muted-foreground text-md md:text-lg">
+                  The input form for {selectedService.name} will be implemented soon.
+                </p>
+                <div className="w-full max-w-lg mx-auto">
+                  <Image 
+                    src="https://placehold.co/600x400.png" 
+                    alt={`${selectedService.name} illustration`}
+                    width={600} 
+                    height={400} 
+                    className="rounded-lg shadow-lg border border-border object-cover"
+                    data-ai-hint={selectedService.query === 'business-name-calculator' ? "business chart graph" : (selectedService.query === 'baby-name-numerology' ? "baby stars moon" : (selectedService.query === 'life-path-report' ? "spiritual journey path" : "numerology chart symbols"))}
+                  />
+                </div>
               </CardContent>
               <CardFooter>
                 <p className="text-xs text-muted-foreground text-center w-full">

@@ -14,7 +14,11 @@ import Image from 'next/image';
 const SESSION_STORAGE_KEY_PERSONAL_REPORT = 'palmVersePersonalLifePathCheckoutForm';
 const SERVICE_QUERY = 'life-path-report';
 
-const PersonalLifePathReportForm = () => {
+interface PersonalLifePathReportFormProps {
+  serviceDescription?: string;
+}
+
+const PersonalLifePathReportForm = ({ serviceDescription }: PersonalLifePathReportFormProps) => {
   const [fullName, setFullName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [timeOfBirth, setTimeOfBirth] = useState('');
@@ -81,6 +85,8 @@ const PersonalLifePathReportForm = () => {
   };
 
   const attemptAutoSubmitAfterPayment = useCallback(async () => {
+    // This logic is primarily handled by the parent NumerologyInputPageComponent now.
+    // This form just ensures it's pre-filled if session data exists.
     const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY_PERSONAL_REPORT);
     if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportNumerologyInputDetails_PersonalReport;
@@ -120,7 +126,7 @@ const PersonalLifePathReportForm = () => {
                 <UserCircle className="h-10 w-10 text-primary" />
             </div>
             <CardTitle className="font-headline text-3xl">Personal Life Path & Destiny Report</CardTitle>
-            <CardDescription>Enter your birth details to uncover insights into your life's journey.</CardDescription>
+            <CardDescription>{serviceDescription || "Enter your birth details to uncover insights into your life's journey."}</CardDescription>
             </CardHeader>
             <CardContent>
             <form onSubmit={onFormSubmit} className="space-y-8">
@@ -168,4 +174,3 @@ const PersonalLifePathReportForm = () => {
 };
 
 export default PersonalLifePathReportForm;
-

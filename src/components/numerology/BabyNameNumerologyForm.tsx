@@ -15,7 +15,11 @@ import Image from 'next/image';
 const SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY = 'palmVerseBabyNameNumerologyCheckoutForm';
 const SERVICE_QUERY = 'baby-name-numerology';
 
-const BabyNameNumerologyForm = () => {
+interface BabyNameNumerologyFormProps {
+  serviceDescription?: string;
+}
+
+const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormProps) => {
   const [proposedNamesText, setProposedNamesText] = useState('');
   const [childDOB, setChildDOB] = useState('');
   const [childTOB, setChildTOB] = useState('');
@@ -113,7 +117,7 @@ const BabyNameNumerologyForm = () => {
         // If payment was successful and minimum data is present, parent component handles auto-submit.
         // If not, user needs to complete the form.
     }
-  }, []); // Removed dependencies handled by parent or form state itself
+  }, []); 
 
   useEffect(() => {
     attemptAutoSubmitAfterPayment();
@@ -145,7 +149,7 @@ const BabyNameNumerologyForm = () => {
                 <Baby className="h-10 w-10 text-primary" />
             </div>
             <CardTitle className="font-headline text-3xl">Baby Name Numerology</CardTitle>
-            <CardDescription>Find harmonious names based on your child's birth details.</CardDescription>
+            <CardDescription>{serviceDescription || "Find harmonious names based on your child's birth details."}</CardDescription>
             </CardHeader>
             <CardContent>
             <form onSubmit={onFormSubmit} className="space-y-8">

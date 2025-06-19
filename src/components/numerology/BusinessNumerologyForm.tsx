@@ -15,7 +15,11 @@ import Image from 'next/image';
 const SESSION_STORAGE_KEY_BUSINESS_NUMEROLOGY = 'palmVerseBusinessNumerologyCheckoutForm';
 const SERVICE_QUERY = 'business-name-calculator';
 
-const BusinessNumerologyForm = () => {
+interface BusinessNumerologyFormProps {
+  serviceDescription?: string;
+}
+
+const BusinessNumerologyForm = ({ serviceDescription }: BusinessNumerologyFormProps) => {
   const [businessName, setBusinessName] = useState('');
   const [additionalBusinessNames, setAdditionalBusinessNames] = useState('');
   const [founderFullName, setFounderFullName] = useState('');
@@ -82,44 +86,18 @@ const BusinessNumerologyForm = () => {
   };
 
   const attemptAutoSubmitAfterPayment = useCallback(async () => {
-    if (searchParams && searchParams.get('payment_success') === 'true' && hasPaid && userName) {
-      const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY_BUSINESS_NUMEROLOGY);
-      
-      const currentSearchParamsString = searchParams.toString();
-      const newParams = new URLSearchParams(currentSearchParamsString);
-      newParams.delete('payment_success'); // Clean up URL
-      router.replace(`/numerology-input?${newParams.toString()}`, { scroll: false });
-
-      if (persistedFormDataJson) {
+    // This logic is primarily handled by the parent NumerologyInputPageComponent now.
+    // This form just ensures it's pre-filled if session data exists.
+    const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY_BUSINESS_NUMEROLOGY);
+    if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportNumerologyInputDetails_Business;
-        
         setBusinessName(persistedData.businessName || '');
         setAdditionalBusinessNames(persistedData.additionalBusinessNames || '');
         setFounderFullName(persistedData.founderFullName || '');
         setFounderDOB(persistedData.founderDOB || '');
         setFounderTOB(persistedData.founderTOB || '');
-
-        if (persistedData.businessName && persistedData.founderFullName && persistedData.founderDOB) {
-          sessionStorage.removeItem(SESSION_STORAGE_KEY_BUSINESS_NUMEROLOGY);
-          startOperation();
-          try {
-            createInitialNumerologyReportPlaceholder(persistedData, SERVICE_QUERY);
-            toast({ title: "Numerology Request Received", description: "Your report is being prepared and will be available under 'My Reading'. Redirecting to Home...", duration: 5000 });
-            router.push('/');
-          } catch (error) {
-            console.error("Error auto-submitting numerology request:", error);
-            toast({ title: "Auto-Submission Error", description: "Failed to automatically submit your request. Please review and submit manually.", variant: "destructive" });
-          } finally {
-            if(isOperationInProgress) stopOperation();
-          }
-        } else {
-          toast({ title: "Payment Successful", description: "Please complete any missing fields and then click 'Generate Report'." });
-        }
-      } else {
-        toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
-      }
     }
-  }, [searchParams, hasPaid, userName, router, toast, startOperation, stopOperation, createInitialNumerologyReportPlaceholder, isOperationInProgress]);
+  }, []);
 
   useEffect(() => {
     attemptAutoSubmitAfterPayment();
@@ -155,8 +133,8 @@ const BusinessNumerologyForm = () => {
             <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
                 <Briefcase className="h-10 w-10 text-primary" />
             </div>
-            <CardTitle className="font-headline text-3xl">Business Name Numerology</CardTitle>
-            <CardDescription>Enter details for your business name analysis.</CardDescription>
+            <CardTitle className="font-headline text-3xl">Business Name Numerology Calculator</CardTitle>
+            <CardDescription>{serviceDescription || "Enter details for your business name analysis."}</CardDescription>
             </CardHeader>
             <CardContent>
             <form onSubmit={onFormSubmit} className="space-y-8">
@@ -190,6 +168,7 @@ const BusinessNumerologyForm = () => {
                     type="submit" 
                     className="w-full text-lg py-6 mt-8" 
                     disabled={finalButtonDisabled}
+                    title={!isReadyForManualSubmitAfterPayment && !hasPaid ? "Please fill all required fields first" : (hasPaid && !isReadyForManualSubmitAfterPayment ? "Please fill all required fields to generate" : "")}
                 >
                     {isOperationInProgress ? ( 
                         <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
