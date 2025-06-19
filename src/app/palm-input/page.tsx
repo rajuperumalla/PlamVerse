@@ -69,7 +69,9 @@ function PalmInputPageComponent() {
     );
   }
   
-  const isPalmistryActive = currentPathname.startsWith('/palm-input');
+  const isPalmistryActive = currentPathname.startsWith('/palm-input') && isValidCategorySelected;
+  const isMyReadingActive = currentPathname === '/report';
+
 
   return (
     <div className="relative space-y-8 md:space-y-10">
@@ -86,7 +88,7 @@ function PalmInputPageComponent() {
         <nav aria-label="Main navigation after login">
           <ul className="flex justify-center items-center space-x-1 sm:space-x-2 md:space-x-4 py-3 bg-primary/10 backdrop-blur-sm rounded-lg shadow-md border border-primary/30 text-xs sm:text-sm">
             <li>
-              <Link href="/" className="text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-md">
+              <Link href="/" className="text-foreground hover:text-primary transition-colors px-2 py-1 rounded-md">
                 Home
               </Link>
             </li>
@@ -95,15 +97,15 @@ function PalmInputPageComponent() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className={`transition-colors px-2 py-1 rounded-md flex items-center text-primary hover:text-primary/80 hover:bg-primary/5 focus:bg-primary/10 ${isPalmistryActive ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent animate-shimmer bg-[length:200%_100%] ring-1 ring-primary/50 bg-primary/10' : ''}`}
+                    className={`transition-colors px-2 py-1 rounded-md flex items-center hover:bg-primary/5 focus:bg-primary/10 ${isPalmistryActive ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent animate-shimmer bg-[length:200%_100%] ring-1 ring-primary/50 bg-primary/10' : 'text-foreground hover:text-primary'}`}
                   >
                     <Handshake className="inline-block mr-1 h-4 w-4 align-middle" /> Palmistry <ChevronDown className="ml-1 h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
                   {readingTypes.map((type) => (
-                    <DropdownMenuItem key={type.query} asChild className="cursor-pointer hover:bg-primary/10">
-                      <Link href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="text-primary w-full">
+                    <DropdownMenuItem key={type.query} asChild className="cursor-pointer hover:bg-primary/10 w-full">
+                      <Link href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="w-full">
                         {type.name}
                       </Link>
                     </DropdownMenuItem>
@@ -112,17 +114,17 @@ function PalmInputPageComponent() {
               </DropdownMenu>
             </li>
             <li>
-              <Link href="/report" className={`transition-colors px-2 py-1 rounded-md ${currentPathname === '/report' ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent animate-shimmer bg-[length:200%_100%] ring-1 ring-primary/50 bg-primary/10' : 'text-primary hover:text-primary/80'}`}>
+              <Link href="/report" className={`transition-colors px-2 py-1 rounded-md ${isMyReadingActive ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent animate-shimmer bg-[length:200%_100%] ring-1 ring-primary/50 bg-primary/10' : 'text-foreground hover:text-primary'}`}>
                 <BookOpen className="inline-block mr-1 h-4 w-4 align-middle" /> My Reading
               </Link>
             </li>
             <li>
-              <Link href="#products" className="text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-md">
+              <Link href="#products" className="text-foreground hover:text-primary transition-colors px-2 py-1 rounded-md">
                 Products
               </Link>
             </li>
             <li>
-              <Link href="#remedies" className="text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-md">
+              <Link href="#remedies" className="text-foreground hover:text-primary transition-colors px-2 py-1 rounded-md">
                 Remedies
               </Link>
             </li>
