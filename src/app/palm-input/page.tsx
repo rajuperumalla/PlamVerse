@@ -25,11 +25,11 @@ const productCategories = [
 ];
 
 const readingTypes = [
-  { name: "General Personality", query: "General Personality" },
-  { name: "Career & Finance", query: "Career & Finance" },
-  { name: "Health & Wellness", query: "Health & Wellness" },
-  { name: "Marriage & Relationships", query: "Marriage & Relationships" },
-  { name: "Comprehensive Analysis", query: "Comprehensive Analysis" },
+  { name: "General Personality", query: "General Personality", description: "Understand your core traits, strengths, potential challenges, and overall life outlook." },
+  { name: "Career & Finance", query: "Career & Finance", description: "Gain insights into suitable career paths, financial tendencies, work style, and opportunities for growth." },
+  { name: "Health & Wellness", query: "Health & Wellness", description: "Discover indications about your vitality levels, potential sensitivities, and wellness practices that support your well-being." },
+  { name: "Marriage & Relationships", query: "Marriage & Relationships", description: "Explore your emotional style in relationships, partnership dynamics, and potential strengths or challenges in connections." },
+  { name: "Comprehensive Analysis", query: "Comprehensive Analysis", description: "Receive a holistic view combining insights from all major areas of life, including personality, career, health, and relationships." },
 ];
 
 const productMenuItems = [
@@ -53,28 +53,30 @@ function PalmInputPageComponent() {
   const { isAuthenticated, isInitializing } = useAppContext();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [currentPathname, setCurrentPathname] = useState("/palm-input"); 
+  const [currentPathname, setCurrentPathname] = useState("/palm-input");
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
   const categoryFromQuery = searchParams ? searchParams.get('category') : null;
-  const isValidCategorySelected = categoryFromQuery && readingTypes.some(rc => rc.query === categoryFromQuery);
+  const selectedReadingType = readingTypes.find(rt => rt.query === categoryFromQuery);
+  const isValidCategorySelected = !!selectedReadingType;
+  const categoryDescription = selectedReadingType?.description;
 
   useEffect(() => {
     if (searchParams) {
       const category = searchParams.get('category');
       const path = category ? `/palm-input?category=${encodeURIComponent(category)}` : "/palm-input";
-      setCurrentPathname(path); 
+      setCurrentPathname(path);
     }
   }, [searchParams]);
 
   useEffect(() => {
-    if (!isInitializing) { 
-      const timer = setTimeout(() => { 
+    if (!isInitializing) {
+      const timer = setTimeout(() => {
         if (!isAuthenticated) {
-          router.push('/'); 
+          router.push('/');
         }
         setAuthCheckComplete(true);
-      }, 100); 
+      }, 100);
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, router, isInitializing]);
@@ -88,7 +90,7 @@ function PalmInputPageComponent() {
       </div>
     );
   }
-  
+
   const isPalmistryActive = currentPathname.startsWith('/palm-input') && isValidCategorySelected;
   const isMyReadingActive = currentPathname === '/report';
 
@@ -124,7 +126,7 @@ function PalmInputPageComponent() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
                   {readingTypes.map((type) => (
-                    <DropdownMenuItem key={type.query} asChild className="cursor-pointer hover:bg-primary/10 w-full">
+                    <DropdownMenuItem key={type.query} asChild className="cursor-pointer hover:bg-primary/10">
                       <Link href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="w-full text-foreground">
                         {type.name}
                       </Link>
@@ -145,7 +147,7 @@ function PalmInputPageComponent() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
                   {numerologyServices.map((service) => (
-                    <DropdownMenuItem key={service.query} asChild className="cursor-pointer hover:bg-primary/10 w-full">
+                    <DropdownMenuItem key={service.query} asChild className="cursor-pointer hover:bg-primary/10">
                       <Link href={`/numerology-input?service=${encodeURIComponent(service.query)}`} className="w-full text-foreground">
                         {service.name}
                       </Link>
@@ -171,7 +173,7 @@ function PalmInputPageComponent() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
                   {productMenuItems.map((item) => (
-                    <DropdownMenuItem key={item.name} asChild className="cursor-pointer hover:bg-primary/10 w-full">
+                    <DropdownMenuItem key={item.name} asChild className="cursor-pointer hover:bg-primary/10">
                       <Link href={item.link} className="w-full text-foreground">
                         {item.name}
                       </Link>
@@ -190,7 +192,7 @@ function PalmInputPageComponent() {
 
         {isValidCategorySelected ? (
           <>
-            <PalmInputForm />
+            <PalmInputForm categoryDescription={categoryDescription} />
             <div className="w-full space-y-8 mt-12">
               <Card className="shadow-lg bg-card/90 backdrop-blur-sm border border-border">
                 <CardHeader>
@@ -256,13 +258,13 @@ function PalmInputPageComponent() {
                   Select a specific reading type from the "Palmistry" menu or a service from the "Numerology" menu to provide your details and receive personalized insights.
                 </p>
                 <div className="w-full max-w-lg mx-auto">
-                  <Image 
-                    src="https://placehold.co/600x400.png" 
-                    alt="Palmistry Overview" 
-                    width={600} 
-                    height={400} 
+                  <Image
+                    src="https://placehold.co/600x400.png"
+                    alt="Palmistry Overview"
+                    width={600}
+                    height={400}
                     className="rounded-lg shadow-lg border border-border object-cover"
-                    data-ai-hint="palmistry hand lines" 
+                    data-ai-hint="palmistry hand lines"
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -294,4 +296,3 @@ export default function PalmInputPage() {
     </Suspense>
   );
 }
-    

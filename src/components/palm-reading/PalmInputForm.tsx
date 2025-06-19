@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { generatePalmReading, type GeneratePalmReadingInput } from '@/ai/flows/generate-palm-reading';
-import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard } from 'lucide-react';
+import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info } from 'lucide-react';
 
 const SESSION_STORAGE_KEY = 'palmVerseCheckoutForm';
 
@@ -24,12 +24,16 @@ const readingCategories = [
   { value: "Comprehensive Analysis", label: "Comprehensive Analysis" },
 ];
 
-const PalmInputForm = () => {
+interface PalmInputFormProps {
+  categoryDescription?: string;
+}
+
+const PalmInputForm = ({ categoryDescription }: PalmInputFormProps) => {
   const [leftPalmImageFile, setLeftPalmImageFile] = useState<File | null>(null);
   const [rightPalmImageFile, setRightPalmImageFile] = useState<File | null>(null);
   const [leftPalmPreview, setLeftPalmPreview] = useState<string | null>(null);
   const [rightPalmPreview, setRightPalmPreview] = useState<string | null>(null);
-  
+
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [placeOfBirth, setPlaceOfBirth] = useState('');
   const [timeOfBirth, setTimeOfBirth] = useState('');
@@ -38,11 +42,11 @@ const PalmInputForm = () => {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { 
-    startOperation, 
-    stopOperation, 
-    isOperationInProgress, 
-    hasPaid, 
+  const {
+    startOperation,
+    stopOperation,
+    isOperationInProgress,
+    hasPaid,
     userName,
     createInitialReportPlaceholder,
     updateReportWithGeneratedContent,
@@ -62,10 +66,10 @@ const PalmInputForm = () => {
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setFile: (file: File | null) => void, setPreview: (url: string | null) => void) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setFile(file); 
+      setFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result as string); 
+        setPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     } else {
@@ -101,24 +105,23 @@ const PalmInputForm = () => {
         toast({ title: "Missing Category", description: "Please select a reading category before proceeding to payment.", variant: "destructive" });
         return;
       }
-      // For palmistry, the return path is always palm-input with its category
       const returnPath = `/palm-input${category ? `?category=${encodeURIComponent(category)}` : ''}`;
       router.push(`/payment?service_type=palmistry&return_path=${encodeURIComponent(returnPath)}`);
       return;
     }
-    
+
     if (!leftPalmImageFile || !rightPalmImageFile || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
       toast({ title: "Missing Information", description: "Please fill all required fields and upload both palm images to generate your report.", variant: "destructive" });
       return;
     }
-    
-    sessionStorage.removeItem(SESSION_STORAGE_KEY); 
+
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
     startOperation();
     let initialReportId = '';
     try {
       const leftPalmDataUriFromFile = await fileToDataUri(leftPalmImageFile);
       const rightPalmDataUriFromFile = await fileToDataUri(rightPalmImageFile);
-      
+
       const finalReportInputDetails: ReportPalmInputDetails = {
         leftPalmDataUri: leftPalmDataUriFromFile,
         rightPalmDataUri: rightPalmDataUriFromFile,
@@ -141,7 +144,7 @@ const PalmInputForm = () => {
         dominantHand,
         category,
       };
-      
+
       const result = await generatePalmReading(aiFlowInput);
       updateReportWithGeneratedContent(initialReportId, result.report);
       router.push('/');
@@ -157,7 +160,7 @@ const PalmInputForm = () => {
       stopOperation();
     }
   };
-  
+
   const onFormSubmit = (e: FormEvent) => {
     e.preventDefault();
     handleSubmitOrProceedToPayment();
@@ -166,12 +169,12 @@ const PalmInputForm = () => {
   const attemptAutoSubmitAfterPayment = useCallback(async () => {
     if (searchParams && searchParams.get('payment_success') === 'true' && hasPaid && userName) {
       const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
-      
+
       const currentSearchParamsString = searchParams.toString();
       const newParams = new URLSearchParams(currentSearchParamsString);
       newParams.delete('payment_success');
-      
-      const categoryFromQuery = newParams.get('category'); 
+
+      const categoryFromQuery = newParams.get('category');
       const basePath = '/palm-input';
       const finalRedirectPath = categoryFromQuery ? `${basePath}?category=${encodeURIComponent(categoryFromQuery)}` : basePath;
       router.replace(finalRedirectPath, { scroll: false });
@@ -179,7 +182,7 @@ const PalmInputForm = () => {
 
       if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
-        
+
         setDateOfBirth(persistedData.dateOfBirth || '');
         setPlaceOfBirth(persistedData.placeOfBirth || '');
         setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
@@ -187,14 +190,14 @@ const PalmInputForm = () => {
         setCategory(categoryFromQuery || persistedData.category || '');
         setLeftPalmPreview(persistedData.leftPalmDataUri || null);
         setRightPalmPreview(persistedData.rightPalmDataUri || null);
-        
+
         if (
-          persistedData.leftPalmDataUri && 
-          persistedData.rightPalmDataUri && 
+          persistedData.leftPalmDataUri &&
+          persistedData.rightPalmDataUri &&
           persistedData.dateOfBirth &&
           persistedData.placeOfBirth &&
           persistedData.dominantHand &&
-          (categoryFromQuery || persistedData.category) 
+          (categoryFromQuery || persistedData.category)
         ) {
           sessionStorage.removeItem(SESSION_STORAGE_KEY);
           startOperation();
@@ -229,13 +232,13 @@ const PalmInputForm = () => {
                markReportAsGenerationFailed(initialReportId, `Auto-generation failed after payment: ${errorMessage}`);
             }
             toast({ title: "Auto-Generation Error", description: `An issue occurred while automatically preparing your report. Please try submitting your details again from the palm input page.`, variant: "destructive" });
-            router.push('/'); 
+            router.push('/');
           } finally {
             if(isOperationInProgress) stopOperation();
           }
         } else {
           toast({ title: "Payment Successful", description: "Please complete any missing fields and upload images if necessary, then click 'Generate Palm Reading'." });
-          if (isOperationInProgress) stopOperation(); 
+          if (isOperationInProgress) stopOperation();
         }
       } else {
         const catFromQuery = searchParams.get('category');
@@ -268,12 +271,12 @@ const PalmInputForm = () => {
     </div>
   );
 
-  const isReadyForManualSubmitAfterPayment = 
-    leftPalmImageFile && 
-    rightPalmImageFile && 
-    dateOfBirth && 
-    placeOfBirth && 
-    dominantHand && 
+  const isReadyForManualSubmitAfterPayment =
+    leftPalmImageFile &&
+    rightPalmImageFile &&
+    dateOfBirth &&
+    placeOfBirth &&
+    dominantHand &&
     category;
 
   let finalButtonDisabled = isOperationInProgress;
@@ -298,11 +301,20 @@ const PalmInputForm = () => {
         </div>
         <div className="relative z-10">
             <CardHeader className="text-center">
-            <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
-                <Hand className="h-10 w-10 text-primary" />
-            </div>
-            <CardTitle className="font-headline text-3xl">Enter Your Palm Details</CardTitle>
-            <CardDescription>Provide your information to generate a personalized palm reading for {category ? `"${category}"` : "your chosen category"}.</CardDescription>
+              <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
+                  <Hand className="h-10 w-10 text-primary" />
+              </div>
+              <CardTitle className="font-headline text-3xl">Palm Reading: {category || "Select Category"}</CardTitle>
+              <CardDescription>
+                {categoryDescription ? (
+                  <span className="block mt-1 text-sm text-accent flex items-start justify-center gap-1.5">
+                    <Info className="h-4 w-4 mt-0.5 shrink-0"/>
+                    {categoryDescription}
+                  </span>
+                ) : (
+                  "Provide your information to generate a personalized palm reading."
+                )}
+              </CardDescription>
             </CardHeader>
             <CardContent>
             <form onSubmit={onFormSubmit} className="space-y-8">
@@ -329,7 +341,7 @@ const PalmInputForm = () => {
                     <Input id="tob" type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} disabled={isOperationInProgress}/>
                 </div>
                 </div>
-                
+
                 <div className="space-y-2">
                 <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth *</Label>
                 <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} required />
@@ -362,13 +374,13 @@ const PalmInputForm = () => {
                     </Select>
                 </div>
                 </div>
-                
-                <Button 
-                type="submit" 
-                className="w-full text-lg py-6 mt-8" 
+
+                <Button
+                type="submit"
+                className="w-full text-lg py-6 mt-8"
                 disabled={finalButtonDisabled}
                 >
-                {isOperationInProgress ? ( 
+                {isOperationInProgress ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                 ) : (
                     hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
