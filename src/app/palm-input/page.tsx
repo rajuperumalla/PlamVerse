@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import PalmInputForm from '@/components/palm-reading/PalmInputForm';
 import { useAppContext } from '@/context/AppContext';
-import { Loader2, Handshake, BookOpen, Sparkles, ArrowRight, ChevronDown, Search, ShoppingBag } from 'lucide-react';
+import { Loader2, Handshake, BookOpen, Sparkles, ArrowRight, ChevronDown, Search, ShoppingBag, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import {
@@ -40,34 +40,41 @@ const productMenuItems = [
   { name: "Yantras", link: "#products/yantras" },
 ];
 
+const numerologyServices = [
+  { name: "Business Name Numerology Calculator", query: "business-name-calculator" },
+  { name: "Baby Name Numerology", query: "baby-name-numerology" },
+  { name: "Personal Life Path & Destiny Report", query: "life-path-report" },
+  { name: "Name Correction & Compatibility Checker", query: "name-correction" },
+  { name: "House Number / Address Compatibility", query: "address-compatibility" },
+];
+
 
 function PalmInputPageComponent() {
   const { isAuthenticated, isInitializing } = useAppContext();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [currentPathname, setCurrentPathname] = useState("/palm-input"); // Default to base path
+  const [currentPathname, setCurrentPathname] = useState("/palm-input"); 
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
   const categoryFromQuery = searchParams ? searchParams.get('category') : null;
   const isValidCategorySelected = categoryFromQuery && readingTypes.some(rc => rc.query === categoryFromQuery);
 
   useEffect(() => {
-    // Update currentPathname based on searchParams on mount and when they change
     if (searchParams) {
       const category = searchParams.get('category');
       const path = category ? `/palm-input?category=${encodeURIComponent(category)}` : "/palm-input";
-      setCurrentPathname(path); // This reflects the logical page, not window.location.pathname
+      setCurrentPathname(path); 
     }
   }, [searchParams]);
 
   useEffect(() => {
-    if (!isInitializing) { // Ensure context is initialized
-      const timer = setTimeout(() => { // Delay to ensure context values are stable
+    if (!isInitializing) { 
+      const timer = setTimeout(() => { 
         if (!isAuthenticated) {
-          router.push('/'); // Redirect if not authenticated
+          router.push('/'); 
         }
         setAuthCheckComplete(true);
-      }, 100); // Small delay for stability
+      }, 100); 
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, router, isInitializing]);
@@ -88,7 +95,6 @@ function PalmInputPageComponent() {
 
   return (
     <div className="relative space-y-8 md:space-y-10">
-      {/* Background Image */}
       <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
         <Image
           src="https://placehold.co/1920x1080.png"
@@ -99,7 +105,6 @@ function PalmInputPageComponent() {
         />
       </div>
       <div className="relative z-10">
-        {/* Navigation Menu */}
         <nav aria-label="Main navigation after login">
           <ul className="flex justify-center items-center space-x-1 sm:space-x-2 md:space-x-4 py-3 bg-primary/10 backdrop-blur-sm rounded-lg shadow-md border border-primary/30 text-xs sm:text-sm">
             <li>
@@ -120,8 +125,29 @@ function PalmInputPageComponent() {
                 <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
                   {readingTypes.map((type) => (
                     <DropdownMenuItem key={type.query} asChild className="cursor-pointer hover:bg-primary/10 w-full">
-                      <Link href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="w-full">
+                      <Link href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="w-full text-foreground">
                         {type.name}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </li>
+            <li>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={`transition-colors px-2 py-1 rounded-md flex items-center text-foreground hover:text-primary hover:bg-primary/5 focus:bg-primary/10`}
+                  >
+                    <Calculator className="inline-block mr-1 h-4 w-4 align-middle" /> Numerology <ChevronDown className="ml-1 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
+                  {numerologyServices.map((service) => (
+                    <DropdownMenuItem key={service.query} asChild className="cursor-pointer hover:bg-primary/10 w-full">
+                      <Link href={`/numerology-input?service=${encodeURIComponent(service.query)}`} className="w-full text-foreground">
+                        {service.name}
                       </Link>
                     </DropdownMenuItem>
                   ))}
@@ -146,7 +172,7 @@ function PalmInputPageComponent() {
                 <DropdownMenuContent align="center" className="bg-background border-primary/30 shadow-xl">
                   {productMenuItems.map((item) => (
                     <DropdownMenuItem key={item.name} asChild className="cursor-pointer hover:bg-primary/10 w-full">
-                      <Link href={item.link} className="w-full">
+                      <Link href={item.link} className="w-full text-foreground">
                         {item.name}
                       </Link>
                     </DropdownMenuItem>
@@ -162,11 +188,9 @@ function PalmInputPageComponent() {
           </ul>
         </nav>
 
-        {/* Conditional Content: Form or Palmistry Intro */}
         {isValidCategorySelected ? (
           <>
             <PalmInputForm />
-            {/* Product Showcase (shown when a palmistry category is selected) */}
             <div className="w-full space-y-8 mt-12">
               <Card className="shadow-lg bg-card/90 backdrop-blur-sm border border-border">
                 <CardHeader>
@@ -216,21 +240,20 @@ function PalmInputPageComponent() {
             </div>
           </>
         ) : (
-          // Palmistry Intro (shown when no palmistry category is selected)
           <div className="text-center py-10 md:py-16 mt-8">
             <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
               <CardHeader className="items-center">
                 <div className="p-3 bg-primary/10 rounded-full mb-3">
                     <Search className="h-12 w-12 text-primary" />
                 </div>
-                <CardTitle className="font-headline text-3xl md:text-4xl text-primary">Explore the World of Palmistry</CardTitle>
+                <CardTitle className="font-headline text-3xl md:text-4xl text-primary">Explore Your Chosen Path</CardTitle>
                 <CardDescription className="text-lg text-muted-foreground mt-2">
                     Begin your journey of self-discovery.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <p className="text-muted-foreground text-md md:text-lg">
-                  Select a specific reading type from the "Palmistry" menu above to provide your details and receive your personalized insights.
+                  Select a specific reading type from the "Palmistry" menu or a service from the "Numerology" menu to provide your details and receive personalized insights.
                 </p>
                 <div className="w-full max-w-lg mx-auto">
                   <Image 
@@ -243,7 +266,7 @@ function PalmInputPageComponent() {
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Each line on your palm tells a unique story. Our AI, guided by ancient wisdom, helps you understand yours.
+                  Each line on your palm, or number in your life, tells a unique story. Our AI, guided by ancient wisdom, helps you understand yours.
                 </p>
               </CardContent>
               <CardFooter>
@@ -271,5 +294,4 @@ export default function PalmInputPage() {
     </Suspense>
   );
 }
-
     
