@@ -84,7 +84,6 @@ const PalmInputForm = () => {
       return;
     }
     
-    // Validation only happens here, after payment, before generation
     if (!leftPalmImageFile || !rightPalmImageFile || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
       toast({ title: "Missing Information", description: "Please fill all required fields and upload both palm images to generate your report.", variant: "destructive" });
       return;
@@ -125,8 +124,9 @@ const PalmInputForm = () => {
       router.push('/');
     } catch (error) {
       console.error("Error generating palm reading:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during report generation.";
       if (initialReportId) {
-        markReportAsGenerationFailed(initialReportId, "Failed to generate palm reading. An unexpected error occurred.");
+        markReportAsGenerationFailed(initialReportId, `Report generation failed: ${errorMessage}`);
       }
       toast({ title: "Generation Error", description: "Failed to generate palm reading. Please try again.", variant: "destructive" });
       router.push('/');
@@ -189,10 +189,11 @@ const PalmInputForm = () => {
             router.push('/');
           } catch (error) {
             console.error("Error auto-generating palm reading:", error);
-             if (initialReportId) {
-               markReportAsGenerationFailed(initialReportId, "Failed to auto-generate palm reading after payment.");
-             }
-            toast({ title: "Auto-Generation Error", description: "Failed to auto-generate. Please check your details and try again.", variant: "destructive" });
+            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during auto-generation.";
+            if (initialReportId) {
+               markReportAsGenerationFailed(initialReportId, `Auto-generation failed after payment: ${errorMessage}`);
+            }
+            toast({ title: "Auto-Generation Error", description: "An issue occurred while automatically preparing your report. Please try submitting your details again from the palm input page.", variant: "destructive" });
             router.push('/'); 
           } finally {
             if(isOperationInProgress) stopOperation();
@@ -215,7 +216,7 @@ const PalmInputForm = () => {
   const renderImagePreview = (previewUrl: string | null, palmName: string, dataAiHint: string) => (
     <div className="w-full h-48 border-2 border-dashed border-primary/50 rounded-lg flex items-center justify-center bg-muted/50 relative overflow-hidden">
       {previewUrl ? (
-        <Image src={previewUrl} alt={`${palmName} preview`} layout="fill" objectFit="contain" />
+        <Image src={previewUrl} alt={`${palmName} preview`} layout="fill" objectFit="contain" data-ai-hint={dataAiHint}/>
       ) : (
         <div className="text-center text-muted-foreground">
           <UploadCloud className="mx-auto h-12 w-12 mb-2" />
@@ -236,11 +237,11 @@ const PalmInputForm = () => {
     category;
 
   let finalButtonDisabled = isOperationInProgress;
-  if (hasPaid) { // If paid, disable button if form is not ready for generation
+  if (hasPaid) {
     if (!isReadyForManualSubmitAfterPayment) {
       finalButtonDisabled = true;
     }
-  } // else, if not paid, it should be enabled (unless operation in progress) for "Proceed to Payment"
+  }
 
 
   return (
@@ -349,3 +350,5 @@ const PalmInputForm = () => {
 };
 
 export default PalmInputForm;
+
+    
