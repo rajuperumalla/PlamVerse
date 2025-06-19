@@ -1,6 +1,6 @@
 
 "use client";
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -14,8 +14,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import BusinessNumerologyForm from '@/components/numerology/BusinessNumerologyForm'; // Import the new form
 
-// Constants for navigation items (can be shared or redefined if layout is very different)
 const readingTypes = [
   { name: "General Personality", query: "General Personality" },
   { name: "Career & Finance", query: "Career & Finance" },
@@ -24,7 +24,7 @@ const readingTypes = [
   { name: "Comprehensive Analysis", query: "Comprehensive Analysis" },
 ];
 
-const numerologyServicesConst = [ // Renamed to avoid conflict if imported elsewhere
+const numerologyServicesConst = [
   { name: "Business Name Numerology Calculator", query: "business-name-calculator", description: "Helps entrepreneurs choose or correct business names for success, financial growth, and brand attraction." },
   { name: "Baby Name Numerology", query: "baby-name-numerology", description: "Guides parents to choose harmonious names based on the child’s date of birth." },
   { name: "Personal Life Path & Destiny Report", query: "life-path-report", description: "In-depth report based on birth date and full name; reveals life purpose, strengths, and career alignment." },
@@ -41,7 +41,7 @@ const productMenuItems = [
 ];
 
 function NumerologyInputPageComponent() {
-  const { isAuthenticated, isInitializing } = useAppContext();
+  const { isAuthenticated, isInitializing, hasPaid, userName } = useAppContext();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
@@ -71,10 +71,6 @@ function NumerologyInputPageComponent() {
   }
 
   const isNumerologyActive = !!selectedService;
-  // Active states for other menu items if needed for styling, similar to palm-input page
-  // const isPalmistryActive = false; 
-  // const isMyReadingActive = false;
-
 
   return (
     <div className="relative space-y-8 md:space-y-10">
@@ -88,7 +84,6 @@ function NumerologyInputPageComponent() {
         />
       </div>
       <div className="relative z-10">
-        {/* Replicated Navigation Menu */}
         <nav aria-label="Main navigation">
           <ul className="flex justify-center items-center space-x-1 sm:space-x-2 md:space-x-4 py-3 bg-primary/10 backdrop-blur-sm rounded-lg shadow-md border border-primary/30 text-xs sm:text-sm">
             <li>
@@ -173,49 +168,53 @@ function NumerologyInputPageComponent() {
         </nav>
 
         {/* Content Area */}
-        <div className="text-center py-10 md:py-16 mt-8">
-          <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
-            <CardHeader className="items-center">
-              <div className="p-3 bg-primary/10 rounded-full mb-3">
-                  <Calculator className="h-12 w-12 text-primary" />
-              </div>
-              <CardTitle className="font-headline text-3xl md:text-4xl text-primary">
-                {selectedService ? selectedService.name : "Numerology Services"}
-              </CardTitle>
-              <CardDescription className="text-lg text-muted-foreground mt-2">
-                {selectedService ? selectedService.description : "Unlock insights through the power of numbers."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {selectedService ? (
-                <>
-                  <p className="text-muted-foreground text-md md:text-lg">
-                    This is the placeholder for the {selectedService.name}. The input form and specific details for this service will be available soon.
+        {serviceQuery === 'business-name-calculator' ? (
+          <BusinessNumerologyForm />
+        ) : (
+          <div className="text-center py-10 md:py-16 mt-8">
+            <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
+              <CardHeader className="items-center">
+                <div className="p-3 bg-primary/10 rounded-full mb-3">
+                    <Calculator className="h-12 w-12 text-primary" />
+                </div>
+                <CardTitle className="font-headline text-3xl md:text-4xl text-primary">
+                  {selectedService ? selectedService.name : "Numerology Services"}
+                </CardTitle>
+                <CardDescription className="text-lg text-muted-foreground mt-2">
+                  {selectedService ? selectedService.description : "Unlock insights through the power of numbers."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {selectedService ? (
+                  <>
+                    <p className="text-muted-foreground text-md md:text-lg">
+                      The input form for {selectedService.name} will be implemented soon.
+                    </p>
+                    <div className="w-full max-w-lg mx-auto">
+                      <Image 
+                        src="https://placehold.co/600x400.png" 
+                        alt={`${selectedService.name} illustration`}
+                        width={600} 
+                        height={400} 
+                        className="rounded-lg shadow-lg border border-border object-cover"
+                        data-ai-hint={selectedService.query === 'business-name-calculator' ? "business chart graph" : "numerology chart symbols"}
+                      />
+                    </div>
+                  </>
+                ) : (
+                   <p className="text-muted-foreground text-md md:text-lg">
+                    Please select a specific numerology service from the "Numerology" menu above to get started.
                   </p>
-                  <div className="w-full max-w-lg mx-auto">
-                    <Image 
-                      src="https://placehold.co/600x400.png" 
-                      alt={`${selectedService.name} illustration`}
-                      width={600} 
-                      height={400} 
-                      className="rounded-lg shadow-lg border border-border object-cover"
-                      data-ai-hint="numerology chart symbols" 
-                    />
-                  </div>
-                </>
-              ) : (
-                 <p className="text-muted-foreground text-md md:text-lg">
-                  Please select a specific numerology service from the "Numerology" menu above to get started.
+                )}
+              </CardContent>
+              <CardFooter>
+                <p className="text-xs text-muted-foreground text-center w-full">
+                  Numerology services provide guidance based on ancient numerical wisdom.
                 </p>
-              )}
-            </CardContent>
-            <CardFooter>
-              <p className="text-xs text-muted-foreground text-center w-full">
-                Numerology services provide guidance based on ancient numerical wisdom.
-              </p>
-            </CardFooter>
-          </Card>
-        </div>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

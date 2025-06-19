@@ -101,7 +101,9 @@ const PalmInputForm = () => {
         toast({ title: "Missing Category", description: "Please select a reading category before proceeding to payment.", variant: "destructive" });
         return;
       }
-      router.push('/payment'); 
+      // For palmistry, the return path is always palm-input with its category
+      const returnPath = `/palm-input${category ? `?category=${encodeURIComponent(category)}` : ''}`;
+      router.push(`/payment?service_type=palmistry&return_path=${encodeURIComponent(returnPath)}`);
       return;
     }
     
@@ -169,7 +171,7 @@ const PalmInputForm = () => {
       const newParams = new URLSearchParams(currentSearchParamsString);
       newParams.delete('payment_success');
       
-      const categoryFromQuery = newParams.get('category'); // Preserve category from query if present
+      const categoryFromQuery = newParams.get('category'); 
       const basePath = '/palm-input';
       const finalRedirectPath = categoryFromQuery ? `${basePath}?category=${encodeURIComponent(categoryFromQuery)}` : basePath;
       router.replace(finalRedirectPath, { scroll: false });
@@ -182,7 +184,6 @@ const PalmInputForm = () => {
         setPlaceOfBirth(persistedData.placeOfBirth || '');
         setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
         setDominantHand(persistedData.dominantHand || '');
-        // Category from session storage is primary, but query param can override if it exists (e.g., user changed mind after payment somehow)
         setCategory(categoryFromQuery || persistedData.category || '');
         setLeftPalmPreview(persistedData.leftPalmDataUri || null);
         setRightPalmPreview(persistedData.rightPalmDataUri || null);
@@ -193,13 +194,12 @@ const PalmInputForm = () => {
           persistedData.dateOfBirth &&
           persistedData.placeOfBirth &&
           persistedData.dominantHand &&
-          (categoryFromQuery || persistedData.category) // Ensure category is present
+          (categoryFromQuery || persistedData.category) 
         ) {
           sessionStorage.removeItem(SESSION_STORAGE_KEY);
           startOperation();
           let initialReportId = '';
           try {
-            // Use the final category determined (query param or session)
             const finalCategoryForReport = categoryFromQuery || persistedData.category;
             const reportDetailsForPlaceholder: ReportPalmInputDetails = {
                 ...persistedData,
@@ -228,7 +228,7 @@ const PalmInputForm = () => {
             if (initialReportId) {
                markReportAsGenerationFailed(initialReportId, `Auto-generation failed after payment: ${errorMessage}`);
             }
-            toast({ title: "Auto-Generation Error", description: `An issue occurred while automatically preparing your report. Details: ${errorMessage}. Please try submitting your details again from the palm input page.`, variant: "destructive" });
+            toast({ title: "Auto-Generation Error", description: `An issue occurred while automatically preparing your report. Please try submitting your details again from the palm input page.`, variant: "destructive" });
             router.push('/'); 
           } finally {
             if(isOperationInProgress) stopOperation();
@@ -238,7 +238,6 @@ const PalmInputForm = () => {
           if (isOperationInProgress) stopOperation(); 
         }
       } else {
-        // If no session data, but payment success, try to get category from query
         const catFromQuery = searchParams.get('category');
         if (catFromQuery && readingCategories.some(rc => rc.value === catFromQuery)) {
             setCategory(catFromQuery);
@@ -303,7 +302,7 @@ const PalmInputForm = () => {
                 <Hand className="h-10 w-10 text-primary" />
             </div>
             <CardTitle className="font-headline text-3xl">Enter Your Palm Details</CardTitle>
-            <CardDescription>Provide your information to generate a personalized palm reading.</CardDescription>
+            <CardDescription>Provide your information to generate a personalized palm reading for {category ? `"${category}"` : "your chosen category"}.</CardDescription>
             </CardHeader>
             <CardContent>
             <form onSubmit={onFormSubmit} className="space-y-8">
@@ -323,7 +322,7 @@ const PalmInputForm = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="dob" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Date of Birth *</Label>
-                    <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} disabled={isOperationInProgress} required={hasPaid || !hasPaid} />
+                    <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} disabled={isOperationInProgress} required />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth (Optional)</Label>
@@ -333,13 +332,13 @@ const PalmInputForm = () => {
                 
                 <div className="space-y-2">
                 <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth *</Label>
-                <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} required={hasPaid || !hasPaid} />
+                <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} required />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="dominantHand" className="text-base flex items-center gap-2"><UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *</Label>
-                    <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress} required={hasPaid || !hasPaid}>
+                    <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress} required>
                     <SelectTrigger id="dominantHand">
                         <SelectValue placeholder="Select your dominant hand" />
                     </SelectTrigger>
@@ -351,7 +350,7 @@ const PalmInputForm = () => {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
-                    <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress} required={hasPaid || !hasPaid}>
+                    <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress || !!searchParams?.get('category')} required>
                     <SelectTrigger id="category">
                         <SelectValue placeholder="Select a category" />
                     </SelectTrigger>

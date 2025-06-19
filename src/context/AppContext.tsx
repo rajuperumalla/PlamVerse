@@ -12,18 +12,41 @@ export interface ReportPalmInputDetails {
   placeOfBirth: string;
   timeOfBirth?: string;
   dominantHand: string;
-  category: string;
+  category: string; // e.g., "General Personality"
 }
+
+export interface ReportNumerologyInputDetails_Business {
+  serviceQuery: 'business-name-calculator';
+  businessName: string;
+  additionalBusinessNames?: string;
+  founderFullName: string;
+  founderDOB: string;
+  founderTOB?: string;
+}
+
+// Add other numerology input types here as needed, e.g.:
+// export interface ReportNumerologyInputDetails_BabyName {
+//   serviceQuery: 'baby-name-numerology';
+//   potentialNames: string[];
+//   parent1FullName: string;
+//   parent1DOB: string;
+//   parent2FullName?: string;
+//   parent2DOB?: string;
+//   babyDOB: string;
+// }
+
+export type ReportInputDetails = ReportPalmInputDetails | ReportNumerologyInputDetails_Business; // Add other numerology types to this union
 
 export interface ReportData {
   id: string;
-  content: string; // Holds AI content or error messages for generation_failed
+  content: string;
   status: 'submitted_for_generation' | 'generation_failed' | 'pending_review' | 'approved';
-  userName: string | null; // User who submitted
-  submissionDate: string; // Date of initial submission, ISO string
-  lastUpdateDate: string; // Tracks last status change, ISO string
-  category: string;
-  inputDetails: ReportPalmInputDetails; // Store original input details for context
+  userName: string | null;
+  submissionDate: string;
+  lastUpdateDate: string;
+  reportType: 'palmistry' | 'numerology';
+  category: string; // For palmistry: "General Personality", etc. For numerology: "business-name-calculator", etc.
+  inputDetails: ReportInputDetails;
 }
 
 interface AppState {
@@ -41,6 +64,7 @@ interface AppContextType extends AppState {
   login: (name: string) => void;
   logout: () => void;
   createInitialReportPlaceholder: (inputData: ReportPalmInputDetails) => string;
+  createInitialNumerologyReportPlaceholder: (inputData: ReportNumerologyInputDetails_Business, serviceQuery: string) => string; // Or a more generic numerology input type
   updateReportWithGeneratedContent: (reportId: string, aiContent: string) => void;
   markReportAsGenerationFailed: (reportId: string, errorMessage?: string) => void;
   approveReport: (reportId: string, newContent?: string) => void;
@@ -58,9 +82,9 @@ const AppContext = createContext<AppContextType | null>(null);
 
 const REPORTS_STORAGE_KEY = 'palmverse_reports_array';
 
-const createSampleReport = (idSuffix: number, category: string, userName: string, status: ReportData['status']): ReportData => {
+const createSampleReport = (idSuffix: number, category: string, userName: string, status: ReportData['status'], reportType: 'palmistry' | 'numerology'): ReportData => {
   const baseDate = new Date();
-  baseDate.setDate(baseDate.getDate() - (idSuffix * 5 + 10)); 
+  baseDate.setDate(baseDate.getDate() - (idSuffix * 5 + 10));
 
   const submissionDate = new Date(baseDate);
   submissionDate.setHours(10 + idSuffix, 30 + idSuffix, 0, 0);
@@ -74,32 +98,42 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
     lastUpdateDate.setHours(submissionDate.getHours() + (2 % 24), submissionDate.getMinutes() + 10);
   }
 
+  let content = `Sample content for ${category} (Report ${idSuffix}). This is a simulated AI generated reading.`;
+  let specificInputDetails: ReportInputDetails;
 
-  let content = `Sample content for ${category} (Report ${idSuffix}). This is a simulated AI generated palm reading. It covers various aspects of your life including career, relationships, and health. The lines on your palm suggest a dynamic and eventful path ahead.`;
-  switch(status) {
-    case 'submitted_for_generation': content = `Report ID ${idSuffix}: Generation currently in progress for this sample. Please wait a few moments.`; break;
-    case 'generation_failed': content = `Sample report (ID ${idSuffix}) generation encountered an issue. This could be due to image quality or a temporary system glitch. Please try again.`; break;
-    case 'pending_review': content = `This is sample AI report ${idSuffix} for ${category}, awaiting expert review. It includes initial insights into your life line, heart line, and head line. Further details are being verified.`; break;
-    case 'approved': content = `This is final approved report ${idSuffix} for ${category}. Your life line indicates strong vitality. Your heart line shows deep connections. Your career path may involve creative pursuits. This detailed reading provides guidance and foretells potential opportunities.`; break;
-  }
-
-  return {
-    id: `sample-${idSuffix}-${submissionDate.getTime()}`,
-    content: content,
-    status: status,
-    userName: userName,
-    submissionDate: submissionDate.toISOString(),
-    lastUpdateDate: lastUpdateDate.toISOString(),
-    category: category,
-    inputDetails: {
+  if (reportType === 'palmistry') {
+    content += ` It covers various aspects of your life including career, relationships, and health based on palmistry.`;
+    specificInputDetails = {
       leftPalmDataUri: `https://placehold.co/300x200.png?text=L+Palm+S${idSuffix}`,
       rightPalmDataUri: `https://placehold.co/300x200.png?text=R+Palm+S${idSuffix}`,
       dateOfBirth: `19${80 + idSuffix}-0${(idSuffix % 9) + 1}-0${(idSuffix % 2) + 1}${idSuffix % 9 +1}`,
       placeOfBirth: `City ${idSuffix}, Sample Land`,
       timeOfBirth: `${(10 + idSuffix) % 24}:0${idSuffix % 6}`,
       dominantHand: idSuffix % 2 === 0 ? 'Right' : 'Left',
-      category: category,
-    }
+      category: category, // Palmistry specific category
+    };
+  } else { // Numerology
+    content += ` It provides insights based on numerological calculations for ${category}.`;
+    // Assuming 'business-name-calculator' for sample numerology reports
+    specificInputDetails = {
+      serviceQuery: 'business-name-calculator',
+      businessName: `Sample Business ${idSuffix}`,
+      founderFullName: `Founder ${userName.split('@')[0]} ${idSuffix}`,
+      founderDOB: `19${70 + idSuffix}-0${(idSuffix % 9) + 1}-1${idSuffix % 9}`,
+    } as ReportNumerologyInputDetails_Business;
+  }
+
+
+  return {
+    id: `sample-${reportType}-${idSuffix}-${submissionDate.getTime()}`,
+    content: content,
+    status: status,
+    userName: userName,
+    submissionDate: submissionDate.toISOString(),
+    lastUpdateDate: lastUpdateDate.toISOString(),
+    category: category,
+    reportType: reportType,
+    inputDetails: specificInputDetails,
   };
 };
 
@@ -124,14 +158,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const loadSampleReports = useCallback(() => {
     const samples = [
-      createSampleReport(1, 'Career and Finances', 'user_alpha@example.com', 'pending_review'),
-      createSampleReport(2, 'Love and Relationships', 'user_beta@example.com', 'pending_review'),
-      createSampleReport(3, 'Health and Wellness', 'user_gamma@example.com', 'approved'),
-      createSampleReport(4, 'General Personality', 'user_delta@example.com', 'submitted_for_generation'),
-      createSampleReport(5, 'Career and Finances', 'user_epsilon@example.com', 'generation_failed'),
-      createSampleReport(6, 'Love and Relationships', 'user_zeta@example.com', 'approved'),
-      createSampleReport(7, 'General Personality', 'user_eta@example.com', 'approved'),
-      createSampleReport(8, 'Health and Wellness', 'user_theta@example.com', 'approved'),
+      createSampleReport(1, 'Career & Finance', 'user_alpha@example.com', 'pending_review', 'palmistry'),
+      createSampleReport(2, 'Marriage & Relationships', 'user_beta@example.com', 'pending_review', 'palmistry'),
+      createSampleReport(3, 'Health & Wellness', 'user_gamma@example.com', 'approved', 'palmistry'),
+      createSampleReport(4, 'business-name-calculator', 'user_delta@example.com', 'pending_review', 'numerology'),
+      createSampleReport(5, 'life-path-report', 'user_epsilon@example.com', 'approved', 'numerology'),
     ];
     persistReports(samples);
   }, []);
@@ -163,7 +194,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (storedReports) {
         try {
             const parsedReports = JSON.parse(storedReports) as ReportData[];
-            if (Array.isArray(parsedReports) && parsedReports.length > 0 && parsedReports.every(r => typeof r.id === 'string' && typeof r.status === 'string' && r.inputDetails && typeof r.submissionDate === 'string' && typeof r.lastUpdateDate === 'string')) {
+            if (Array.isArray(parsedReports) && parsedReports.length > 0 && parsedReports.every(r => typeof r.id === 'string' && typeof r.status === 'string' && r.inputDetails && typeof r.submissionDate === 'string' && typeof r.lastUpdateDate === 'string' && (r.reportType === 'palmistry' || r.reportType === 'numerology'))) {
                 setReports(parsedReports);
             } else {
                 loadSampleReports();
@@ -225,17 +256,18 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const currentDate = new Date().toISOString();
 
     const reportsToKeep = reports.filter(r => {
-        return !(r.userName === userName && (r.status === 'submitted_for_generation' || r.status === 'generation_failed'));
+        return !(r.userName === userName && r.reportType === 'palmistry' && (r.status === 'submitted_for_generation' || r.status === 'generation_failed'));
     });
 
     const newReport: ReportData = {
       id: newReportId,
-      content: "Report generation initiated...",
+      content: "Palmistry report generation initiated...",
       status: 'submitted_for_generation',
       userName: userName,
       submissionDate: currentDate,
       lastUpdateDate: currentDate,
-      category: inputData.category,
+      category: inputData.category, // Palmistry specific category
+      reportType: 'palmistry',
       inputDetails: inputData,
     };
 
@@ -244,13 +276,41 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return newReportId;
   };
 
+  const createInitialNumerologyReportPlaceholder = (inputData: ReportNumerologyInputDetails_Business, serviceQuery: string): string => {
+    const newReportId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const currentDate = new Date().toISOString();
+
+    const reportsToKeep = reports.filter(r => {
+        return !(r.userName === userName && r.reportType === 'numerology' && r.category === serviceQuery && (r.status === 'submitted_for_generation' || r.status === 'generation_failed' || r.status === 'pending_review'));
+    });
+    
+    const newReport: ReportData = {
+        id: newReportId,
+        content: `Numerology report for ${serviceQuery} initiated...`,
+        status: 'pending_review', // Numerology reports go to pending_review first
+        userName: userName,
+        submissionDate: currentDate,
+        lastUpdateDate: currentDate,
+        category: serviceQuery, // e.g., "business-name-calculator"
+        reportType: 'numerology',
+        inputDetails: inputData,
+    };
+
+    const updatedReports = [...reportsToKeep, newReport];
+    persistReports(updatedReports);
+    return newReportId;
+  };
+
+
   const updateReportWithGeneratedContent = (reportId: string, aiContent: string) => {
     const updatedReports = reports.map(report => {
       if (report.id === reportId) {
+        // For palmistry, this moves to 'approved'. Numerology is handled by editor.
+        const newStatus = report.reportType === 'palmistry' ? 'approved' : report.status;
         return {
           ...report,
           content: aiContent,
-          status: 'approved' as 'approved', 
+          status: newStatus,
           lastUpdateDate: new Date().toISOString(),
         };
       }
@@ -315,17 +375,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             .filter(r => r.status === status)
             .sort((a, b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime());
         if (reportsWithStatus.length > 0) {
-            return reportsWithStatus[0];
+            return reportsWithStatus[0]; // Return the most recent for that status
         }
     }
-
+    // Fallback if no reports match priority statuses (should not happen if any report exists)
     return userReports.sort((a,b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime())[0];
   }, [reports, userName]);
 
 
   const clearCurrentUserReportStorage = () => {
     const userReport = getCurrentUserReport();
-    if (userReport && (userReport.status === 'generation_failed' || userReport.status === 'submitted_for_generation' || userReport.status === 'approved')) { // Include approved to clear after viewing if desired by Start New
+    if (userReport && (userReport.status === 'generation_failed' || userReport.status === 'submitted_for_generation' || userReport.status === 'approved')) {
         const updatedReports = reports.filter(r => r.id !== userReport.id);
         persistReports(updatedReports);
     }
@@ -346,6 +406,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       logout,
       reports,
       createInitialReportPlaceholder,
+      createInitialNumerologyReportPlaceholder,
       updateReportWithGeneratedContent,
       markReportAsGenerationFailed,
       approveReport,
