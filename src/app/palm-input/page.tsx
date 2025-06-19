@@ -23,8 +23,16 @@ function PalmInputPageComponent() {
   const { isAuthenticated, isInitializing } = useAppContext();
   const router = useRouter();
   const searchParams = useSearchParams(); 
-  const currentPathname = searchParams.toString() ? `/palm-input?${searchParams.toString()}` : "/palm-input"; 
+  const [currentPathname, setCurrentPathname] = useState("/palm-input"); // Default value
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
+
+  useEffect(() => {
+    // Update currentPathname whenever searchParams changes
+    if (searchParams) {
+      const path = searchParams.toString() ? `/palm-input?${searchParams.toString()}` : "/palm-input";
+      setCurrentPathname(path);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!isInitializing) {
