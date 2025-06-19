@@ -16,6 +16,14 @@ import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks,
 
 const SESSION_STORAGE_KEY = 'palmVerseCheckoutForm';
 
+const readingCategories = [
+  { value: "General Personality", label: "General Personality" },
+  { value: "Career & Finance", label: "Career & Finance" },
+  { value: "Health & Wellness", label: "Health & Wellness" },
+  { value: "Marriage & Relationships", label: "Marriage & Relationships" },
+  { value: "Comprehensive Analysis", label: "Comprehensive Analysis" },
+];
+
 const PalmInputForm = () => {
   const [leftPalmImageFile, setLeftPalmImageFile] = useState<File | null>(null);
   const [rightPalmImageFile, setRightPalmImageFile] = useState<File | null>(null);
@@ -41,6 +49,15 @@ const PalmInputForm = () => {
     markReportAsGenerationFailed,
   } = useAppContext();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (searchParams) {
+      const categoryFromQuery = searchParams.get('category');
+      if (categoryFromQuery && readingCategories.some(rc => rc.value === categoryFromQuery)) {
+        setCategory(categoryFromQuery);
+      }
+    }
+  }, [searchParams]);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setFile: (file: File | null) => void, setPreview: (url: string | null) => void) => {
     if (e.target.files && e.target.files[0]) {
@@ -80,6 +97,10 @@ const PalmInputForm = () => {
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(reportInputDetails));
 
     if (!hasPaid) {
+      if (!category) {
+        toast({ title: "Missing Category", description: "Please select a reading category before proceeding to payment.", variant: "destructive" });
+        return;
+      }
       router.push('/payment'); 
       return;
     }
@@ -147,7 +168,12 @@ const PalmInputForm = () => {
       const currentSearchParamsString = searchParams.toString();
       const newParams = new URLSearchParams(currentSearchParamsString);
       newParams.delete('payment_success');
-      router.replace(`/palm-input?${newParams.toString()}`, { scroll: false });
+      
+      const categoryFromQuery = newParams.get('category'); // Preserve category from query if present
+      const basePath = '/palm-input';
+      const finalRedirectPath = categoryFromQuery ? `${basePath}?category=${encodeURIComponent(categoryFromQuery)}` : basePath;
+      router.replace(finalRedirectPath, { scroll: false });
+
 
       if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
@@ -156,7 +182,8 @@ const PalmInputForm = () => {
         setPlaceOfBirth(persistedData.placeOfBirth || '');
         setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
         setDominantHand(persistedData.dominantHand || '');
-        setCategory(persistedData.category || '');
+        // Category from session storage is primary, but query param can override if it exists (e.g., user changed mind after payment somehow)
+        setCategory(categoryFromQuery || persistedData.category || '');
         setLeftPalmPreview(persistedData.leftPalmDataUri || null);
         setRightPalmPreview(persistedData.rightPalmDataUri || null);
         
@@ -166,13 +193,20 @@ const PalmInputForm = () => {
           persistedData.dateOfBirth &&
           persistedData.placeOfBirth &&
           persistedData.dominantHand &&
-          persistedData.category
+          (categoryFromQuery || persistedData.category) // Ensure category is present
         ) {
           sessionStorage.removeItem(SESSION_STORAGE_KEY);
           startOperation();
           let initialReportId = '';
           try {
-            initialReportId = createInitialReportPlaceholder(persistedData);
+            // Use the final category determined (query param or session)
+            const finalCategoryForReport = categoryFromQuery || persistedData.category;
+            const reportDetailsForPlaceholder: ReportPalmInputDetails = {
+                ...persistedData,
+                category: finalCategoryForReport!,
+            };
+
+            initialReportId = createInitialReportPlaceholder(reportDetailsForPlaceholder);
             toast({ title: "Request Received", description: "Your report is being prepared and will be available under 'My Reading'. Redirecting to Home...", duration: 5000 });
 
             const aiFlowInput: GeneratePalmReadingInput = {
@@ -182,7 +216,7 @@ const PalmInputForm = () => {
               placeOfBirth: persistedData.placeOfBirth,
               timeOfBirth: persistedData.timeOfBirth || "Not specified",
               dominantHand: persistedData.dominantHand,
-              category: persistedData.category,
+              category: finalCategoryForReport!,
             };
 
             const result = await generatePalmReading(aiFlowInput);
@@ -204,11 +238,17 @@ const PalmInputForm = () => {
           if (isOperationInProgress) stopOperation(); 
         }
       } else {
+        // If no session data, but payment success, try to get category from query
+        const catFromQuery = searchParams.get('category');
+        if (catFromQuery && readingCategories.some(rc => rc.value === catFromQuery)) {
+            setCategory(catFromQuery);
+        }
         toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
-         if (isOperationInProgress) stopOperation();
+        if (isOperationInProgress) stopOperation();
       }
     }
   }, [searchParams, hasPaid, userName, router, toast, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, isOperationInProgress]);
+
 
   useEffect(() => {
     attemptAutoSubmitAfterPayment();
@@ -283,7 +323,7 @@ const PalmInputForm = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="dob" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Date of Birth *</Label>
-                    <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} disabled={isOperationInProgress} required={hasPaid} />
+                    <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} disabled={isOperationInProgress} required={hasPaid || !hasPaid} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth (Optional)</Label>
@@ -293,13 +333,13 @@ const PalmInputForm = () => {
                 
                 <div className="space-y-2">
                 <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth *</Label>
-                <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} required={hasPaid} />
+                <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} required={hasPaid || !hasPaid} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="dominantHand" className="text-base flex items-center gap-2"><UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *</Label>
-                    <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress} required={hasPaid}>
+                    <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress} required={hasPaid || !hasPaid}>
                     <SelectTrigger id="dominantHand">
                         <SelectValue placeholder="Select your dominant hand" />
                     </SelectTrigger>
@@ -311,15 +351,14 @@ const PalmInputForm = () => {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
-                    <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress} required={hasPaid}>
+                    <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress} required={hasPaid || !hasPaid}>
                     <SelectTrigger id="category">
                         <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="General Personality">General Personality</SelectItem>
-                        <SelectItem value="Health and Wellness">Health and Wellness</SelectItem>
-                        <SelectItem value="Love and relationships">Love and Relationships</SelectItem>
-                        <SelectItem value="Career and Finances">Career and Finances</SelectItem>
+                        {readingCategories.map(rc => (
+                            <SelectItem key={rc.value} value={rc.value}>{rc.label}</SelectItem>
+                        ))}
                     </SelectContent>
                     </Select>
                 </div>
@@ -336,7 +375,7 @@ const PalmInputForm = () => {
                     hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
                 )}
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">* Required fields when generating report after payment.</p>
+                <p className="text-xs text-muted-foreground text-center">* Required fields{hasPaid ? " when generating report after payment" : " before proceeding to payment"}.</p>
             </form>
             </CardContent>
             <CardFooter className="mt-4">
@@ -351,7 +390,3 @@ const PalmInputForm = () => {
 };
 
 export default PalmInputForm;
-
-    
-
-    
