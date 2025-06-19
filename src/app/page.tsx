@@ -50,7 +50,6 @@ export default function HomePage() {
 
   const renderAuthenticatedView = () => (
     <div className="w-full max-w-5xl space-y-10">
-      {/* Removed Welcome Back Card */}
       <section>
         <h2 className="font-headline text-3xl font-bold text-center mb-6 text-foreground">Explore Our Services</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -90,10 +89,34 @@ export default function HomePage() {
         />
       </div>
 
-      {isAuthenticated ? renderAuthenticatedView() : renderUnauthenticatedView()}
+      {/* Left Decorative Image */}
+      <div className="hidden lg:block absolute left-4 top-1/4 w-40 h-auto z-0 opacity-20 pointer-events-none">
+        <Image 
+          src="https://placehold.co/300x600.png" 
+          alt="Left Sacred Geometry Decoration" 
+          width={300} 
+          height={600} 
+          layout="responsive" 
+          data-ai-hint="sacred geometry vertical" 
+        />
+      </div>
 
-      {/* Common Sections */}
+      {/* Right Decorative Image */}
+      <div className="hidden lg:block absolute right-4 top-1/4 w-40 h-auto z-0 opacity-20 pointer-events-none">
+        <Image 
+          src="https://placehold.co/300x600.png" 
+          alt="Right Sacred Geometry Decoration" 
+          width={300} 
+          height={600} 
+          layout="responsive" 
+          data-ai-hint="sacred geometry vertical" 
+        />
+      </div>
+      
       <div className="relative z-10 w-full max-w-5xl px-4 space-y-12">
+        {isAuthenticated ? renderAuthenticatedView() : renderUnauthenticatedView()}
+
+        {/* Common Sections */}
         <section id="learn-palmistry" className="scroll-mt-20">
           <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-6 text-foreground">
             Unlock the Secrets in Your Palm

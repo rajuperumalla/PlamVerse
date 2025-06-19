@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import ClientOnly from './ClientOnly'; 
+import ClientOnly from './ClientOnly';
 
 const readingTypes = [
   { name: "General Personality", query: "General Personality" },
@@ -64,13 +64,13 @@ const Header = () => {
 
   return (
     <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-40">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+      <div className="container mx-auto px-4 py-3 flex items-center"> {/* Removed justify-between */}
+        <Link href="/" className="flex-shrink-0 flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Hand className="h-7 w-7 sm:h-8 sm:w-8" />
           <h1 className="text-xl sm:text-2xl font-headline font-bold">PalmVerse</h1>
         </Link>
 
-        <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+        <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-6 flex-grow">
           <Link href="/" className={getLinkClassName(isHomePageActive)}>
             <HomeIcon className="mr-1.5 h-4 w-4" /> Home
           </Link>
@@ -118,7 +118,7 @@ const Header = () => {
           <ClientOnly>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className={getDropdownTriggerClassName(isProductsPageActive)} > {/* Removed disabled prop */}
+                <Button variant="ghost" className={getDropdownTriggerClassName(isProductsPageActive)}>
                   <ShoppingBag className="mr-1.5 h-4 w-4" /> Products <ChevronDown className="ml-1 h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
@@ -141,7 +141,7 @@ const Header = () => {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto"> {/* ml-auto pushes this section to the right */}
           {isAuthenticated && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
