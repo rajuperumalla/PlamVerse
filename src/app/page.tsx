@@ -16,9 +16,9 @@ const productCategories = [
 export default function LandingPage() {
   return (
     <div className="relative flex flex-col items-center py-8 md:py-12 space-y-10 min-h-full">
-      <div className="absolute inset-0 z-0 opacity-5">
+      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
         <Image
-          src="https://placehold.co/1200x800.png"
+          src="https://placehold.co/1200x800.png" 
           alt="Sacred Geometry Background"
           layout="fill"
           objectFit="cover"
@@ -76,7 +76,7 @@ export default function LandingPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {productCategories.slice(0,2).map((category) => ( // Show 2 for better fit in this layout
+                {productCategories.slice(0,2).map((category) => ( 
                   <Card key={category.name} className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col">
                     <div className="relative h-40 w-full">
                       <Image
@@ -99,7 +99,7 @@ export default function LandingPage() {
                         Explore
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
-                       <p className="text-xs text-center mt-1.5 text-amber-700 dark:text-amber-500 font-semibold">Coming Soon!</p>
+                       <p className="text-xs text-center mt-1.5 text-accent font-semibold">Coming Soon!</p>
                     </CardFooter>
                   </Card>
                 ))}
@@ -110,7 +110,7 @@ export default function LandingPage() {
                      <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground text-md py-3 px-6" disabled>
                         Visit Our Full Shop <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
-                    <p className="text-sm text-center mt-2 text-amber-700 dark:text-amber-500 font-semibold">More products coming soon!</p>
+                    <p className="text-sm text-center mt-2 text-accent font-semibold">More products coming soon!</p>
                  </CardFooter>
             )}
           </Card>

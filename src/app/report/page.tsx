@@ -36,6 +36,7 @@ export default function ReportPage() {
     setCurrentUserReport(report);
 
     if (!report && userName) { // userName exists, context initialized, but no report found
+        // Redirect to palm-input if no report exists for the user, to encourage creation
         const timer = setTimeout(() => router.push('/palm-input'), 100);
         return () => clearTimeout(timer);
     }
@@ -55,7 +56,7 @@ export default function ReportPage() {
   if (!currentUserReport) { // userName exists, context initialized, but no report object found
     return (
       <div className="flex flex-col items-center justify-center text-center py-12 min-h-[calc(100vh-200px)]">
-        <Info className="h-16 w-16 text-blue-500 mb-4" />
+        <Info className="h-16 w-16 text-primary mb-4" />
         <h2 className="text-2xl font-headline mb-2">No Report Journey Started Yet</h2>
         <p className="text-muted-foreground mb-6">It looks like you haven't submitted details for a palm reading.</p>
         <Button onClick={() => router.push('/palm-input')}>
@@ -128,8 +129,8 @@ export default function ReportPage() {
         <div className="flex flex-col items-center justify-center text-center py-12 min-h-[calc(100vh-200px)]">
           <Card className="w-full max-w-lg shadow-lg">
             <CardHeader className="items-center">
-              <div className="p-3 bg-blue-100/70 dark:bg-blue-900/30 rounded-full mb-4">
-                <Hourglass className="h-12 w-12 text-blue-600 dark:text-blue-400" />
+              <div className="p-3 bg-accent/10 dark:bg-accent/20 rounded-full mb-4">
+                <Hourglass className="h-12 w-12 text-accent dark:text-accent" />
               </div>
               <CardTitle className="font-headline text-2xl">Report Pending Expert Review</CardTitle>
               <CardDescription>Your personalized palm reading is being carefully reviewed.</CardDescription>

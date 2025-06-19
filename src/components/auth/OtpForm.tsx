@@ -48,7 +48,7 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     identifierLabel = "Editor ID";
     identifierPlaceholder = "Enter Editor ID (use 'editor')";
     otpPlaceholder = "Editor OTP (use '000000')";
-    formIcon = <Edit className="h-10 w-10 text-purple-600" />;
+    formIcon = <Edit className="h-10 w-10 text-primary" />;
     inputType = 'text';
   } else if (mode === 'admin') {
     cardTitle = "Admin Portal Access";
@@ -58,7 +58,7 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     identifierLabel = "Admin ID";
     identifierPlaceholder = "Enter Admin ID (use 'admin')";
     otpPlaceholder = "Admin OTP (use '111111')";
-    formIcon = <ShieldCheck className="h-10 w-10 text-teal-600" />;
+    formIcon = <ShieldCheck className="h-10 w-10 text-accent" />;
     inputType = 'text';
   }
 
@@ -123,7 +123,7 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     <div className="flex justify-center items-center py-12">
       <Card className="w-full max-w-md shadow-xl animate-fade-in">
         <CardHeader className="text-center">
-          <div className={`mx-auto ${mode === 'editor' ? 'bg-purple-500/10' : mode === 'admin' ? 'bg-teal-500/10' : 'bg-primary/10'} p-3 rounded-full w-fit mb-4`}>
+          <div className={`mx-auto ${mode === 'admin' ? 'bg-accent/10' : 'bg-primary/10'} p-3 rounded-full w-fit mb-4`}>
             {formIcon}
           </div>
           <CardTitle className="font-headline text-3xl">{cardTitle}</CardTitle>
@@ -196,5 +196,3 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
 };
 
 export default OtpForm;
-
-    

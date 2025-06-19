@@ -60,7 +60,7 @@ const REPORTS_STORAGE_KEY = 'palmverse_reports_array';
 
 const createSampleReport = (idSuffix: number, category: string, userName: string, status: ReportData['status']): ReportData => {
   const baseDate = new Date();
-  baseDate.setDate(baseDate.getDate() - (idSuffix * 5 + 10)); // Ensure sample dates are distinct
+  baseDate.setDate(baseDate.getDate() - (idSuffix * 5 + 10)); 
 
   const submissionDate = new Date(baseDate);
   submissionDate.setHours(10 + idSuffix, 30 + idSuffix, 0, 0);
@@ -75,12 +75,12 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
   }
 
 
-  let content = `Sample content for ${category} (Report ${idSuffix}).`;
+  let content = `Sample content for ${category} (Report ${idSuffix}). This is a simulated AI generated palm reading. It covers various aspects of your life including career, relationships, and health. The lines on your palm suggest a dynamic and eventful path ahead.`;
   switch(status) {
-    case 'submitted_for_generation': content = `Report ID ${idSuffix}: Generation currently in progress for this sample.`; break;
-    case 'generation_failed': content = `Sample report (ID ${idSuffix}) generation encountered an issue.`; break;
-    case 'pending_review': content = `This is sample AI report ${idSuffix} for ${category}, awaiting expert review. Lorem ipsum dolor sit amet.`; break;
-    case 'approved': content = `This is final approved report ${idSuffix} for ${category}. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ready for user.`; break;
+    case 'submitted_for_generation': content = `Report ID ${idSuffix}: Generation currently in progress for this sample. Please wait a few moments.`; break;
+    case 'generation_failed': content = `Sample report (ID ${idSuffix}) generation encountered an issue. This could be due to image quality or a temporary system glitch. Please try again.`; break;
+    case 'pending_review': content = `This is sample AI report ${idSuffix} for ${category}, awaiting expert review. It includes initial insights into your life line, heart line, and head line. Further details are being verified.`; break;
+    case 'approved': content = `This is final approved report ${idSuffix} for ${category}. Your life line indicates strong vitality. Your heart line shows deep connections. Your career path may involve creative pursuits. This detailed reading provides guidance and foretells potential opportunities.`; break;
   }
 
   return {
@@ -92,10 +92,10 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
     lastUpdateDate: lastUpdateDate.toISOString(),
     category: category,
     inputDetails: {
-      leftPalmDataUri: `https://placehold.co/300x200.png?text=L+Palm+${idSuffix}`,
-      rightPalmDataUri: `https://placehold.co/300x200.png?text=R+Palm+${idSuffix}`,
+      leftPalmDataUri: `https://placehold.co/300x200.png?text=L+Palm+S${idSuffix}`,
+      rightPalmDataUri: `https://placehold.co/300x200.png?text=R+Palm+S${idSuffix}`,
       dateOfBirth: `19${80 + idSuffix}-0${(idSuffix % 9) + 1}-0${(idSuffix % 2) + 1}${idSuffix % 9 +1}`,
-      placeOfBirth: `City ${idSuffix}, Country ${idSuffix}`,
+      placeOfBirth: `City ${idSuffix}, Sample Land`,
       timeOfBirth: `${(10 + idSuffix) % 24}:0${idSuffix % 6}`,
       dominantHand: idSuffix % 2 === 0 ? 'Right' : 'Left',
       category: category,
@@ -117,7 +117,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const persistReports = (updatedReports: ReportData[]) => {
     setReports(updatedReports);
-    localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(updatedReports));
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(updatedReports));
+    }
   };
 
   const loadSampleReports = useCallback(() => {
@@ -135,44 +137,46 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    setIsInitializing(true);
-    const storedAuth = sessionStorage.getItem('palmverse_isAuthenticated');
-    const storedName = sessionStorage.getItem('palmverse_userName');
-    const storedPaid = sessionStorage.getItem('palmverse_hasPaid');
-    const storedIsEditor = sessionStorage.getItem('palmverse_isEditor');
-    const storedIsAdmin = sessionStorage.getItem('palmverse_isAdmin');
-    const storedReports = localStorage.getItem(REPORTS_STORAGE_KEY);
+    if (typeof window !== 'undefined') {
+        setIsInitializing(true);
+        const storedAuth = sessionStorage.getItem('palmverse_isAuthenticated');
+        const storedName = sessionStorage.getItem('palmverse_userName');
+        const storedPaid = sessionStorage.getItem('palmverse_hasPaid');
+        const storedIsEditor = sessionStorage.getItem('palmverse_isEditor');
+        const storedIsAdmin = sessionStorage.getItem('palmverse_isAdmin');
+        const storedReports = localStorage.getItem(REPORTS_STORAGE_KEY);
 
-    if (storedAuth === 'true' && storedName) {
-      setIsAuthenticated(true);
-      setUserName(storedName);
-      if (storedIsEditor === 'true') {
-        setIsEditor(true);
-      }
-      if (storedIsAdmin === 'true') {
-        setIsAdmin(true);
-      }
-    }
-    if (storedPaid === 'true') {
-      setHasPaidState(true);
-    }
+        if (storedAuth === 'true' && storedName) {
+        setIsAuthenticated(true);
+        setUserName(storedName);
+        if (storedIsEditor === 'true') {
+            setIsEditor(true);
+        }
+        if (storedIsAdmin === 'true') {
+            setIsAdmin(true);
+        }
+        }
+        if (storedPaid === 'true') {
+        setHasPaidState(true);
+        }
 
-    if (storedReports) {
-      try {
-        const parsedReports = JSON.parse(storedReports) as ReportData[];
-        if (Array.isArray(parsedReports) && parsedReports.length > 0 && parsedReports.every(r => typeof r.id === 'string' && typeof r.status === 'string' && r.inputDetails && typeof r.submissionDate === 'string' && typeof r.lastUpdateDate === 'string')) {
-            setReports(parsedReports);
-        } else {
+        if (storedReports) {
+        try {
+            const parsedReports = JSON.parse(storedReports) as ReportData[];
+            if (Array.isArray(parsedReports) && parsedReports.length > 0 && parsedReports.every(r => typeof r.id === 'string' && typeof r.status === 'string' && r.inputDetails && typeof r.submissionDate === 'string' && typeof r.lastUpdateDate === 'string')) {
+                setReports(parsedReports);
+            } else {
+                loadSampleReports();
+            }
+        } catch (e) {
+            localStorage.removeItem(REPORTS_STORAGE_KEY);
             loadSampleReports();
         }
-      } catch (e) {
-        localStorage.removeItem(REPORTS_STORAGE_KEY);
+        } else {
         loadSampleReports();
-      }
-    } else {
-       loadSampleReports();
+        }
+        setIsInitializing(false);
     }
-    setIsInitializing(false);
   }, [loadSampleReports]);
 
 
@@ -220,7 +224,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const newReportId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const currentDate = new Date().toISOString();
 
-    // Filter out existing 'submitted_for_generation' or 'generation_failed' reports for THIS user
     const reportsToKeep = reports.filter(r => {
         return !(r.userName === userName && (r.status === 'submitted_for_generation' || r.status === 'generation_failed'));
     });
@@ -247,7 +250,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return {
           ...report,
           content: aiContent,
-          status: 'approved' as 'approved', // Directly set to approved
+          status: 'approved' as 'approved', 
           lastUpdateDate: new Date().toISOString(),
         };
       }
@@ -321,10 +324,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
 
   const clearCurrentUserReportStorage = () => {
-    // This function might be redundant if createInitialReportPlaceholder handles cleanup,
-    // but can be kept for explicit calls if needed elsewhere.
     const userReport = getCurrentUserReport();
-    if (userReport && (userReport.status === 'generation_failed' || userReport.status === 'submitted_for_generation')) {
+    if (userReport && (userReport.status === 'generation_failed' || userReport.status === 'submitted_for_generation' || userReport.status === 'approved')) { // Include approved to clear after viewing if desired by Start New
         const updatedReports = reports.filter(r => r.id !== userReport.id);
         persistReports(updatedReports);
     }
@@ -375,5 +376,3 @@ export const useAppContext = () => {
   }
   return context;
 };
-
-    

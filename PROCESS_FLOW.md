@@ -1,4 +1,3 @@
-
 # PalmVerse User Process Flow
 
 This document outlines the typical user journey through the PalmVerse application.

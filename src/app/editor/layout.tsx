@@ -100,5 +100,3 @@ export default function EditorLayout({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
-
-    

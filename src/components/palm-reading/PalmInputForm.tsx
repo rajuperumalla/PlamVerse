@@ -84,6 +84,7 @@ const PalmInputForm = () => {
       return;
     }
     
+    // Validation only happens here, after payment, before generation
     if (!leftPalmImageFile || !rightPalmImageFile || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
       toast({ title: "Missing Information", description: "Please fill all required fields and upload both palm images to generate your report.", variant: "destructive" });
       return;
@@ -212,7 +213,7 @@ const PalmInputForm = () => {
   }, [attemptAutoSubmitAfterPayment]);
 
   const renderImagePreview = (previewUrl: string | null, palmName: string, dataAiHint: string) => (
-    <div className="w-full h-48 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50 relative overflow-hidden">
+    <div className="w-full h-48 border-2 border-dashed border-primary/50 rounded-lg flex items-center justify-center bg-muted/50 relative overflow-hidden">
       {previewUrl ? (
         <Image src={previewUrl} alt={`${palmName} preview`} layout="fill" objectFit="contain" />
       ) : (
@@ -235,11 +236,11 @@ const PalmInputForm = () => {
     category;
 
   let finalButtonDisabled = isOperationInProgress;
-  if (hasPaid) {
+  if (hasPaid) { // If paid, disable button if form is not ready for generation
     if (!isReadyForManualSubmitAfterPayment) {
       finalButtonDisabled = true;
     }
-  }
+  } // else, if not paid, it should be enabled (unless operation in progress) for "Proceed to Payment"
 
 
   return (
@@ -348,4 +349,3 @@ const PalmInputForm = () => {
 };
 
 export default PalmInputForm;
-    

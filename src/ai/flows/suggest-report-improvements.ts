@@ -57,4 +57,3 @@ const suggestReportImprovementsFlow = ai.defineFlow(
     return output!;
   }
 );
-

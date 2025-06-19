@@ -86,7 +86,26 @@ const generatePalmReadingFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    // Simulate dummy content for now
+    const dummyReport = `This is a simulated AI-generated palm reading for the category: ${input.category}. 
+Key insights based on your details:
+Date of Birth: ${input.dateOfBirth}
+Place of Birth: ${input.placeOfBirth}
+Dominant Hand: ${input.dominantHand}
+
+Your palm lines suggest a path filled with interesting events and opportunities. 
+The Life Line indicates strong vitality and resilience. 
+The Heart Line points towards deep emotional connections and a compassionate nature. 
+The Head Line reveals a sharp intellect and a thirst for knowledge. 
+
+For ${input.category}, specific indicators point towards [Simulated positive outcome for the category]. 
+Challenges may arise in [Simulated challenge], but your inherent strengths will help you navigate them. 
+Focus on [Simulated advice] to enhance your journey.
+
+This report is a general overview. For a more detailed and personalized reading, consider consulting with an expert.
+Remember, palmistry offers guidance, but your future is ultimately shaped by your choices and actions.
+    `;
+    return { report: dummyReport };
+    // return output!; // This would be used for actual AI generation
   }
 );
-

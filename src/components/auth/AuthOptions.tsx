@@ -89,10 +89,10 @@ const AuthOptions = () => {
           </div>
         </div>
 
-        <Button onClick={handleShowEditorLogin} variant="ghost" className="w-full text-sm sm:text-base py-3 sm:py-4 border border-purple-500/50 hover:bg-purple-500/10 text-purple-600">
+        <Button onClick={handleShowEditorLogin} variant="ghost" className="w-full text-sm sm:text-base py-3 sm:py-4 border border-primary/50 hover:bg-primary/10 text-primary">
           <Edit className="mr-2 h-5 w-5" /> Editor Login
         </Button>
-        <Button onClick={handleShowAdminLogin} variant="ghost" className="w-full text-sm sm:text-base py-3 sm:py-4 border border-teal-500/50 hover:bg-teal-500/10 text-teal-600">
+        <Button onClick={handleShowAdminLogin} variant="ghost" className="w-full text-sm sm:text-base py-3 sm:py-4 border border-accent/70 hover:bg-accent/10 text-accent">
           <ShieldCheck className="mr-2 h-5 w-5" /> Admin Login
         </Button>
       </CardContent>

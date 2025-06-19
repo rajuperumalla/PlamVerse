@@ -22,8 +22,8 @@ const productCategories = [
 function PalmInputPageComponent() {
   const { isAuthenticated, isInitializing } = useAppContext();
   const router = useRouter();
-  const searchParams = useSearchParams(); // Ensure searchParams is used for pathname
-  const currentPathname = searchParams.toString() ? `/palm-input?${searchParams.toString()}` : "/palm-input"; // Reconstruct or use pathname from router if available and reliable
+  const searchParams = useSearchParams(); 
+  const currentPathname = searchParams.toString() ? `/palm-input?${searchParams.toString()}` : "/palm-input"; 
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
   useEffect(() => {
@@ -60,29 +60,29 @@ function PalmInputPageComponent() {
       </div>
       <div className="relative z-10"> {/* Content wrapper */}
         <nav aria-label="Main navigation after login">
-          <ul className="flex justify-center items-center space-x-1 sm:space-x-2 md:space-x-4 py-3 bg-amber-100 dark:bg-amber-800/30 backdrop-blur-sm rounded-lg shadow-md border border-amber-300 dark:border-amber-700 text-xs sm:text-sm">
+          <ul className="flex justify-center items-center space-x-1 sm:space-x-2 md:space-x-4 py-3 bg-primary/10 backdrop-blur-sm rounded-lg shadow-md border border-primary/30 text-xs sm:text-sm">
             <li>
-              <Link href="/" className="text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
+              <Link href="/" className="text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-md">
                 Home
               </Link>
             </li>
             <li>
-              <Link href="/palm-input" className={`transition-colors px-2 py-1 rounded-md ${currentPathname === '/palm-input' || currentPathname.startsWith('/palm-input?') ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 animate-shimmer bg-[length:200%_100%] ring-1 ring-amber-500/50 bg-amber-500/10' : 'text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200'}`}>
+              <Link href="/palm-input" className={`transition-colors px-2 py-1 rounded-md ${currentPathname === '/palm-input' || currentPathname.startsWith('/palm-input?') ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent animate-shimmer bg-[length:200%_100%] ring-1 ring-primary/50 bg-primary/10' : 'text-primary hover:text-primary/80'}`}>
                 <Handshake className="inline-block mr-1 h-4 w-4 align-middle" /> Palmistry
               </Link>
             </li>
              <li>
-              <Link href="/report" className={`transition-colors px-2 py-1 rounded-md ${currentPathname === '/report' ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 animate-shimmer bg-[length:200%_100%] ring-1 ring-amber-500/50 bg-amber-500/10' : 'text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200'}`}>
+              <Link href="/report" className={`transition-colors px-2 py-1 rounded-md ${currentPathname === '/report' ? 'font-semibold text-transparent bg-clip-text bg-gradient-to-r from-accent via-primary to-accent animate-shimmer bg-[length:200%_100%] ring-1 ring-primary/50 bg-primary/10' : 'text-primary hover:text-primary/80'}`}>
                  <BookOpen className="inline-block mr-1 h-4 w-4 align-middle" /> My Reading
               </Link>
             </li>
             <li>
-              <Link href="#products" className="text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
+              <Link href="#products" className="text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-md">
                 Products
               </Link>
             </li>
             <li>
-              <Link href="#remedies" className="text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200 transition-colors px-2 py-1 rounded-md">
+              <Link href="#remedies" className="text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded-md">
                 Remedies
               </Link>
             </li>
@@ -135,7 +135,7 @@ function PalmInputPageComponent() {
                       Visit Our Full Shop <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
               </CardFooter>
-               <p className="text-sm text-center pb-4 text-amber-700 dark:text-amber-500 font-semibold">More products coming soon!</p>
+               <p className="text-sm text-center pb-4 text-accent font-semibold">More products coming soon!</p>
             </Card>
           </div>
         </div>
@@ -155,5 +155,3 @@ export default function PalmInputPage() {
     </Suspense>
   );
 }
-
-  
