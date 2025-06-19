@@ -26,7 +26,7 @@ export interface ReportNumerologyInputDetails_Business {
 
 export interface ReportNumerologyInputDetails_BabyName {
   serviceQuery: 'baby-name-numerology';
-  proposedNames: string[]; // Store as an array of strings
+  proposedNames: string[];
   childDOB: string;
   childTOB?: string;
   parent1FullName?: string;
@@ -35,16 +35,16 @@ export interface ReportNumerologyInputDetails_BabyName {
   parent2DOB?: string;
 }
 
+export interface ReportNumerologyInputDetails_PersonalReport {
+  serviceQuery: 'life-path-report';
+  fullName: string;
+  dateOfBirth: string;
+  timeOfBirth?: string;
+}
 
-// Add other numerology input types here as needed, e.g.:
-// export interface ReportNumerologyInputDetails_PersonalReport {
-//   serviceQuery: 'life-path-report';
-//   fullName: string;
-//   dateOfBirth: string;
-//   timeOfBirth?: string;
-// }
 
-export type ReportInputDetails = ReportPalmInputDetails | ReportNumerologyInputDetails_Business | ReportNumerologyInputDetails_BabyName; // Add other numerology types to this union
+// Add other numerology input types here as needed
+export type ReportInputDetails = ReportPalmInputDetails | ReportNumerologyInputDetails_Business | ReportNumerologyInputDetails_BabyName | ReportNumerologyInputDetails_PersonalReport;
 
 export interface ReportData {
   id: string;
@@ -54,7 +54,7 @@ export interface ReportData {
   submissionDate: string;
   lastUpdateDate: string;
   reportType: 'palmistry' | 'numerology';
-  category: string; // For palmistry: "General Personality", etc. For numerology: "business-name-calculator", "baby-name-numerology", etc.
+  category: string; // For palmistry: "General Personality", etc. For numerology: "business-name-calculator", "baby-name-numerology", "life-path-report" etc.
   inputDetails: ReportInputDetails;
 }
 
@@ -73,7 +73,7 @@ interface AppContextType extends AppState {
   login: (name: string) => void;
   logout: () => void;
   createInitialReportPlaceholder: (inputData: ReportPalmInputDetails) => string;
-  createInitialNumerologyReportPlaceholder: (inputData: ReportNumerologyInputDetails_Business | ReportNumerologyInputDetails_BabyName, serviceQuery: string) => string;
+  createInitialNumerologyReportPlaceholder: (inputData: ReportNumerologyInputDetails_Business | ReportNumerologyInputDetails_BabyName | ReportNumerologyInputDetails_PersonalReport, serviceQuery: string) => string;
   updateReportWithGeneratedContent: (reportId: string, aiContent: string) => void;
   markReportAsGenerationFailed: (reportId: string, errorMessage?: string) => void;
   approveReport: (reportId: string, newContent?: string) => void;
@@ -119,7 +119,7 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
       placeOfBirth: `City ${idSuffix}, Sample Land`,
       timeOfBirth: `${(10 + idSuffix) % 24}:0${idSuffix % 6}`,
       dominantHand: idSuffix % 2 === 0 ? 'Right' : 'Left',
-      category: category, // Palmistry specific category
+      category: category,
     };
   } else { // Numerology
     content += ` It provides insights based on numerological calculations for ${category}.`;
@@ -131,7 +131,7 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
           founderDOB: `19${70 + idSuffix}-0${(idSuffix % 9) + 1}-1${idSuffix % 9}`,
         } as ReportNumerologyInputDetails_Business;
     } else if (category === 'baby-name-numerology') {
-        const includeParent1 = idSuffix % 2 === 0; // Randomly include parent 1 for sample
+        const includeParent1 = idSuffix % 2 === 0;
         specificInputDetails = {
             serviceQuery: 'baby-name-numerology',
             proposedNames: [`BabyName Alpha ${idSuffix}`, `BabyName Beta ${idSuffix}`],
@@ -139,11 +139,15 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
             parent1FullName: includeParent1 ? `Parent One ${idSuffix}` : undefined,
             parent1DOB: includeParent1 ? `19${85 + idSuffix % 5}-0${(idSuffix % 9) + 1}-0${(idSuffix % 2) + 1}${idSuffix % 9 +1}` : undefined,
         } as ReportNumerologyInputDetails_BabyName;
-    } else { // Fallback for other numerology types if samples are extended
-        specificInputDetails = { // This is a generic placeholder, adjust if other numerology types are added
-            serviceQuery: category as any, // Cast as any because serviceQuery is not known here.
-            // Add some generic fields or leave it minimal
-        } as ReportInputDetails; // Ensure it adheres to the base type.
+    } else if (category === 'life-path-report') {
+        specificInputDetails = {
+            serviceQuery: 'life-path-report',
+            fullName: `User ${userName.split('@')[0]} ${idSuffix}`,
+            dateOfBirth: `19${80 + idSuffix}-0${(idSuffix % 9) + 1}-0${(idSuffix % 2) + 1}${idSuffix % 9 +1}`,
+            timeOfBirth: idSuffix % 3 === 0 ? `${(10 + idSuffix) % 24}:0${idSuffix % 6}` : undefined,
+        } as ReportNumerologyInputDetails_PersonalReport;
+    } else {
+        specificInputDetails = { serviceQuery: category as any } as ReportInputDetails;
     }
   }
 
@@ -188,6 +192,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       createSampleReport(4, 'business-name-calculator', 'user_delta@example.com', 'pending_review', 'numerology'),
       createSampleReport(5, 'baby-name-numerology', 'user_epsilon@example.com', 'pending_review', 'numerology'),
       createSampleReport(6, 'life-path-report', 'user_zeta@example.com', 'approved', 'numerology'),
+      createSampleReport(7, 'life-path-report', 'user_eta@example.com', 'pending_review', 'numerology'),
     ];
     persistReports(samples);
   }, []);
@@ -291,7 +296,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       userName: userName,
       submissionDate: currentDate,
       lastUpdateDate: currentDate,
-      category: inputData.category, // Palmistry specific category
+      category: inputData.category,
       reportType: 'palmistry',
       inputDetails: inputData,
     };
@@ -301,7 +306,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return newReportId;
   };
 
-  const createInitialNumerologyReportPlaceholder = (inputData: ReportNumerologyInputDetails_Business | ReportNumerologyInputDetails_BabyName, serviceQuery: string): string => {
+  const createInitialNumerologyReportPlaceholder = (inputData: ReportNumerologyInputDetails_Business | ReportNumerologyInputDetails_BabyName | ReportNumerologyInputDetails_PersonalReport, serviceQuery: string): string => {
     const newReportId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     const currentDate = new Date().toISOString();
 
@@ -312,11 +317,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const newReport: ReportData = {
         id: newReportId,
         content: `Numerology report for ${serviceQuery} initiated...`,
-        status: 'pending_review', // Numerology reports go to pending_review first
+        status: 'pending_review',
         userName: userName,
         submissionDate: currentDate,
         lastUpdateDate: currentDate,
-        category: serviceQuery, // e.g., "business-name-calculator"
+        category: serviceQuery,
         reportType: 'numerology',
         inputDetails: inputData,
     };
@@ -330,7 +335,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const updateReportWithGeneratedContent = (reportId: string, aiContent: string) => {
     const updatedReports = reports.map(report => {
       if (report.id === reportId) {
-        // For palmistry, this moves to 'approved'. Numerology is handled by editor.
         const newStatus = report.reportType === 'palmistry' ? 'approved' : report.status;
         return {
           ...report,
@@ -400,10 +404,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             .filter(r => r.status === status)
             .sort((a, b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime());
         if (reportsWithStatus.length > 0) {
-            return reportsWithStatus[0]; // Return the most recent for that status
+            return reportsWithStatus[0];
         }
     }
-    // Fallback if no reports match priority statuses (should not happen if any report exists)
     return userReports.sort((a,b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime())[0];
   }, [reports, userName]);
 
@@ -462,3 +465,4 @@ export const useAppContext = () => {
   }
   return context;
 };
+

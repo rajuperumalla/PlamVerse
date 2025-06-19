@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useAppContext, type ReportNumerologyInputDetails_Business, type ReportNumerologyInputDetails_BabyName } from '@/context/AppContext';
+import { useAppContext, type ReportNumerologyInputDetails_Business, type ReportNumerologyInputDetails_BabyName, type ReportNumerologyInputDetails_PersonalReport } from '@/context/AppContext';
 import { Loader2, Handshake, BookOpen, Calculator, ChevronDown, Search, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import BusinessNumerologyForm from '@/components/numerology/BusinessNumerologyForm';
 import BabyNameNumerologyForm from '@/components/numerology/BabyNameNumerologyForm'; 
+import PersonalLifePathReportForm from '@/components/numerology/PersonalLifePathReportForm';
 import { useToast } from '@/hooks/use-toast';
 
 const readingTypes = [
@@ -45,6 +46,7 @@ const productMenuItems = [
 const SESSION_STORAGE_KEYS = {
   'business-name-calculator': 'palmVerseBusinessNumerologyCheckoutForm',
   'baby-name-numerology': 'palmVerseBabyNameNumerologyCheckoutForm',
+  'life-path-report': 'palmVersePersonalLifePathCheckoutForm',
   // Add other keys as new forms are implemented
 };
 
@@ -91,7 +93,7 @@ function NumerologyInputPageComponent() {
       
       const currentSearchParamsString = searchParams.toString();
       const newParams = new URLSearchParams(currentSearchParamsString);
-      newParams.delete('payment_success'); // Clean up URL
+      newParams.delete('payment_success'); 
       router.replace(`/numerology-input?${newParams.toString()}`, { scroll: false });
 
       if (persistedFormDataJson) {
@@ -103,8 +105,10 @@ function NumerologyInputPageComponent() {
           canAutoSubmit = !!(data.businessName && data.founderFullName && data.founderDOB);
         } else if (serviceQuery === 'baby-name-numerology') {
           const data = persistedData as ReportNumerologyInputDetails_BabyName;
-          // For baby names, only proposed names and child's DOB are strictly required for auto-submit
           canAutoSubmit = !!(data.proposedNames && data.proposedNames.length > 0 && data.childDOB);
+        } else if (serviceQuery === 'life-path-report') {
+          const data = persistedData as ReportNumerologyInputDetails_PersonalReport;
+          canAutoSubmit = !!(data.fullName && data.dateOfBirth);
         }
         // Add more conditions for other forms
 
@@ -152,6 +156,8 @@ function NumerologyInputPageComponent() {
         return <BusinessNumerologyForm />;
       case 'baby-name-numerology':
         return <BabyNameNumerologyForm />;
+      case 'life-path-report':
+        return <PersonalLifePathReportForm />;
       default:
         return (
           <div className="text-center py-10 md:py-16 mt-8">
@@ -180,7 +186,7 @@ function NumerologyInputPageComponent() {
                         width={600} 
                         height={400} 
                         className="rounded-lg shadow-lg border border-border object-cover"
-                        data-ai-hint={selectedService.query === 'business-name-calculator' ? "business chart graph" : (selectedService.query === 'baby-name-numerology' ? "baby stars moon" : "numerology chart symbols")}
+                        data-ai-hint={selectedService.query === 'business-name-calculator' ? "business chart graph" : (selectedService.query === 'baby-name-numerology' ? "baby stars moon" : (selectedService.query === 'life-path-report' ? "spiritual journey path" : "numerology chart symbols"))}
                       />
                     </div>
                   </>
@@ -297,7 +303,6 @@ function NumerologyInputPageComponent() {
           </ul>
         </nav>
 
-        {/* Content Area */}
         {renderForm()}
       </div>
     </div>
@@ -316,3 +321,4 @@ export default function NumerologyInputPage() {
     </Suspense>
   );
 }
+

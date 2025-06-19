@@ -8,3 +8,4 @@ import '@/ai/flows/process-user-report-feedback.ts';
 import '@/ai/flows/refine-palm-reading-report.ts';
 import '@/ai/flows/generate-business-numerology-report.ts';
 import '@/ai/flows/generate-baby-name-numerology-report.ts';
+import '@/ai/flows/generate-personal-life-path-report.ts';
