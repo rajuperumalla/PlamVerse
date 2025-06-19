@@ -85,7 +85,7 @@ const generatePalmReadingFlow = ai.defineFlow(
     outputSchema: GeneratePalmReadingOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    // const {output} = await prompt(input); // This would be used for actual AI generation
     // Simulate dummy content for now
     const dummyReport = `This is a simulated AI-generated palm reading for the category: ${input.category}. 
 Key insights based on your details:
@@ -105,7 +105,7 @@ Focus on [Simulated advice] to enhance your journey.
 This report is a general overview. For a more detailed and personalized reading, consider consulting with an expert.
 Remember, palmistry offers guidance, but your future is ultimately shaped by your choices and actions.
     `;
-    return { report: dummyReport };
-    // return output!; // This would be used for actual AI generation
+    return { report: dummyReport }; 
   }
 );
+
