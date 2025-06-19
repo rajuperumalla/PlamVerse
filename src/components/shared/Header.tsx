@@ -1,7 +1,7 @@
 
 "use client";
 import Link from 'next/link';
-import { Hand, LogOut, Edit, ShieldCheck, BookOpen, Calculator, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap, Handshake } from 'lucide-react'; // Added Handshake
+import { Hand, LogOut, Edit, ShieldCheck, BookOpen, Calculator, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap, Handshake } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -48,7 +48,7 @@ const Header = () => {
 
   const isPalmInputPageActive = pathname === '/palm-input' && !!readingTypes.find(rt => rt.query === palmCategoryFromQuery);
   const isNumerologyInputPageActive = pathname === '/numerology-input' && !!numerologyServicesConst.find(ns => ns.query === numeroServiceFromQuery);
-  const isProductsPageActive = pathname.startsWith('/products'); 
+  const isProductsPageActive = pathname.startsWith('/products');
   const isReportPageActive = pathname === '/report';
   const isHomePageActive = pathname === '/';
 
@@ -145,7 +145,7 @@ const Header = () => {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {isEditor ? "Editor" : isAdmin ? "Admin" : userName}
+                      {isEditor ? "Editor" : isAdmin ? "Admin" : (userName || "User")}
                     </p>
                     {!(isEditor || isAdmin) && userName && (
                         <p className="text-xs leading-none text-primary-foreground/80">
