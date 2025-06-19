@@ -95,7 +95,7 @@ function NumerologyInputPageComponent() {
       router.replace(`/numerology-input?${newParams.toString()}`, { scroll: false });
 
       if (persistedFormDataJson) {
-        const persistedData = JSON.parse(persistedFormDataJson); // Type assertion will happen inside form or based on serviceQuery
+        const persistedData = JSON.parse(persistedFormDataJson); 
         
         let canAutoSubmit = false;
         if (serviceQuery === 'business-name-calculator') {
@@ -111,7 +111,7 @@ function NumerologyInputPageComponent() {
           sessionStorage.removeItem(storageKey);
           startOperation();
           try {
-            createInitialNumerologyReportPlaceholder(persistedData, serviceQuery); // Pass the correct type
+            createInitialNumerologyReportPlaceholder(persistedData, serviceQuery); 
             toast({ title: "Numerology Request Received", description: "Your report is being prepared and will be available under 'My Reading'. Redirecting to Home...", duration: 5000 });
             router.push('/');
           } catch (error) {
@@ -122,7 +122,6 @@ function NumerologyInputPageComponent() {
           }
         } else {
           toast({ title: "Payment Successful", description: "Please complete any missing fields and then click 'Generate Report'." });
-           // Pre-fill logic would be handled by individual forms if they are mounted
         }
       } else {
         toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
