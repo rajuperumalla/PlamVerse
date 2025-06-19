@@ -1,7 +1,7 @@
 
 "use client";
 import Link from 'next/link';
-import { Hand, LogOut, Edit, ShieldCheck } from 'lucide-react';
+import { Hand, LogOut, Edit, ShieldCheck, BookOpen } from 'lucide-react'; // Added BookOpen
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 
@@ -28,6 +28,14 @@ const Header = () => {
             <div className="flex items-center gap-2 sm:gap-4">
               {userName && <span className="text-sm hidden md:inline">{welcomeMessage}</span>}
 
+              {(!isEditor && !isAdmin && isAuthenticated) && ( // Show My Reading for normal authenticated users
+                <Link href="/report" passHref>
+                  <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary/80 px-2 sm:px-3">
+                    <BookOpen className="mr-0 sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">My Reading</span>
+                  </Button>
+                </Link>
+              )}
+
               {isEditor && (
                 <Link href="/editor" passHref>
                   <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary/80 px-2 sm:px-3">
@@ -36,7 +44,7 @@ const Header = () => {
                 </Link>
               )}
 
-              {isAdmin && ( // New Admin Panel Link
+              {isAdmin && ( 
                 <Link href="/admin" passHref>
                   <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary/80 px-2 sm:px-3">
                     <ShieldCheck className="mr-0 sm:mr-2 h-4 w-4" /> <span className="hidden sm:inline">Admin Panel</span>

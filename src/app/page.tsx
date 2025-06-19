@@ -1,11 +1,14 @@
 
 "use client";
 
+import { useAppContext } from '@/context/AppContext';
 import AuthOptions from '@/components/auth/AuthOptions';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Handshake } from 'lucide-react';
+import { Sparkles, ArrowRight, Handshake, BookOpen, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
+
 
 const productCategories = [
   { name: "Crystal Bracelets", description: "Harness the energy of natural crystals for balance and healing.", imageUrl: "https://placehold.co/400x300.png", imageHint: "crystal bracelet", link: "#shop/bracelets" },
@@ -14,11 +17,12 @@ const productCategories = [
 ];
 
 export default function LandingPage() {
+  const { isAuthenticated, userName } = useAppContext();
   return (
     <div className="relative flex flex-col items-center py-8 md:py-12 space-y-10 min-h-full">
       <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
         <Image
-          src="https://placehold.co/1200x800.png" 
+          src="https://placehold.co/1200x800.png"
           alt="Sacred Geometry Background"
           layout="fill"
           objectFit="cover"
@@ -56,13 +60,36 @@ export default function LandingPage() {
         </Card>
       </div>
 
-      {/* Main Content Area: Auth Options and Product Showcase */}
+      {/* Main Content Area: Auth Options/Welcome and Product Showcase */}
       <div className="relative z-10 flex flex-col lg:flex-row items-start justify-center gap-8 md:gap-10 w-full max-w-6xl px-4 mt-8">
         
-        {/* Authentication Block (Palm Reading Service Entry) */}
-        <div className="w-full lg:w-2/5 flex-shrink-0">
-          <AuthOptions />
-        </div>
+        {!isAuthenticated ? (
+          <div className="w-full lg:w-2/5 flex-shrink-0">
+            <AuthOptions />
+          </div>
+        ) : (
+          <div className="w-full lg:w-2/5 flex-shrink-0">
+            <Card className="shadow-xl animate-fade-in flex-shrink-0 bg-card/95 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="font-headline text-2xl md:text-3xl">Welcome Back, {userName}!</CardTitle>
+                <CardDescription>Ready to explore further?</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button asChild className="w-full text-base sm:text-lg py-3 sm:py-4">
+                  <Link href="/report"><BookOpen className="mr-2 h-5 w-5" /> View My Reading</Link>
+                </Button>
+                <Button asChild variant="secondary" className="w-full text-base sm:text-lg py-3 sm:py-4">
+                 <Link href="/palm-input"><RefreshCw className="mr-2 h-5 w-5" /> Start New Reading</Link>
+                </Button>
+              </CardContent>
+              <CardFooter className="mt-2">
+                <p className="text-xs text-muted-foreground text-center w-full">
+                    Your destiny awaits.
+                </p>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
 
         {/* Spiritual Products Showcase Block */}
         <div className="w-full lg:w-3/5 space-y-8">
