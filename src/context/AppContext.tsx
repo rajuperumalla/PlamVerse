@@ -29,8 +29,8 @@ export interface ReportNumerologyInputDetails_BabyName {
   proposedNames: string[]; // Store as an array of strings
   childDOB: string;
   childTOB?: string;
-  parent1FullName: string;
-  parent1DOB: string;
+  parent1FullName?: string;
+  parent1DOB?: string;
   parent2FullName?: string;
   parent2DOB?: string;
 }
@@ -131,18 +131,19 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
           founderDOB: `19${70 + idSuffix}-0${(idSuffix % 9) + 1}-1${idSuffix % 9}`,
         } as ReportNumerologyInputDetails_Business;
     } else if (category === 'baby-name-numerology') {
+        const includeParent1 = idSuffix % 2 === 0; // Randomly include parent 1 for sample
         specificInputDetails = {
             serviceQuery: 'baby-name-numerology',
             proposedNames: [`BabyName Alpha ${idSuffix}`, `BabyName Beta ${idSuffix}`],
             childDOB: `2024-0${(idSuffix % 9) + 1}-1${idSuffix % 9}`,
-            parent1FullName: `Parent One ${idSuffix}`,
-            parent1DOB: `19${85 + idSuffix % 5}-0${(idSuffix % 9) + 1}-0${(idSuffix % 2) + 1}${idSuffix % 9 +1}`,
+            parent1FullName: includeParent1 ? `Parent One ${idSuffix}` : undefined,
+            parent1DOB: includeParent1 ? `19${85 + idSuffix % 5}-0${(idSuffix % 9) + 1}-0${(idSuffix % 2) + 1}${idSuffix % 9 +1}` : undefined,
         } as ReportNumerologyInputDetails_BabyName;
     } else { // Fallback for other numerology types if samples are extended
         specificInputDetails = { // This is a generic placeholder, adjust if other numerology types are added
-            serviceQuery: category,
+            serviceQuery: category as any, // Cast as any because serviceQuery is not known here.
             // Add some generic fields or leave it minimal
-        } as any; 
+        } as ReportInputDetails; // Ensure it adheres to the base type.
     }
   }
 

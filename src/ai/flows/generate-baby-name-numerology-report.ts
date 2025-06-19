@@ -15,8 +15,8 @@ const GenerateBabyNameNumerologyInputSchema = z.object({
   proposedNames: z.array(z.string()).describe('A list of proposed names for the baby.'),
   childDOB: z.string().describe("The date of birth of the child (YYYY-MM-DD)."),
   childTOB: z.string().optional().describe("The time of birth of the child (HH:MM), if known."),
-  parent1FullName: z.string().describe("The full name of the first parent."),
-  parent1DOB: z.string().describe("The date of birth of the first parent (YYYY-MM-DD)."),
+  parent1FullName: z.string().optional().describe("The full name of the first parent, if provided."),
+  parent1DOB: z.string().optional().describe("The date of birth of the first parent (YYYY-MM-DD), if provided."),
   parent2FullName: z.string().optional().describe("The full name of the second parent, if applicable."),
   parent2DOB: z.string().optional().describe("The date of birth of the second parent (YYYY-MM-DD), if applicable."),
   // expertAnalysis: z.string().optional().describe('Detailed analysis and interpretation notes provided by a human expert numerologist. This should guide the AI generation if present.'),
@@ -47,7 +47,7 @@ const prompt = ai.definePrompt({
   Proposed Names: {{#each proposedNames}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
   Child's Date of Birth: {{{childDOB}}}
   {{#if childTOB}}Child's Time of Birth: {{{childTOB}}}{{/if}}
-  Parent 1: {{{parent1FullName}}} (DOB: {{{parent1DOB}}})
+  {{#if parent1FullName}}Parent 1: {{{parent1FullName}}} (DOB: {{{parent1DOB}}}){{/if}}
   {{#if parent2FullName}}Parent 2: {{{parent2FullName}}} (DOB: {{{parent2DOB}}}){{/if}}
 
   Generate a comprehensive baby name numerology report based PRIMARILY on the expert's analysis. Ensure it aligns with numerological principles for harmony, positive traits, and life path compatibility.
@@ -57,10 +57,10 @@ const prompt = ai.definePrompt({
   Proposed Names: {{#each proposedNames}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
   Child's Date of Birth: {{{childDOB}}}
   {{#if childTOB}}Child's Time of Birth: {{{childTOB}}}{{/if}}
-  Parent 1: {{{parent1FullName}}} (DOB: {{{parent1DOB}}})
+  {{#if parent1FullName}}Parent 1: {{{parent1FullName}}} (DOB: {{{parent1DOB}}}){{/if}}
   {{#if parent2FullName}}Parent 2: {{{parent2FullName}}} (DOB: {{{parent2DOB}}}){{/if}}
 
-  Based on these details, generate a comprehensive baby name numerology report. Analyze each proposed name. Focus on its numerological significance in relation to the child's core numbers (derived from DOB) and its compatibility with the parents' numerology. Provide insights on potential strengths, challenges, and overall vibration for each name. Recommend the most harmonious name(s) if possible. The report should be detailed, insightful, and professionally toned.
+  Based on these details, generate a comprehensive baby name numerology report. Analyze each proposed name. Focus on its numerological significance in relation to the child's core numbers (derived from DOB) and its compatibility with the parents' numerology if provided. Provide insights on potential strengths, challenges, and overall vibration for each name. Recommend the most harmonious name(s) if possible. The report should be detailed, insightful, and professionally toned.
   {{/if}}
   `,
 });
@@ -73,12 +73,19 @@ const generateBabyNameNumerologyReportFlow = ai.defineFlow(
   },
   async (input) => {
     // Simulate a dummy report for now
+    const parent1Details = input.parent1FullName && input.parent1DOB 
+      ? `${input.parent1FullName} (DOB: ${input.parent1DOB})` 
+      : (input.parent1FullName ? `${input.parent1FullName} (DOB: Not Provided)` : 'Parent 1 details not fully provided');
+
+    const parent2Details = input.parent2FullName && input.parent2DOB
+      ? ` & ${input.parent2FullName} (DOB: ${input.parent2DOB})`
+      : (input.parent2FullName ? ` & ${input.parent2FullName} (DOB: Not Provided)` : '');
+
     const dummyReport = `
 ## Baby Name Numerology Report
 
 **For Child Born:** ${input.childDOB} ${input.childTOB ? `(TOB: ${input.childTOB})` : ''}
-**Parents:** ${input.parent1FullName} (DOB: ${input.parent1DOB})
-${input.parent2FullName ? ` & ${input.parent2FullName} (DOB: ${input.parent2DOB})` : ''}
+**Parents:** ${parent1Details}${parent2Details}
 
 **Proposed Names:**
 ${input.proposedNames.map(name => `- ${name}`).join('\n')}
@@ -92,7 +99,7 @@ ${input.proposedNames.map((name, index) => `
 *   **Simulated Name Number:** ${index + 1} (Derived from a simplified calculation for "${name}")
 *   **Simulated Characteristics:** This name vibration suggests potential for [Simulated Trait A for ${name}, e.g., creativity and expression] and [Simulated Trait B for ${name}, e.g., leadership qualities].
 *   **Simulated Compatibility with Child's DOB:** The name "${name}" has a [Simulated Compatibility Level, e.g., harmonious, moderately challenging] vibrational match with the child's core numbers (derived from ${input.childDOB}).
-*   **Simulated Parental Compatibility:** Consideration of parental numerology (Parent 1: ${input.parent1FullName}, Parent 2: ${input.parent2FullName || 'N/A'}) suggests [Simulated Parental Insight for ${name}].
+*   **Simulated Parental Compatibility:** Consideration of parental numerology (Parent 1: ${input.parent1FullName || 'N/A'}, Parent 2: ${input.parent2FullName || 'N/A'}) suggests [Simulated Parental Insight for ${name}].
 `).join('')}
 
 **Recommendations (Simulated):**

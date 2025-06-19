@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Textarea } from '@/components/ui/textarea';
 import { useAppContext, type ReportNumerologyInputDetails_BabyName } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { Baby, User, CalendarDays, Clock, Loader2, Sparkles, CreditCard, Users } from 'lucide-react';
+import { Baby, User, CalendarDays, Clock, Loader2, Sparkles, CreditCard, Users, Info } from 'lucide-react';
 import Image from 'next/image';
 
 const SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY = 'palmVerseBabyNameNumerologyCheckoutForm';
@@ -40,9 +40,9 @@ const BabyNameNumerologyForm = () => {
     return text.split('\n').map(name => name.trim()).filter(name => name.length > 0);
   };
   
-  const areRequiredFieldsFilled = () => {
+  const areMinimumFieldsFilled = () => {
     const namesArray = parseProposedNames(proposedNamesText);
-    return namesArray.length > 0 && childDOB && parent1FullName && parent1DOB;
+    return namesArray.length > 0 && childDOB;
   };
 
   const handleSubmitOrProceedToPayment = async () => {
@@ -53,8 +53,8 @@ const BabyNameNumerologyForm = () => {
       proposedNames: proposedNamesArray,
       childDOB,
       childTOB: childTOB || undefined,
-      parent1FullName,
-      parent1DOB,
+      parent1FullName: parent1FullName || undefined,
+      parent1DOB: parent1DOB || undefined,
       parent2FullName: parent2FullName || undefined,
       parent2DOB: parent2DOB || undefined,
     };
@@ -62,8 +62,8 @@ const BabyNameNumerologyForm = () => {
     sessionStorage.setItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY, JSON.stringify(reportInputDetails));
 
     if (!hasPaid) {
-      if (!areRequiredFieldsFilled()) {
-        toast({ title: "Missing Information", description: "Please fill all required fields (Proposed Names, Child's DOB, Parent 1 Name & DOB) before proceeding.", variant: "destructive" });
+      if (!areMinimumFieldsFilled()) {
+        toast({ title: "Missing Information", description: "Please fill all required fields (Proposed Names, Child's DOB) before proceeding.", variant: "destructive" });
         return;
       }
       const returnPath = `/numerology-input?service=${SERVICE_QUERY}`;
@@ -72,8 +72,8 @@ const BabyNameNumerologyForm = () => {
     }
 
     // Post-payment submission logic
-    if (!areRequiredFieldsFilled()) {
-      toast({ title: "Missing Information", description: "Please fill all required fields to generate your report.", variant: "destructive" });
+    if (!areMinimumFieldsFilled()) {
+      toast({ title: "Missing Information", description: "Please fill all required fields (Proposed Names, Child's DOB) to generate your report.", variant: "destructive" });
       return;
     }
 
@@ -97,41 +97,8 @@ const BabyNameNumerologyForm = () => {
   };
 
   const attemptAutoSubmitAfterPayment = useCallback(async () => {
-    if (searchParams && searchParams.get('payment_success') === 'true' && hasPaid && userName) {
-      const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY);
-      
-      // Clean up URL param - this is done in the parent NumerologyInputPageComponent
-      // const currentSearchParamsString = searchParams.toString();
-      // const newParams = new URLSearchParams(currentSearchParamsString);
-      // newParams.delete('payment_success'); 
-      // router.replace(`/numerology-input?${newParams.toString()}`, { scroll: false });
-
-      if (persistedFormDataJson) {
-        const persistedData = JSON.parse(persistedFormDataJson) as ReportNumerologyInputDetails_BabyName;
-        
-        setProposedNamesText(persistedData.proposedNames.join('\n'));
-        setChildDOB(persistedData.childDOB || '');
-        setChildTOB(persistedData.childTOB || '');
-        setParent1FullName(persistedData.parent1FullName || '');
-        setParent1DOB(persistedData.parent1DOB || '');
-        setParent2FullName(persistedData.parent2FullName || '');
-        setParent2DOB(persistedData.parent2DOB || '');
-
-        if (persistedData.proposedNames && persistedData.proposedNames.length > 0 && persistedData.childDOB && persistedData.parent1FullName && persistedData.parent1DOB) {
-          // This logic is now handled by the parent NumerologyInputPageComponent
-        } else {
-          // This toast might also be handled by parent, or form can show it if it's already mounted
-           // toast({ title: "Payment Successful", description: "Please complete any missing fields and then click 'Generate Report'." });
-        }
-      } else {
-        // toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
-      }
-    }
-  }, [searchParams, hasPaid, userName, /* router, toast, startOperation, stopOperation, createInitialNumerologyReportPlaceholder */]); // Removed dependencies handled by parent
-
-  useEffect(() => {
-    // This effect now primarily handles pre-filling if session data exists when the form mounts
-    // (e.g., if user navigated away and back before payment, or if auto-submit in parent didn't fully clear)
+    // This logic is primarily handled by the parent NumerologyInputPageComponent now.
+    // This form just ensures it's pre-filled if session data exists.
     const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY);
     if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportNumerologyInputDetails_BabyName;
@@ -142,16 +109,19 @@ const BabyNameNumerologyForm = () => {
         setParent1DOB(persistedData.parent1DOB || '');
         setParent2FullName(persistedData.parent2FullName || '');
         setParent2DOB(persistedData.parent2DOB || '');
-    }
 
-    // Auto-submit logic after payment is primarily handled by the parent NumerologyInputPageComponent.
-    // This form component is responsible for its own rendering and user interaction.
+        // If payment was successful and minimum data is present, parent component handles auto-submit.
+        // If not, user needs to complete the form.
+    }
+  }, []); // Removed dependencies handled by parent or form state itself
+
+  useEffect(() => {
     attemptAutoSubmitAfterPayment();
   }, [attemptAutoSubmitAfterPayment]);
   
   let finalButtonDisabled = isOperationInProgress;
   if (hasPaid) {
-    if (!areRequiredFieldsFilled()) {
+    if (!areMinimumFieldsFilled()) {
       finalButtonDisabled = true;
     }
   }
@@ -182,13 +152,14 @@ const BabyNameNumerologyForm = () => {
                 <div className="space-y-2">
                     <Label htmlFor="proposedNamesText" className="text-base flex items-center gap-2"><Baby className="h-5 w-5 text-primary"/>Child's Proposed Names *</Label>
                     <Textarea id="proposedNamesText" value={proposedNamesText} onChange={(e) => setProposedNamesText(e.target.value)} placeholder="Enter potential names, one per line" disabled={isOperationInProgress} rows={4} required />
-                    <p className="text-xs text-muted-foreground">Enter each name on a new line.</p>
+                    <p className="text-xs text-muted-foreground">Enter each name on a new line. This is a required field.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="childDOB" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Child's Date of Birth *</Label>
                         <Input id="childDOB" type="date" value={childDOB} onChange={(e) => setChildDOB(e.target.value)} disabled={isOperationInProgress} required />
+                         <p className="text-xs text-muted-foreground">This is a required field.</p>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="childTOB" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Child's Time of Birth (Optional)</Label>
@@ -197,28 +168,30 @@ const BabyNameNumerologyForm = () => {
                 </div>
                 
                 <Card className="p-4 bg-muted/30 border-primary/20">
-                    <CardTitle className="text-lg mb-3 flex items-center gap-2"><Users className="h-5 w-5 text-primary"/>Parent 1 Details</CardTitle>
+                    <CardTitle className="text-lg mb-2 flex items-center gap-2"><Users className="h-5 w-5 text-primary"/>Parent Details (Optional)</CardTitle>
+                    <CardDescription className="text-xs text-muted-foreground mb-3 flex items-start gap-1.5">
+                       <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                       <span>Providing parent details can help in a more comprehensive analysis to assess harmony and compatibility of the proposed names with parental energies.</span>
+                    </CardDescription>
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="parent1FullName" className="text-base">Full Name *</Label>
-                            <Input id="parent1FullName" type="text" value={parent1FullName} onChange={(e) => setParent1FullName(e.target.value)} placeholder="e.g., John Doe" disabled={isOperationInProgress} required />
+                            <Label htmlFor="parent1FullName" className="text-base">Parent 1 Full Name</Label>
+                            <Input id="parent1FullName" type="text" value={parent1FullName} onChange={(e) => setParent1FullName(e.target.value)} placeholder="e.g., John Doe" disabled={isOperationInProgress} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="parent1DOB" className="text-base">Date of Birth *</Label>
-                            <Input id="parent1DOB" type="date" value={parent1DOB} onChange={(e) => setParent1DOB(e.target.value)} disabled={isOperationInProgress} required />
+                            <Label htmlFor="parent1DOB" className="text-base">Parent 1 Date of Birth</Label>
+                            <Input id="parent1DOB" type="date" value={parent1DOB} onChange={(e) => setParent1DOB(e.target.value)} disabled={isOperationInProgress || !parent1FullName} />
+                            {parent1FullName && !parent1DOB && <p className="text-xs text-destructive">Please provide DOB if Parent 1 name is entered.</p>}
                         </div>
                     </div>
-                </Card>
-                
-                <Card className="p-4 bg-muted/30 border-primary/20">
-                    <CardTitle className="text-lg mb-3 flex items-center gap-2"><Users className="h-5 w-5 text-primary"/>Parent 2 Details (Optional)</CardTitle>
+                    <hr className="my-4"/>
                      <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="parent2FullName" className="text-base">Full Name</Label>
+                            <Label htmlFor="parent2FullName" className="text-base">Parent 2 Full Name</Label>
                             <Input id="parent2FullName" type="text" value={parent2FullName} onChange={(e) => setParent2FullName(e.target.value)} placeholder="e.g., Jane Smith" disabled={isOperationInProgress} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="parent2DOB" className="text-base">Date of Birth</Label>
+                            <Label htmlFor="parent2DOB" className="text-base">Parent 2 Date of Birth</Label>
                             <Input id="parent2DOB" type="date" value={parent2DOB} onChange={(e) => setParent2DOB(e.target.value)} disabled={isOperationInProgress || !parent2FullName} />
                              {parent2FullName && !parent2DOB && <p className="text-xs text-destructive">Please provide DOB if Parent 2 name is entered.</p>}
                         </div>
@@ -229,6 +202,7 @@ const BabyNameNumerologyForm = () => {
                     type="submit" 
                     className="w-full text-lg py-6 mt-8" 
                     disabled={finalButtonDisabled}
+                    title={!areMinimumFieldsFilled() && !hasPaid ? "Please fill all required fields first" : (hasPaid && !areMinimumFieldsFilled() ? "Please fill all required fields to generate" : "")}
                 >
                     {isOperationInProgress ? ( 
                         <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
@@ -236,7 +210,7 @@ const BabyNameNumerologyForm = () => {
                         hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Baby Name Report</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
                     )}
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">* Required fields.</p>
+                <p className="text-xs text-muted-foreground text-center">* Required fields are marked with an asterisk if not already obvious.</p>
             </form>
             </CardContent>
             <CardFooter className="mt-4">

@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import BusinessNumerologyForm from '@/components/numerology/BusinessNumerologyForm';
-import BabyNameNumerologyForm from '@/components/numerology/BabyNameNumerologyForm'; // Import the new form
+import BabyNameNumerologyForm from '@/components/numerology/BabyNameNumerologyForm'; 
 import { useToast } from '@/hooks/use-toast';
 
 const readingTypes = [
@@ -103,7 +103,8 @@ function NumerologyInputPageComponent() {
           canAutoSubmit = !!(data.businessName && data.founderFullName && data.founderDOB);
         } else if (serviceQuery === 'baby-name-numerology') {
           const data = persistedData as ReportNumerologyInputDetails_BabyName;
-          canAutoSubmit = !!(data.proposedNames && data.proposedNames.length > 0 && data.childDOB && data.parent1FullName && data.parent1DOB);
+          // For baby names, only proposed names and child's DOB are strictly required for auto-submit
+          canAutoSubmit = !!(data.proposedNames && data.proposedNames.length > 0 && data.childDOB);
         }
         // Add more conditions for other forms
 
