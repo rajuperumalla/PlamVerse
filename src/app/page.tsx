@@ -6,7 +6,7 @@ import AuthOptions from '@/components/auth/AuthOptions';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Handshake, BookOpen, RefreshCw } from 'lucide-react';
+import { Sparkles, ArrowRight, Handshake, BookOpen, RefreshCw, LifeBuoy, Brain, Heart, Star } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -14,6 +14,13 @@ const productCategories = [
   { name: "Crystal Bracelets", description: "Harness the energy of natural crystals for balance and healing.", imageUrl: "https://placehold.co/400x300.png", imageHint: "crystal bracelet", link: "#shop/bracelets" },
   { name: "Sacred Gemstones", description: "Discover the power of authentic gemstones for well-being.", imageUrl: "https://placehold.co/400x300.png", imageHint: "gemstone collection", link: "#shop/gemstones" },
   { name: "Energized Yantras", description: "Invite prosperity and protection with sacred geometric yantras.", imageUrl: "https://placehold.co/400x300.png", imageHint: "sacred yantra", link: "#shop/yantras" },
+];
+
+const palmLines = [
+  { name: "Life Line", icon: LifeBuoy, description: "Represents vitality, physical health, and major life changes. Its length is not an indicator of lifespan." , colorClass: "text-red-500"},
+  { name: "Head Line", icon: Brain, description: "Indicates your intellectual curiosity, learning style, communication, and thirst for knowledge." , colorClass: "text-blue-500"},
+  { name: "Heart Line", icon: Heart, description: "Reveals your emotional stability, romantic perspectives, psychological state, and interpersonal relationships." , colorClass: "text-pink-500"},
+  { name: "Fate Line (Destiny Line)", icon: Star, description: "Shows the impact of external factors on your life path, including career, choices, and life's purpose." , colorClass: "text-purple-500"},
 ];
 
 export default function LandingPage() {
@@ -31,34 +38,46 @@ export default function LandingPage() {
         />
       </div>
 
-      {/* Hero Banner Section */}
-      <div className="relative z-10 w-full max-w-5xl px-4 text-center">
-        <Card className="shadow-xl bg-gradient-to-br from-primary/20 via-background to-background border-primary/30 overflow-hidden">
-          <div className="flex flex-col md:flex-row items-center justify-between p-6 md:p-8 gap-6">
-            <div className="md:w-2/3 text-center md:text-left">
-              <h2 className="font-headline text-3xl md:text-4xl lg:text-5xl font-bold text-primary mb-3">
-                Your First AI Palm Reading FREE!
-              </h2>
-              <p className="text-muted-foreground text-lg md:text-xl mb-6">
-                Unlock the secrets of your destiny. Get your personalized AI-powered palm reading today.
-              </p>
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3 px-8 shadow-lg animate-pulse">
-                <Handshake className="mr-2 h-6 w-6" /> Get Your Reading Now
-              </Button>
-            </div>
-            <div className="md:w-1/3 flex justify-center">
+      {/* New Informational Palm Line Section */}
+      <div className="relative z-10 w-full max-w-5xl px-4 text-center space-y-8">
+        <h2 className="font-headline text-3xl md:text-4xl lg:text-5xl font-bold text-primary">
+          Unlock the Secrets in Your Palm
+        </h2>
+        <p className="text-muted-foreground text-lg md:text-xl">
+          Discover what the major lines on your palm reveal about your life, personality, and destiny.
+        </p>
+        <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-border overflow-hidden">
+          <CardContent className="p-6">
+            <div className="w-full max-w-md mx-auto mb-6">
               <Image
-                src="https://placehold.co/300x300.png"
-                alt="AI Palm Reading"
-                width={250}
-                height={250}
-                className="rounded-full shadow-2xl border-4 border-secondary object-cover"
-                data-ai-hint="mystical hands spiritual"
+                src="https://placehold.co/600x400.png"
+                alt="Annotated Palm Lines"
+                width={600}
+                height={400}
+                className="rounded-lg shadow-lg border border-border object-cover"
+                data-ai-hint="annotated palm lines"
               />
             </div>
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+              {palmLines.map((line) => (
+                <div key={line.name} className="p-4 bg-background/70 rounded-lg border border-border shadow-sm">
+                  <div className="flex items-center mb-2">
+                    <line.icon className={`mr-2 h-6 w-6 ${line.colorClass}`} />
+                    <h3 className="font-headline text-xl font-semibold text-foreground">{line.name}</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{line.description}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
+        <Button size="lg" asChild className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3 px-8 shadow-lg">
+          <Link href="/palm-input">
+            <Handshake className="mr-2 h-6 w-6" /> Get Your AI Palm Reading
+          </Link>
+        </Button>
       </div>
+
 
       {/* Main Content Area: Auth Options/Welcome and Product Showcase */}
       <div className="relative z-10 flex flex-col lg:flex-row items-start justify-center gap-8 md:gap-10 w-full max-w-6xl px-4 mt-8">
