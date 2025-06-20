@@ -26,7 +26,7 @@ export default function PaymentPage() {
     setHasPaid(true);
     toast({
       title: 'Payment Successful (Simulated)',
-      description: `You can now proceed to generate your ${serviceType === 'numerology' ? 'numerology reading' : 'palm reading'}.`,
+      description: `Payment received successfully. You can now proceed to generate your ${serviceType === 'numerology' ? 'numerology reading' : 'palm reading'}.`,
     });
     
     // Ensure payment_success=true is appended to the effective return path

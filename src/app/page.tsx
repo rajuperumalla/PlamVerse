@@ -41,6 +41,15 @@ export default function HomePage() {
         <p className="text-muted-foreground text-lg md:text-xl mb-8">
           Discover your destiny, understand your personality, and unlock insights into your future.
         </p>
+        <Button 
+          asChild 
+          size="lg" 
+          className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg md:text-xl py-3 md:py-4 px-6 md:px-8 shadow-lg animate-pulse-subtle mb-10"
+        >
+          <Link href="/palm-input?category=Comprehensive%20Analysis">
+            <Sparkles className="mr-2 h-5 w-5" /> Get Your FREE AI Reading
+          </Link>
+        </Button>
       </div>
       <div className="w-full lg:w-2/5 flex-shrink-0 mb-10 lg:mb-0">
         <AuthOptions />
@@ -148,7 +157,7 @@ export default function HomePage() {
              {!isAuthenticated && (
                 <CardFooter className="justify-center pt-4 border-t">
                      <Button size="lg" asChild className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3 px-8 shadow-lg">
-                        <Link href="/palm-input">
+                        <Link href="/palm-input?category=Comprehensive%20Analysis">
                             <Handshake className="mr-2 h-6 w-6" /> Get Your AI Palm Reading
                         </Link>
                     </Button>
