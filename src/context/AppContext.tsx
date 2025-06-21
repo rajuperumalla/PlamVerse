@@ -281,7 +281,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const currentDate = new Date().toISOString();
 
     const reportsToKeep = reports.filter(r => {
-        return !(r.userName === userName && r.reportType === 'palmistry' && (r.status === 'submitted_for_generation' || r.status === 'generation_failed'));
+        return r.userName !== userName || r.status === 'approved';
     });
 
     const newReport: ReportData = {
@@ -306,7 +306,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const currentDate = new Date().toISOString();
 
     const reportsToKeep = reports.filter(r => {
-        return !(r.userName === userName && r.reportType === 'numerology' && r.category === serviceQuery && (r.status === 'submitted_for_generation' || r.status === 'generation_failed' || r.status === 'pending_review'));
+      return r.userName !== userName || r.status === 'approved';
     });
     
     const newReport: ReportData = {
