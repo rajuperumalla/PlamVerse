@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useAppContext, type ReportData } from '@/context/AppContext';
+import { useAppContext, type ReportData, type ReportPalmInputDetails } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -47,6 +47,8 @@ export default function AdminApprovedReportsPage() {
     setSelectedReportForView(report);
     setIsViewReportDialogOpen(true);
   };
+  
+  const palmInputDetails = selectedReportForView?.reportType === 'palmistry' ? selectedReportForView.inputDetails as ReportPalmInputDetails : null;
 
   if (isInitializing || !authCheckComplete) {
     return (
@@ -139,20 +141,24 @@ export default function AdminApprovedReportsPage() {
               <DialogTitle>Approved Report: {selectedReportForView.id.substring(0,10)}...</DialogTitle>
               <DialogDesc>Category: {selectedReportForView.category} | Submitted by: {selectedReportForView.userName || 'N/A'}</DialogDesc>
             </DialogHeader>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
-              {selectedReportForView.inputDetails.leftPalmDataUri && 
+            
+            {palmInputDetails && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
+                {palmInputDetails.frontPalmDataUri && 
                   <div className="text-center">
-                  <Image src={selectedReportForView.inputDetails.leftPalmDataUri} alt="Left Palm" width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand"/>
-                  <p className="text-xs text-muted-foreground mt-1">Left Palm</p>
-                </div>
-              }
-              {selectedReportForView.inputDetails.rightPalmDataUri && 
-                <div className="text-center">
-                  <Image src={selectedReportForView.inputDetails.rightPalmDataUri} alt="Right Palm" width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand"/>
-                  <p className="text-xs text-muted-foreground mt-1">Right Palm</p>
-                </div>
-              }
-            </div>
+                    <Image src={palmInputDetails.frontPalmDataUri} alt={`Front of ${palmInputDetails.dominantHand} Palm`} width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand front"/>
+                    <p className="text-xs text-muted-foreground mt-1">Front of {palmInputDetails.dominantHand} Palm</p>
+                  </div>
+                }
+                {palmInputDetails.sidePalmDataUri && 
+                  <div className="text-center">
+                    <Image src={palmInputDetails.sidePalmDataUri} alt={`Side of ${palmInputDetails.dominantHand} Palm`} width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand side"/>
+                    <p className="text-xs text-muted-foreground mt-1">Side of {palmInputDetails.dominantHand} Palm</p>
+                  </div>
+                }
+              </div>
+            )}
+            
             <Label className="font-semibold">Report Content:</Label>
             <ScrollArea className="h-[250px] w-full rounded-md border p-4 mt-1 bg-muted/10 text-sm">
               {selectedReportForView.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (

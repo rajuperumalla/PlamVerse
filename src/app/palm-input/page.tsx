@@ -85,8 +85,8 @@ function PalmInputPageComponent() {
       if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
         
-        const canAutoSubmit = persistedData.leftPalmDataUri &&
-                              persistedData.rightPalmDataUri &&
+        const canAutoSubmit = persistedData.frontPalmDataUri &&
+                              persistedData.sidePalmDataUri &&
                               persistedData.dateOfBirth &&
                               persistedData.placeOfBirth &&
                               persistedData.dominantHand &&
@@ -94,6 +94,7 @@ function PalmInputPageComponent() {
 
         if (canAutoSubmit) {
           startOperation();
+          setHasPaid(false); // Consume the payment voucher immediately
           let initialReportId = '';
           try {
             const finalCategoryForReport = categoryFromQuery || persistedData.category;
@@ -110,8 +111,8 @@ function PalmInputPageComponent() {
             });
 
             const aiFlowInput: GeneratePalmReadingInput = {
-              leftPalmDataUri: persistedData.leftPalmDataUri!,
-              rightPalmDataUri: persistedData.rightPalmDataUri!,
+              frontPalmDataUri: persistedData.frontPalmDataUri!,
+              sidePalmDataUri: persistedData.sidePalmDataUri!,
               dateOfBirth: persistedData.dateOfBirth,
               placeOfBirth: persistedData.placeOfBirth,
               timeOfBirth: persistedData.timeOfBirth || "Not specified",

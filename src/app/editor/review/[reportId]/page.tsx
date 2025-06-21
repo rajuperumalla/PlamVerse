@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useAppContext, type ReportData } from '@/context/AppContext';
+import { useAppContext, type ReportData, type ReportPalmInputDetails } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { generatePalmReading } from '@/ai/flows/generate-palm-reading';
 import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { Loader2, CheckCircle, AlertTriangle, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, ThumbsUp, Brain } from 'lucide-react'; // Removed Edit3 as it might not be used
+import { Loader2, CheckCircle, AlertTriangle, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, ThumbsUp, Brain } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function EditorReviewReportPage() {
@@ -86,7 +86,7 @@ export default function EditorReviewReportPage() {
     setGeneratedReportPreview(null);
     try {
       const result = await generatePalmReading({
-        ...report.inputDetails,
+        ...(report.inputDetails as ReportPalmInputDetails), // Assuming palmistry for now
         category: report.category,
         expertAnalysis: expertAnalysisNotes,
       });
@@ -158,6 +158,8 @@ export default function EditorReviewReportPage() {
     );
   }
 
+  const palmInputDetails = report.reportType === 'palmistry' ? report.inputDetails as ReportPalmInputDetails : null;
+
   return (
     <div className="container mx-auto py-8 max-w-4xl">
       <Button onClick={() => router.push('/editor/workflow')} variant="outline" className="mb-6">
@@ -172,20 +174,22 @@ export default function EditorReviewReportPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
-            {report.inputDetails.leftPalmDataUri &&
-              <div className="text-center">
-                <Image src={report.inputDetails.leftPalmDataUri} alt="Left Palm" width={300} height={225} className="rounded-md border mx-auto shadow" data-ai-hint="palm hand"/>
-                <p className="text-xs text-muted-foreground mt-1">Left Palm</p>
+          {palmInputDetails && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+                {palmInputDetails.frontPalmDataUri && 
+                  <div className="text-center">
+                    <Image src={palmInputDetails.frontPalmDataUri} alt={`Front of ${palmInputDetails.dominantHand} Palm`} width={300} height={225} className="rounded-md border mx-auto shadow" data-ai-hint="palm hand front"/>
+                    <p className="text-xs text-muted-foreground mt-1">Front of {palmInputDetails.dominantHand} Palm</p>
+                  </div>
+                }
+                {palmInputDetails.sidePalmDataUri && 
+                  <div className="text-center">
+                    <Image src={palmInputDetails.sidePalmDataUri} alt={`Side of ${palmInputDetails.dominantHand} Palm`} width={300} height={225} className="rounded-md border mx-auto shadow" data-ai-hint="palm hand side"/>
+                    <p className="text-xs text-muted-foreground mt-1">Side of {palmInputDetails.dominantHand} Palm</p>
+                  </div>
+                }
               </div>
-            }
-            {report.inputDetails.rightPalmDataUri &&
-               <div className="text-center">
-                <Image src={report.inputDetails.rightPalmDataUri} alt="Right Palm" width={300} height={225} className="rounded-md border mx-auto shadow" data-ai-hint="palm hand"/>
-                <p className="text-xs text-muted-foreground mt-1">Right Palm</p>
-              </div>
-            }
-          </div>
+           )}
 
           <div>
             <Label className="font-semibold text-lg">Initial AI Generated Content (From User Submission):</Label>

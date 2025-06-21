@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 
 // Define the structure for palm input details to be stored with the report
 export interface ReportPalmInputDetails {
-  leftPalmDataUri?: string;
-  rightPalmDataUri?: string;
+  frontPalmDataUri?: string;
+  sidePalmDataUri?: string;
   dateOfBirth: string;
   placeOfBirth: string;
   timeOfBirth?: string;
@@ -113,8 +113,8 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
   if (reportType === 'palmistry') {
     content += ` It covers various aspects of your life including career, relationships, and health based on palmistry.`;
     specificInputDetails = {
-      leftPalmDataUri: `https://placehold.co/300x200.png?text=L+Palm+S${idSuffix}`,
-      rightPalmDataUri: `https://placehold.co/300x200.png?text=R+Palm+S${idSuffix}`,
+      frontPalmDataUri: `https://placehold.co/300x200.png?text=Front+Palm+S${idSuffix}`,
+      sidePalmDataUri: `https://placehold.co/300x200.png?text=Side+Palm+S${idSuffix}`,
       dateOfBirth: `19${80 + idSuffix}-0${(idSuffix % 9) + 1}-0${(idSuffix % 2) + 1}${idSuffix % 9 +1}`,
       placeOfBirth: `City ${idSuffix}, Sample Land`,
       timeOfBirth: `${(10 + idSuffix) % 24}:0${idSuffix % 6}`,

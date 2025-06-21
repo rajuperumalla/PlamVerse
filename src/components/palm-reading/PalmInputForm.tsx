@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Textarea } from '@/components/ui/textarea';
 import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { generatePalmReading, type GeneratePalmReadingInput } from '@/ai/flows/generate-palm-reading';
 import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info } from 'lucide-react';
 
 const SESSION_STORAGE_KEY = 'palmVerseCheckoutForm';
@@ -30,10 +29,10 @@ interface PalmInputFormProps {
 }
 
 const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputFormProps) => {
-  const [leftPalmImageFile, setLeftPalmImageFile] = useState<File | null>(null);
-  const [rightPalmImageFile, setRightPalmImageFile] = useState<File | null>(null);
-  const [leftPalmPreview, setLeftPalmPreview] = useState<string | null>(null);
-  const [rightPalmPreview, setRightPalmPreview] = useState<string | null>(null);
+  const [frontPalmImageFile, setFrontPalmImageFile] = useState<File | null>(null);
+  const [sidePalmImageFile, setSidePalmImageFile] = useState<File | null>(null);
+  const [frontPalmPreview, setFrontPalmPreview] = useState<string | null>(null);
+  const [sidePalmPreview, setSidePalmPreview] = useState<string | null>(null);
 
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [placeOfBirth, setPlaceOfBirth] = useState('');
@@ -46,11 +45,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     startOperation,
     stopOperation,
     isOperationInProgress,
-    hasPaid,
-    setHasPaid,
     createInitialReportPlaceholder,
-    updateReportWithGeneratedContent,
-    markReportAsGenerationFailed,
   } = useAppContext();
   const { toast } = useToast();
 
@@ -72,14 +67,14 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!leftPalmPreview || !rightPalmPreview || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
-      toast({ title: "Missing Information", description: "Please complete all required fields and upload images.", variant: "destructive" });
+    if (!frontPalmPreview || !sidePalmPreview || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
+      toast({ title: "Missing Information", description: "Please complete all required fields and upload both images.", variant: "destructive" });
       return;
     }
 
     const reportInputDetails: ReportPalmInputDetails = {
-      leftPalmDataUri: leftPalmPreview,
-      rightPalmDataUri: rightPalmPreview,
+      frontPalmDataUri: frontPalmPreview,
+      sidePalmDataUri: sidePalmPreview,
       dateOfBirth,
       placeOfBirth,
       timeOfBirth: timeOfBirth || "Not specified",
@@ -96,25 +91,26 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (persistedFormDataJson) {
       try {
-        const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
-        // Pre-fill text fields for convenience on refresh
+        const persistedData = JSON.parse(persistedFormDataJson);
         setDateOfBirth(persistedData.dateOfBirth || '');
         setPlaceOfBirth(persistedData.placeOfBirth || '');
         setTimeOfBirth(persistedData.timeOfBirth === 'Not specified' ? '' : persistedData.timeOfBirth || '');
         setDominantHand(persistedData.dominantHand || '');
-        // The category from the URL always overrides any stored category
         setCategory(categoryFromQuery || persistedData.category || '');
       } catch (e) {
         console.error("Failed to parse form data from session storage", e);
         sessionStorage.removeItem(SESSION_STORAGE_KEY);
-        // Fallback to URL category if parsing fails
         setCategory(categoryFromQuery || '');
       }
     } else if (categoryFromQuery) {
-      // If there's no session data, just initialize with the category from the URL
       setCategory(categoryFromQuery);
     }
-    // Image previews are intentionally not restored from session to ensure a clean slate
+    
+    // Always clear image previews on component mount
+    setFrontPalmPreview(null);
+    setSidePalmPreview(null);
+    setFrontPalmImageFile(null);
+    setSidePalmImageFile(null);
   }, [categoryFromQuery]);
 
 
@@ -164,60 +160,63 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
             <CardContent>
             <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <Label htmlFor="leftPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Left Palm Image *</Label>
-                    {renderImagePreview(leftPalmPreview, "Left Palm", "palm hand")}
-                    <Input id="leftPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setLeftPalmImageFile, setLeftPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress} />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="rightPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Right Palm Image *</Label>
-                    {renderImagePreview(rightPalmPreview, "Right Palm", "palm hand")}
-                    <Input id="rightPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setRightPalmImageFile, setRightPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress} />
-                </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="dominantHand" className="text-base flex items-center gap-2"><UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *</Label>
+                        <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress} required>
+                        <SelectTrigger id="dominantHand">
+                            <SelectValue placeholder="Select your dominant hand" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Left">Left</SelectItem>
+                            <SelectItem value="Right">Right</SelectItem>
+                        </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
+                        <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress || !!categoryFromQuery} required>
+                        <SelectTrigger id="category">
+                            <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {readingCategories.map(rc => (
+                                <SelectItem key={rc.value} value={rc.value}>{rc.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <Label htmlFor="dob" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Date of Birth *</Label>
-                    <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} disabled={isOperationInProgress} required />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth (Optional)</Label>
-                    <Input id="tob" type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} disabled={isOperationInProgress}/>
-                </div>
-                </div>
-
-                <div className="space-y-2">
-                <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth *</Label>
-                <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} required />
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="dob" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Date of Birth *</Label>
+                        <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} disabled={isOperationInProgress} required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth (Optional)</Label>
+                        <Input id="tob" type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} disabled={isOperationInProgress}/>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                    <Label htmlFor="dominantHand" className="text-base flex items-center gap-2"><UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *</Label>
-                    <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress} required>
-                    <SelectTrigger id="dominantHand">
-                        <SelectValue placeholder="Select your dominant hand" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Left">Left</SelectItem>
-                        <SelectItem value="Right">Right</SelectItem>
-                    </SelectContent>
-                    </Select>
+                    <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth *</Label>
+                    <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} required />
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
-                    <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress || !!categoryFromQuery} required>
-                    <SelectTrigger id="category">
-                        <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {readingCategories.map(rc => (
-                            <SelectItem key={rc.value} value={rc.value}>{rc.label}</SelectItem>
-                        ))}
-                    </SelectContent>
-                    </Select>
-                </div>
+                
+                <div className="space-y-4">
+                    <p className="text-base font-medium">Upload Palm Images *</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="frontPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Front of {dominantHand || 'Dominant'} Hand *</Label>
+                            {renderImagePreview(frontPalmPreview, "Front Palm", "palm hand front")}
+                            <Input id="frontPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setFrontPalmImageFile, setFrontPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="sidePalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Side of {dominantHand || 'Dominant'} Hand *</Label>
+                            {renderImagePreview(sidePalmPreview, "Side Palm", "palm hand side")}
+                            <Input id="sidePalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setSidePalmImageFile, setSidePalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress} />
+                        </div>
+                    </div>
                 </div>
 
                 <Button

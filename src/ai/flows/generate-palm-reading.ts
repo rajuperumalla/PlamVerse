@@ -13,15 +13,15 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GeneratePalmReadingInputSchema = z.object({
-  leftPalmDataUri: z
+  frontPalmDataUri: z
     .string()
     .describe(
-      "A photo of the left palm, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A photo of the front of the user's dominant palm, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
-  rightPalmDataUri: z
+  sidePalmDataUri: z
     .string()
     .describe(
-      "A photo of the right palm, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A photo of the side of the user's dominant palm, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
   dateOfBirth: z.string().describe('The date of birth of the user.'),
   placeOfBirth: z.string().describe('The place of birth of the user.'),
@@ -47,14 +47,14 @@ const prompt = ai.definePrompt({
   output: {schema: GeneratePalmReadingOutputSchema},
   prompt: `You are an expert palm reader.
   {{#if expertAnalysis}}
-  A human expert palm reader has provided the following analysis and directives. Use this as the PRIMARY basis for your report. Integrate the user's details and palm images as supporting information or for aspects not explicitly covered by the expert.
+  A human expert palm reader has provided the following analysis and directives. Use this as the PRIMARY basis for your report. Integrate the user's details and palm images as supporting information or for aspects not explicitly covered by the expert. The user has provided a front and a side view of their dominant hand. Pay special attention to the side view for analyzing lines related to relationships and children.
 
   Expert Analysis & Directives:
   {{{expertAnalysis}}}
 
   User Details for context:
-  Left Palm: {{media url=leftPalmDataUri}}
-  Right Palm: {{media url=rightPalmDataUri}}
+  Front of Dominant Palm: {{media url=frontPalmDataUri}}
+  Side of Dominant Palm: {{media url=sidePalmDataUri}}
   Date of Birth: {{{dateOfBirth}}}
   Place of Birth: {{{placeOfBirth}}}
   Time of Birth: {{{timeOfBirth}}}
@@ -63,10 +63,10 @@ const prompt = ai.definePrompt({
 
   Generate a comprehensive palm reading report based PRIMARILY on the expert's analysis. Ensure it aligns with the specified category and incorporates the user's details where relevant and not contradictory to the expert's input. The final report should be well-structured, insightful, and directly address the user.
   {{else}}
-  Analyze the user's palms and provide a detailed report based on the information provided.
+  Analyze the user's dominant palm and provide a detailed report based on the information provided. The user has provided a front and a side view of their dominant hand. Pay special attention to the side view for analyzing lines related to relationships and children.
 
-  Left Palm: {{media url=leftPalmDataUri}}
-  Right Palm: {{media url=rightPalmDataUri}}
+  Front of Dominant Palm: {{media url=frontPalmDataUri}}
+  Side of Dominant Palm: {{media url=sidePalmDataUri}}
   Date of Birth: {{{dateOfBirth}}}
   Place of Birth: {{{placeOfBirth}}}
   Time of Birth: {{{timeOfBirth}}}
