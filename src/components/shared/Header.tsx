@@ -1,4 +1,3 @@
-
 "use client";
 import Link from 'next/link';
 import { Hand, LogOut, Edit, ShieldCheck, BookOpen, Calculator, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap, Handshake } from 'lucide-react';
@@ -14,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from 'react';
+import ClientOnly from '@/components/shared/ClientOnly';
 
 const readingTypes = [
   { name: "General Personality", query: "General Personality" },
@@ -121,12 +121,14 @@ const Header = () => {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {isAuthenticated && (
-              <Link href="/report" className={getLinkClassName(activeStates.isReportPageActive)}>
-                <BookOpen className="mr-1.5 h-4 w-4" /> My Reading
-              </Link>
-          )}
+          
+          <ClientOnly>
+            {isAuthenticated && (
+                <Link href="/report" className={getLinkClassName(activeStates.isReportPageActive)}>
+                  <BookOpen className="mr-1.5 h-4 w-4" /> My Reading
+                </Link>
+            )}
+          </ClientOnly>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -153,42 +155,43 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center gap-2 ml-auto">
-          {isAuthenticated && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="rounded-full h-9 w-9 p-0 sm:h-10 sm:w-10 hover:bg-primary/80">
-                  <UserCircle className="h-6 w-6 sm:h-7 sm:w-7" />
-                  <span className="sr-only">Open user menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-primary border-primary-foreground/20 text-primary-foreground w-48">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {isEditor ? "Editor" : isAdmin ? "Admin" : (userName || "User")}
-                    </p>
-                    {!(isEditor || isAdmin) && userName && (
-                        <p className="text-xs leading-none text-primary-foreground/80">
-                        {userName.includes('@') ? userName : `${userName.substring(0,10)}...`}
-                        </p>
-                    )}
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-primary-foreground/20"/>
-                {isEditor && (
-                  <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                    <Link href="/editor">
-                      <Edit className="mr-2 h-4 w-4" /> Editor Panel
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {isAdmin && (
-                  <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                    <Link href="/admin">
-                      <ShieldCheck className="mr-2 h-4 w-4" /> Admin Panel
-                    </Link>
-                  </DropdownMenuItem>
-                )}
+          <ClientOnly>
+            {isAuthenticated && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="rounded-full h-9 w-9 p-0 sm:h-10 sm:w-10 hover:bg-primary/80">
+                    <UserCircle className="h-6 w-6 sm:h-7 sm:w-7" />
+                    <span className="sr-only">Open user menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-primary border-primary-foreground/20 text-primary-foreground w-48">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {isEditor ? "Editor" : isAdmin ? "Admin" : (userName || "User")}
+                      </p>
+                      {!(isEditor || isAdmin) && userName && (
+                          <p className="text-xs leading-none text-primary-foreground/80">
+                          {userName.includes('@') ? userName : `${userName.substring(0,10)}...`}
+                          </p>
+                      )}
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-primary-foreground/20"/>
+                  {isEditor && (
+                    <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
+                      <Link href="/editor">
+                        <Edit className="mr-2 h-4 w-4" /> Editor Panel
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {isAdmin && (
+                    <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
+                      <Link href="/admin">
+                        <ShieldCheck className="mr-2 h-4 w-4" /> Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                  {isAuthenticated && !isEditor && !isAdmin && (
                     <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
                         <Link href="/report">
@@ -201,12 +204,31 @@ const Header = () => {
                   <LogOut className="mr-2 h-4 w-4" /> Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-          <Button variant="ghost" className="md:hidden h-9 w-9 p-0 sm:h-10 sm:w-10 hover:bg-primary/80">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-            <span className="sr-only">Toggle menu</span>
-          </Button>
+              </DropdownMenu>
+            )}
+          </ClientOnly>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="md:hidden h-9 w-9 p-0 sm:h-10 sm:w-10 hover:bg-primary/80">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-primary border-primary-foreground/20 text-primary-foreground md:hidden w-48">
+                 <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/">Home</Link></DropdownMenuItem>
+                 <DropdownMenuSeparator className="bg-primary-foreground/20"/>
+                 <DropdownMenuLabel>Palmistry</DropdownMenuLabel>
+                 {readingTypes.map(item => <DropdownMenuItem key={item.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href={`/palm-input?category=${encodeURIComponent(item.query)}`}>{item.name}</Link></DropdownMenuItem>)}
+                 <DropdownMenuSeparator className="bg-primary-foreground/20"/>
+                 <DropdownMenuLabel>Numerology</DropdownMenuLabel>
+                 {numerologyServicesConst.map(item => <DropdownMenuItem key={item.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href={`/numerology-input?service=${encodeURIComponent(item.query)}`}>{item.name}</Link></DropdownMenuItem>)}
+                 <DropdownMenuSeparator className="bg-primary-foreground/20"/>
+                 <ClientOnly>
+                    {isAuthenticated && <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/report">My Reading</Link></DropdownMenuItem>}
+                 </ClientOnly>
+                 <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/products">Products</Link></DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
