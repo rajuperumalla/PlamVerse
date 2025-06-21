@@ -130,7 +130,6 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
       toast({ title: "Generation Error", description: "Failed to generate palm reading. Please try again.", variant: "destructive" });
       router.push('/');
     } finally {
-      setHasPaid(false); // Consume payment token
       sessionStorage.removeItem(SESSION_STORAGE_KEY);
       if(isOperationInProgress) stopOperation();
     }
@@ -272,7 +271,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
                     disabled={isOperationInProgress}
                 >
                     <Sparkles className="mr-2 h-5 w-5" />
-                    {hasPaid ? 'Generate Palm Reading' : 'Proceed to Payment'}
+                    Generate Palm Reading
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">* All fields required to generate your report.</p>

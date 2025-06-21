@@ -264,7 +264,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setIsAuthenticated(false);
     setUserName(null);
-    setHasPaid(false);
     setIsEditor(false);
     setIsAdmin(false);
 
