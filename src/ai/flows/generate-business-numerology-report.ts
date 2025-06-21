@@ -17,7 +17,7 @@ const GenerateBusinessNumerologyInputSchema = z.object({
   founderFullName: z.string().describe("The full name of the business founder or key person."),
   founderDOB: z.string().describe("The date of birth of the founder (YYYY-MM-DD)."),
   founderTOB: z.string().optional().describe("The time of birth of the founder (HH:MM), if known."),
-  // expertAnalysis: z.string().optional().describe('Detailed analysis and interpretation notes provided by a human expert numerologist. This should guide the AI generation if present.'),
+  expertAnalysis: z.string().optional().describe('Detailed analysis and interpretation notes provided by a human expert numerologist. This should guide the AI generation if present.'),
 });
 export type GenerateBusinessNumerologyInput = z.infer<typeof GenerateBusinessNumerologyInputSchema>;
 
@@ -70,42 +70,7 @@ const generateBusinessNumerologyReportFlow = ai.defineFlow(
     outputSchema: GenerateBusinessNumerologyOutputSchema,
   },
   async (input) => {
-    // Simulate a dummy report for now
-    // In a real scenario, you would call the 'prompt' function:
-    // const {output} = await prompt(input);
-    // return output!;
-    
-    const dummyReport = `
-## Business Numerology Report for: ${input.businessName}
-
-**Founder:** ${input.founderFullName} (DOB: ${input.founderDOB})
-
-**Introduction:**
-This is a simulated numerology report for the business "${input.businessName}". Numerology offers insights into the vibrational energies associated with names and numbers, which can influence a business's journey. This analysis considers the interplay between the business name and the founder's core numerological profile.
-
-**Business Name Vibration (Simulated Analysis):**
-The name "${input.businessName}" resonates with the simulated number X. This number typically suggests [Simulated Positive Trait 1, e.g., innovation and dynamism] and [Simulated Positive Trait 2, e.g., strong foundational growth]. Potential challenges associated with this vibration could involve [Simulated Challenge, e.g., managing rapid expansion or maintaining focus].
-
-**Founder's Influence (Simulated Analysis):**
-${input.founderFullName}'s Life Path number (derived from DOB ${input.founderDOB}) is Y (simulated). This indicates a natural inclination towards [Simulated Founder Trait 1, e.g., leadership and strategic thinking]. The compatibility between the founder's core numbers and the business name's vibration is [Simulated Compatibility Level, e.g., generally harmonious, suggesting good synergy].
-
-**Key Insights & Recommendations (Simulated):**
-*   **Branding & Attraction:** The name "${input.businessName}" is likely to attract [Simulated Target Audience/Market Segment]. To enhance this, consider [Simulated Branding Tip].
-*   **Financial Growth:** The combined energies suggest potential for [Simulated Financial Outlook, e.g., steady financial growth through consistent effort]. Focus on [Simulated Financial Advice] to maximize this potential.
-*   **Operational Harmony:** [Simulated Operational Insight, e.g., The name supports a collaborative team environment.]
-
-**Additional Names Considered (Simulated, if provided):**
-{{#if input.additionalBusinessNames}}
-The following additional names were considered:
-${input.additionalBusinessNames}
-A detailed analysis for these would follow a similar pattern.
-{{/if}}
-
-**Conclusion (Simulated):**
-This simulated numerology report suggests that "${input.businessName}" has a [Simulated Overall Outlook, e.g., promising vibrational foundation]. By understanding these energies, the founder can make informed decisions to steer the business towards its highest potential.
-
-**Disclaimer:** This is a simulated report for demonstration purposes. A real numerology analysis involves complex calculations and deeper intuitive interpretation.
-    `;
-    return { report: dummyReport.trim() };
+    const {output} = await prompt(input);
+    return output!;
   }
 );

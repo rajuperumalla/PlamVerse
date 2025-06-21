@@ -19,7 +19,7 @@ const GenerateBabyNameNumerologyInputSchema = z.object({
   parent1DOB: z.string().optional().describe("The date of birth of the first parent (YYYY-MM-DD), if provided."),
   parent2FullName: z.string().optional().describe("The full name of the second parent, if applicable."),
   parent2DOB: z.string().optional().describe("The date of birth of the second parent (YYYY-MM-DD), if applicable."),
-  // expertAnalysis: z.string().optional().describe('Detailed analysis and interpretation notes provided by a human expert numerologist. This should guide the AI generation if present.'),
+  expertAnalysis: z.string().optional().describe('Detailed analysis and interpretation notes provided by a human expert numerologist. This should guide the AI generation if present.'),
 });
 export type GenerateBabyNameNumerologyInput = z.infer<typeof GenerateBabyNameNumerologyInputSchema>;
 
@@ -72,46 +72,7 @@ const generateBabyNameNumerologyReportFlow = ai.defineFlow(
     outputSchema: GenerateBabyNameNumerologyOutputSchema,
   },
   async (input) => {
-    // Simulate a dummy report for now
-    const parent1Details = input.parent1FullName && input.parent1DOB 
-      ? `${input.parent1FullName} (DOB: ${input.parent1DOB})` 
-      : (input.parent1FullName ? `${input.parent1FullName} (DOB: Not Provided)` : 'Parent 1 details not fully provided');
-
-    const parent2Details = input.parent2FullName && input.parent2DOB
-      ? ` & ${input.parent2FullName} (DOB: ${input.parent2DOB})`
-      : (input.parent2FullName ? ` & ${input.parent2FullName} (DOB: Not Provided)` : '');
-
-    const dummyReport = `
-## Baby Name Numerology Report
-
-**For Child Born:** ${input.childDOB} ${input.childTOB ? `(TOB: ${input.childTOB})` : ''}
-**Parents:** ${parent1Details}${parent2Details}
-
-**Proposed Names:**
-${input.proposedNames.map(name => `- ${name}`).join('\n')}
-
-**Introduction (Simulated):**
-This is a simulated numerology report to guide you in choosing a harmonious name for your child. Numerology suggests that names carry vibrational energies that can influence a child's development and life path.
-
-**Analysis of Proposed Names (Simulated):**
-${input.proposedNames.map((name, index) => `
-### Name: ${name}
-*   **Simulated Name Number:** ${index + 1} (Derived from a simplified calculation for "${name}")
-*   **Simulated Characteristics:** This name vibration suggests potential for [Simulated Trait A for ${name}, e.g., creativity and expression] and [Simulated Trait B for ${name}, e.g., leadership qualities].
-*   **Simulated Compatibility with Child's DOB:** The name "${name}" has a [Simulated Compatibility Level, e.g., harmonious, moderately challenging] vibrational match with the child's core numbers (derived from ${input.childDOB}).
-*   **Simulated Parental Compatibility:** Consideration of parental numerology (Parent 1: ${input.parent1FullName || 'N/A'}, Parent 2: ${input.parent2FullName || 'N/A'}) suggests [Simulated Parental Insight for ${name}].
-`).join('')}
-
-**Recommendations (Simulated):**
-Based on this simulated analysis:
-*   The name "[Simulated Recommended Name from list, e.g., ${input.proposedNames[0] || 'Proposed Name 1'}]" appears to offer a strong balance of positive attributes and compatibility.
-*   Consider the long-term implications of each name's vibration.
-
-**Conclusion (Simulated):**
-Choosing a name is a significant decision. This simulated report offers a glimpse into numerological perspectives. For a deeper, personalized analysis, our experts would perform more intricate calculations and interpretations.
-
-**Disclaimer:** This is a simulated report for demonstration purposes. Real numerology analysis involves complex calculations and intuitive interpretation.
-    `;
-    return { report: dummyReport.trim() };
+    const {output} = await prompt(input);
+    return output!;
   }
 );
