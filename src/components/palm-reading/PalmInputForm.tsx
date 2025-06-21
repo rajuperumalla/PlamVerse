@@ -70,16 +70,8 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
 
   const handleSubmit = async () => {
     // 1. Validate all required fields upfront
-    if (!leftPalmPreview) {
-      toast({ title: "Missing Image", description: "Please upload an image of your left palm.", variant: "destructive" });
-      return;
-    }
-    if (!rightPalmPreview) {
-      toast({ title: "Missing Image", description: "Please upload an image of your right palm.", variant: "destructive" });
-      return;
-    }
-    if (!dateOfBirth || !placeOfBirth || !dominantHand || !category) {
-      toast({ title: "Missing Information", description: "Please fill all required fields: Date of Birth, Place of Birth, Dominant Hand, and Category.", variant: "destructive" });
+    if (!leftPalmPreview || !rightPalmPreview || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
+      toast({ title: "Missing Information", description: "Please complete all required fields and upload both palm images.", variant: "destructive" });
       return;
     }
 
@@ -142,7 +134,6 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
   };
 
   useEffect(() => {
-    setCategory(categoryFromQuery || '');
     const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (persistedFormDataJson) {
       const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
@@ -150,12 +141,11 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
       setPlaceOfBirth(persistedData.placeOfBirth || '');
       setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
       setDominantHand(persistedData.dominantHand || '');
-      // The category from URL should take precedence
-      if (!categoryFromQuery) {
-        setCategory(persistedData.category || '');
-      }
+      setCategory(categoryFromQuery || persistedData.category || '');
       setLeftPalmPreview(persistedData.leftPalmDataUri || null);
       setRightPalmPreview(persistedData.rightPalmDataUri || null);
+    } else {
+        setCategory(categoryFromQuery || '');
     }
   }, [categoryFromQuery]);
 
@@ -263,15 +253,15 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
                 </div>
 
                 <Button
-                type="submit"
-                className="w-full text-lg py-6 mt-8"
-                disabled={isOperationInProgress}
+                    type="submit"
+                    className="w-full text-lg py-6 mt-8"
+                    disabled={isOperationInProgress}
                 >
-                {isOperationInProgress ? (
-                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
-                ) : (
-                    <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</>
-                )}
+                    {isOperationInProgress ? (
+                        <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
+                    ) : (
+                        <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</>
+                    )}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">* All fields required to generate your report.</p>
             </form>
