@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -69,7 +70,7 @@ function PalmInputPageComponent() {
         {/* Navigation menu has been moved to Header.tsx and SubHeaderNavigation is removed */}
         {isValidCategorySelected ? (
           <>
-            <PalmInputForm categoryDescription={categoryDescription} />
+            <PalmInputForm categoryFromQuery={categoryFromQuery} categoryDescription={categoryDescription} />
             <div className="w-full space-y-8 mt-12">
               <Card className="shadow-lg bg-card/90 backdrop-blur-sm border border-border">
                 <CardHeader>

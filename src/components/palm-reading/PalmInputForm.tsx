@@ -25,10 +25,11 @@ const readingCategories = [
 ];
 
 interface PalmInputFormProps {
+  categoryFromQuery: string | null;
   categoryDescription?: string;
 }
 
-const PalmInputForm = ({ categoryDescription }: PalmInputFormProps) => {
+const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputFormProps) => {
   const [leftPalmImageFile, setLeftPalmImageFile] = useState<File | null>(null);
   const [rightPalmImageFile, setRightPalmImageFile] = useState<File | null>(null);
   const [leftPalmPreview, setLeftPalmPreview] = useState<string | null>(null);
@@ -38,7 +39,7 @@ const PalmInputForm = ({ categoryDescription }: PalmInputFormProps) => {
   const [placeOfBirth, setPlaceOfBirth] = useState('');
   const [timeOfBirth, setTimeOfBirth] = useState('');
   const [dominantHand, setDominantHand] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(categoryFromQuery || '');
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -53,15 +54,6 @@ const PalmInputForm = ({ categoryDescription }: PalmInputFormProps) => {
     markReportAsGenerationFailed,
   } = useAppContext();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (searchParams) {
-      const categoryFromQuery = searchParams.get('category');
-      if (categoryFromQuery && readingCategories.some(rc => rc.value === categoryFromQuery)) {
-        setCategory(categoryFromQuery);
-      }
-    }
-  }, [searchParams]);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setFile: (file: File | null) => void, setPreview: (url: string | null) => void) => {
     if (e.target.files && e.target.files[0]) {
@@ -174,7 +166,6 @@ const PalmInputForm = ({ categoryDescription }: PalmInputFormProps) => {
       const newParams = new URLSearchParams(currentSearchParamsString);
       newParams.delete('payment_success');
 
-      const categoryFromQuery = newParams.get('category');
       const basePath = '/palm-input';
       const finalRedirectPath = categoryFromQuery ? `${basePath}?category=${encodeURIComponent(categoryFromQuery)}` : basePath;
       router.replace(finalRedirectPath, { scroll: false });
@@ -241,15 +232,12 @@ const PalmInputForm = ({ categoryDescription }: PalmInputFormProps) => {
           if (isOperationInProgress) stopOperation();
         }
       } else {
-        const catFromQuery = searchParams.get('category');
-        if (catFromQuery && readingCategories.some(rc => rc.value === catFromQuery)) {
-            setCategory(catFromQuery);
-        }
+        setCategory(categoryFromQuery || '');
         toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
         if (isOperationInProgress) stopOperation();
       }
     }
-  }, [searchParams, hasPaid, userName, router, toast, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, isOperationInProgress]);
+  }, [searchParams, hasPaid, userName, router, toast, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, isOperationInProgress, categoryFromQuery]);
 
 
   useEffect(() => {
@@ -362,7 +350,7 @@ const PalmInputForm = ({ categoryDescription }: PalmInputFormProps) => {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
-                    <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress || !!searchParams?.get('category')} required>
+                    <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress || !!categoryFromQuery} required>
                     <SelectTrigger id="category">
                         <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
