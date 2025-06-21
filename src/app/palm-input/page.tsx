@@ -103,7 +103,11 @@ function PalmInputPageComponent() {
             };
 
             initialReportId = createInitialReportPlaceholder(reportDetailsForPlaceholder);
-            toast({ title: "Request Received", description: "Your report is being prepared.", duration: 5000 });
+             toast({
+                title: "Request Submitted for Review",
+                description: "Your palm reading information has been sent to our experts. Your report will be available in 'My Reading' once ready.",
+                duration: 5000
+            });
 
             const aiFlowInput: GeneratePalmReadingInput = {
               leftPalmDataUri: persistedData.leftPalmDataUri!,

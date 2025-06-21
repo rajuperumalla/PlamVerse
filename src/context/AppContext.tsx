@@ -172,7 +172,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [userName, setUserName] = useState<string | null>(null);
   const [reports, setReports] = useState<ReportData[]>([]);
   const [isOperationInProgress, setIsOperationInProgress] = useState(false);
-  const [hasPaid, setHasPaidState] = useState(false);
+  const [hasPaid, setHasPaid] = useState(false);
   const [isEditor, setIsEditor] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
@@ -264,7 +264,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setIsAuthenticated(false);
     setUserName(null);
-    setHasPaidState(false);
+    setHasPaid(false);
     setIsEditor(false);
     setIsAdmin(false);
 
@@ -330,11 +330,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const updateReportWithGeneratedContent = (reportId: string, aiContent: string) => {
     const updatedReports = reports.map(report => {
       if (report.id === reportId) {
-        const newStatus = report.reportType === 'palmistry' ? 'approved' : report.status;
         return {
           ...report,
           content: aiContent,
-          status: newStatus,
+          status: 'pending_review',
           lastUpdateDate: new Date().toISOString(),
         };
       }
@@ -417,9 +416,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const startOperation = () => setIsOperationInProgress(true);
   const stopOperation = () => setIsOperationInProgress(false);
 
-  const setHasPaid = (paid: boolean) => {
-    setHasPaidState(paid);
-  };
 
   return (
     <AppContext.Provider value={{

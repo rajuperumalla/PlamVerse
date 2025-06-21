@@ -99,7 +99,11 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     let initialReportId = '';
     try {
       initialReportId = createInitialReportPlaceholder(reportInputDetails);
-      toast({ title: "Request Received", description: "Your report is being prepared and will be available under 'My Reading'.", duration: 5000 });
+      toast({
+        title: "Request Submitted for Review",
+        description: "Your palm reading information has been sent to our experts. Your report will be available in 'My Reading' once ready.",
+        duration: 5000
+      });
 
       const aiFlowInput: GeneratePalmReadingInput = {
         leftPalmDataUri: leftPalmPreview,
@@ -267,12 +271,10 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
                     className="w-full text-lg py-6 mt-8"
                     disabled={isOperationInProgress}
                 >
-                    {isOperationInProgress ? (
-                        <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
-                    ) : (
-                        <><Sparkles className="mr-2 h-5 w-5" /> Generate Analysis</>
-                    )}
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    {hasPaid ? 'Generate Palm Reading' : 'Proceed to Payment'}
                 </Button>
+
                 <p className="text-xs text-muted-foreground text-center">* All fields required to generate your report.</p>
             </form>
             </CardContent>
