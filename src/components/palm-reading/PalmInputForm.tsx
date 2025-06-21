@@ -94,6 +94,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
       return;
     }
 
+    // This part runs only if hasPaid is true (i.e., after returning from payment but auto-submit failed).
     startOperation();
     let initialReportId = '';
     try {
@@ -115,8 +116,6 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
           throw new Error("The AI model did not return a valid report.");
       }
       updateReportWithGeneratedContent(initialReportId, result.report);
-      setHasPaid(false); // Consume payment token
-      sessionStorage.removeItem(SESSION_STORAGE_KEY);
       router.push('/');
     } catch (error) {
       console.error("Error generating palm reading:", error);
@@ -127,6 +126,8 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
       toast({ title: "Generation Error", description: "Failed to generate palm reading. Please try again.", variant: "destructive" });
       router.push('/');
     } finally {
+      setHasPaid(false); // Consume payment token
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
       if(isOperationInProgress) stopOperation();
     }
   };

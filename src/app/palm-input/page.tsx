@@ -93,7 +93,6 @@ function PalmInputPageComponent() {
                               (categoryFromQuery || persistedData.category);
 
         if (canAutoSubmit) {
-          sessionStorage.removeItem('palmVerseCheckoutForm');
           startOperation();
           let initialReportId = '';
           try {
@@ -118,7 +117,6 @@ function PalmInputPageComponent() {
 
             const result = await generatePalmReading(aiFlowInput);
             updateReportWithGeneratedContent(initialReportId, result.report);
-            setHasPaid(false); // Consume payment token
             router.push('/');
           } catch (error) {
             console.error("Error auto-generating palm reading:", error);
@@ -129,6 +127,8 @@ function PalmInputPageComponent() {
             toast({ title: "Auto-Generation Error", description: `An issue occurred. Please try submitting again.`, variant: "destructive" });
             router.push('/');
           } finally {
+            setHasPaid(false); // Consume payment token
+            sessionStorage.removeItem('palmVerseCheckoutForm');
             if(isOperationInProgress) stopOperation();
           }
         } else {

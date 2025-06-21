@@ -98,11 +98,9 @@ function NumerologyInputPageComponent() {
         }
 
         if (canAutoSubmit) {
-          sessionStorage.removeItem(storageKey);
           startOperation();
           try {
             createInitialNumerologyReportPlaceholder(persistedData, serviceQuery); 
-            setHasPaid(false); // Consume payment token
             toast({ title: "Numerology Request Received", description: "Your report is being prepared and will be available under 'My Reading'.", duration: 5000 });
             router.push('/');
           } catch (error) {
@@ -110,6 +108,8 @@ function NumerologyInputPageComponent() {
             toast({ title: "Auto-Submission Error", description: "Failed to automatically submit your request. Please review and submit manually.", variant: "destructive" });
             router.push('/');
           } finally {
+            setHasPaid(false); // Consume payment token
+            sessionStorage.removeItem(storageKey);
             if(isOperationInProgress) stopOperation();
           }
         } else {

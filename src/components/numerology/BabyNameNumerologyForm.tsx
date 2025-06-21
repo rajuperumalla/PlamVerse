@@ -75,14 +75,14 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
     startOperation();
     try {
       createInitialNumerologyReportPlaceholder(reportInputDetails, SERVICE_QUERY);
-      setHasPaid(false); // Consume payment token
-      sessionStorage.removeItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY);
       toast({ title: "Numerology Request Received", description: "Your report is being prepared and will be available under 'My Reading'. Redirecting to Home...", duration: 5000 });
       router.push('/');
     } catch (error) {
       console.error("Error creating baby name numerology report placeholder:", error);
       toast({ title: "Request Error", description: "Failed to submit your numerology request. Please try again.", variant: "destructive" });
     } finally {
+      setHasPaid(false); // Consume payment token
+      sessionStorage.removeItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY);
       stopOperation();
     }
   };
