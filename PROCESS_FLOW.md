@@ -5,7 +5,7 @@ This document outlines the typical user journey through the PalmVerse applicatio
 ## 1. Landing and Authentication
 
 1.  **User Visits Home Page (`/`)**:
-    *   Sees a prominent Hero Banner ("Your First AI Palm Reading FREE!").
+    *   Sees a prominent Hero Banner ("Unlock the Secrets of Your Palm").
     *   Below the banner, `AuthOptions` component is displayed for Login/Registration alongside a "Spiritual Products Showcase".
     *   User interacts with `AuthOptions`.
 

@@ -36,7 +36,7 @@ export default function HomePage() {
     <>
       <div className="relative z-10 w-full max-w-3xl text-center mb-10">
         <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-4">
-          Your First AI Palm Reading FREE!
+          Unlock the Secrets of Your Palm
         </h1>
         <p className="text-muted-foreground text-lg md:text-xl mb-8">
           Discover your destiny, understand your personality, and unlock insights into your future.
@@ -47,7 +47,7 @@ export default function HomePage() {
           className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg md:text-xl py-3 md:py-4 px-6 md:px-8 shadow-lg animate-pulse-subtle mb-10"
         >
           <Link href="/palm-input?category=Comprehensive%20Analysis">
-            <Sparkles className="mr-2 h-5 w-5" /> Get Your FREE AI Reading
+            <Sparkles className="mr-2 h-5 w-5" /> Get Your AI Reading
           </Link>
         </Button>
       </div>

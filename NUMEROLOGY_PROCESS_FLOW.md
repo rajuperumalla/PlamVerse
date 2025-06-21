@@ -1,4 +1,3 @@
-
 # PalmVerse Numerology Services - User & Admin Process Flow
 
 This document outlines the typical user journey and administrative process for Numerology services within the PalmVerse application. This flow largely mirrors the Palmistry process.
@@ -24,7 +23,7 @@ This document outlines the typical user journey and administrative process for N
         *   **(Optional) Time of Birth**:
         *   Other fields specific to the service (e.g., current address for House Number Numerology, multiple name options for Business/Baby Name services).
     *   User fills in the required details.
-    *   User clicks the **"Proceed to Payment"** button (assuming a similar "first one free" or payment model as palmistry).
+    *   User clicks the **"Proceed to Payment"** button.
 
 4.  **Pre-Payment Data Handling**:
     *   The current form data is saved to **session storage**.
