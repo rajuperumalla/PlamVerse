@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useAppContext } from '@/context/AppContext';
@@ -47,7 +46,7 @@ export default function HomePage() {
           className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg md:text-xl py-3 md:py-4 px-6 md:px-8 shadow-lg animate-pulse-subtle mb-10"
         >
           <Link href="/palm-input?category=Comprehensive%20Analysis">
-            <Sparkles className="mr-2 h-5 w-5" /> Get Your AI Reading
+            <Sparkles className="mr-2 h-5 w-5" /> Get your Palm Reading
           </Link>
         </Button>
       </div>
@@ -158,7 +157,7 @@ export default function HomePage() {
                 <CardFooter className="justify-center pt-4 border-t">
                      <Button size="lg" asChild className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3 px-8 shadow-lg">
                         <Link href="/palm-input?category=Comprehensive%20Analysis">
-                            <Handshake className="mr-2 h-6 w-6" /> Get Your AI Palm Reading
+                            <Handshake className="mr-2 h-6 w-6" /> Get your Palm Reading
                         </Link>
                     </Button>
                 </CardFooter>
