@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, type ChangeEvent, type FormEvent, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -61,7 +60,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
       reader.onloadend = () => {
         setPreview(reader.result as string);
       };
-      reader.readDataURL(file);
+      reader.readAsDataURL(file);
     } else {
         setFile(null);
         setPreview(null);
@@ -70,8 +69,12 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
 
   const handleSubmit = async () => {
     // 1. Validate all required fields upfront
-    if (!leftPalmPreview || !rightPalmPreview || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
-      toast({ title: "Missing Information", description: "Please complete all required fields and upload both palm images.", variant: "destructive" });
+    if (!leftPalmPreview || !rightPalmPreview) {
+        toast({ title: "Missing Images", description: "Please upload both palm images to proceed.", variant: "destructive" });
+        return;
+    }
+    if (!dateOfBirth || !placeOfBirth || !dominantHand || !category) {
+      toast({ title: "Missing Information", description: "Please complete all required fields.", variant: "destructive" });
       return;
     }
 
@@ -112,6 +115,9 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
       };
 
       const result = await generatePalmReading(aiFlowInput);
+      if (!result || !result.report) {
+          throw new Error("The AI model did not return a valid report.");
+      }
       updateReportWithGeneratedContent(initialReportId, result.report);
       sessionStorage.removeItem(SESSION_STORAGE_KEY);
       router.push('/');
@@ -124,7 +130,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
       toast({ title: "Generation Error", description: "Failed to generate palm reading. Please try again.", variant: "destructive" });
       router.push('/'); // Redirect home even on failure to avoid getting stuck
     } finally {
-      stopOperation();
+      if(isOperationInProgress) stopOperation();
     }
   };
 
@@ -134,20 +140,30 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
   };
 
   useEffect(() => {
+    // When the component mounts, check for persisted form data from session storage
     const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (persistedFormDataJson) {
-      const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
-      setDateOfBirth(persistedData.dateOfBirth || '');
-      setPlaceOfBirth(persistedData.placeOfBirth || '');
-      setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
-      setDominantHand(persistedData.dominantHand || '');
-      setCategory(categoryFromQuery || persistedData.category || '');
-      setLeftPalmPreview(persistedData.leftPalmDataUri || null);
-      setRightPalmPreview(persistedData.rightPalmDataUri || null);
-    } else {
-        setCategory(categoryFromQuery || '');
+      try {
+        const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
+        // Pre-fill the form fields from session storage data
+        setDateOfBirth(persistedData.dateOfBirth || '');
+        setPlaceOfBirth(persistedData.placeOfBirth || '');
+        setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
+        setDominantHand(persistedData.dominantHand || '');
+        setCategory(categoryFromQuery || persistedData.category || '');
+        setLeftPalmPreview(persistedData.leftPalmDataUri || null);
+        setRightPalmPreview(persistedData.rightPalmDataUri || null);
+      } catch (e) {
+          console.error("Failed to parse form data from session storage", e);
+          sessionStorage.removeItem(SESSION_STORAGE_KEY); // Clear corrupted data
+          setCategory(categoryFromQuery || '');
+      }
+    } else if(categoryFromQuery) {
+        // If there's no persisted data, but there's a category from query, set it.
+        setCategory(categoryFromQuery);
     }
   }, [categoryFromQuery]);
+
 
   const renderImagePreview = (previewUrl: string | null, palmName: string, dataAiHint: string) => (
     <div className="w-full h-48 border-2 border-dashed border-primary/50 rounded-lg flex items-center justify-center bg-muted/50 relative overflow-hidden">
@@ -260,7 +276,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
                     {isOperationInProgress ? (
                         <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                     ) : (
-                        <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</>
+                        hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
                     )}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">* All fields required to generate your report.</p>
