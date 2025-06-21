@@ -34,7 +34,8 @@ function NumerologyInputPageComponent() {
   const { 
     isAuthenticated, 
     isInitializing, 
-    hasPaid, 
+    hasPaid,
+    setHasPaid,
     userName, 
     startOperation, 
     stopOperation, 
@@ -101,6 +102,7 @@ function NumerologyInputPageComponent() {
           startOperation();
           try {
             createInitialNumerologyReportPlaceholder(persistedData, serviceQuery); 
+            setHasPaid(false); // Consume payment token
             toast({ title: "Numerology Request Received", description: "Your report is being prepared and will be available under 'My Reading'.", duration: 5000 });
             router.push('/');
           } catch (error) {
@@ -119,7 +121,7 @@ function NumerologyInputPageComponent() {
         toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
       }
     }
-  }, [searchParams, hasPaid, userName, serviceQuery, router, toast, startOperation, stopOperation, createInitialNumerologyReportPlaceholder, isOperationInProgress]);
+  }, [searchParams, hasPaid, setHasPaid, userName, serviceQuery, router, toast, startOperation, stopOperation, createInitialNumerologyReportPlaceholder, isOperationInProgress]);
 
   useEffect(() => {
     attemptAutoSubmitAfterPayment();

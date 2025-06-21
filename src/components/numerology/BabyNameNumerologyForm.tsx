@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, type FormEvent, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -33,6 +34,7 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
     stopOperation,
     isOperationInProgress,
     hasPaid,
+    setHasPaid,
     createInitialNumerologyReportPlaceholder,
   } = useAppContext();
   const { toast } = useToast();
@@ -70,10 +72,11 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
     }
 
     // Post-payment submission logic
-    sessionStorage.removeItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY);
     startOperation();
     try {
       createInitialNumerologyReportPlaceholder(reportInputDetails, SERVICE_QUERY);
+      setHasPaid(false); // Consume payment token
+      sessionStorage.removeItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY);
       toast({ title: "Numerology Request Received", description: "Your report is being prepared and will be available under 'My Reading'. Redirecting to Home...", duration: 5000 });
       router.push('/');
     } catch (error) {

@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, type ChangeEvent, type FormEvent, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -46,6 +47,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     stopOperation,
     isOperationInProgress,
     hasPaid,
+    setHasPaid,
     createInitialReportPlaceholder,
     updateReportWithGeneratedContent,
     markReportAsGenerationFailed,
@@ -70,17 +72,11 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // 1. Validate all required fields upfront
-    if (!leftPalmPreview || !rightPalmPreview) {
-        toast({ title: "Missing Images", description: "Please upload both palm images to proceed.", variant: "destructive" });
-        return;
-    }
-    if (!dateOfBirth || !placeOfBirth || !dominantHand || !category) {
-      toast({ title: "Missing Information", description: "Please complete all required fields.", variant: "destructive" });
+    if (!leftPalmPreview || !rightPalmPreview || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
+      toast({ title: "Missing Information", description: "Please complete all required fields and upload images.", variant: "destructive" });
       return;
     }
 
-    // 2. Create details object and save to session storage
     const reportInputDetails: ReportPalmInputDetails = {
       leftPalmDataUri: leftPalmPreview,
       rightPalmDataUri: rightPalmPreview,
@@ -92,14 +88,12 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     };
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(reportInputDetails));
 
-    // 3. Route to payment if not paid
     if (!hasPaid) {
       const returnPath = `/palm-input${category ? `?category=${encodeURIComponent(category)}` : ''}`;
       router.push(`/payment?service_type=palmistry&return_path=${encodeURIComponent(returnPath)}`);
       return;
     }
 
-    // 4. If paid, proceed with generation
     startOperation();
     let initialReportId = '';
     try {
@@ -121,6 +115,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
           throw new Error("The AI model did not return a valid report.");
       }
       updateReportWithGeneratedContent(initialReportId, result.report);
+      setHasPaid(false); // Consume payment token
       sessionStorage.removeItem(SESSION_STORAGE_KEY);
       router.push('/');
     } catch (error) {
@@ -130,19 +125,17 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
         markReportAsGenerationFailed(initialReportId, `Report generation failed: ${errorMessage}`);
       }
       toast({ title: "Generation Error", description: "Failed to generate palm reading. Please try again.", variant: "destructive" });
-      router.push('/'); // Redirect home even on failure to avoid getting stuck
+      router.push('/');
     } finally {
       if(isOperationInProgress) stopOperation();
     }
   };
 
-  useEffect(() => {
-    // When the component mounts, check for persisted form data from session storage
+  const loadPersistedData = useCallback(() => {
     const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (persistedFormDataJson) {
       try {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
-        // Pre-fill the form fields from session storage data
         setDateOfBirth(persistedData.dateOfBirth || '');
         setPlaceOfBirth(persistedData.placeOfBirth || '');
         setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
@@ -152,14 +145,17 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
         setRightPalmPreview(persistedData.rightPalmDataUri || null);
       } catch (e) {
           console.error("Failed to parse form data from session storage", e);
-          sessionStorage.removeItem(SESSION_STORAGE_KEY); // Clear corrupted data
+          sessionStorage.removeItem(SESSION_STORAGE_KEY);
           setCategory(categoryFromQuery || '');
       }
     } else if(categoryFromQuery) {
-        // If there's no persisted data, but there's a category from query, set it.
         setCategory(categoryFromQuery);
     }
   }, [categoryFromQuery]);
+
+  useEffect(() => {
+    loadPersistedData();
+  }, [loadPersistedData]);
 
 
   const renderImagePreview = (previewUrl: string | null, palmName: string, dataAiHint: string) => (

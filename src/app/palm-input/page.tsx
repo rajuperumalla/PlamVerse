@@ -34,7 +34,8 @@ function PalmInputPageComponent() {
   const { 
     isAuthenticated, 
     isInitializing,
-    hasPaid, 
+    hasPaid,
+    setHasPaid, 
     userName, 
     startOperation, 
     stopOperation, 
@@ -117,6 +118,7 @@ function PalmInputPageComponent() {
 
             const result = await generatePalmReading(aiFlowInput);
             updateReportWithGeneratedContent(initialReportId, result.report);
+            setHasPaid(false); // Consume payment token
             router.push('/');
           } catch (error) {
             console.error("Error auto-generating palm reading:", error);
@@ -138,7 +140,7 @@ function PalmInputPageComponent() {
         toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
       }
     }
-  }, [searchParams, hasPaid, userName, router, toast, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, isOperationInProgress, categoryFromQuery]);
+  }, [searchParams, hasPaid, setHasPaid, userName, router, toast, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, isOperationInProgress, categoryFromQuery]);
 
   useEffect(() => {
     attemptAutoSubmitAfterPayment();
