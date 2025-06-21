@@ -90,6 +90,7 @@ interface AppContextType extends AppState {
 const AppContext = createContext<AppContextType | null>(null);
 
 const REPORTS_STORAGE_KEY = 'palmverse_reports_array';
+const HAS_PAID_STORAGE_KEY = 'palmverse_hasPaid_session';
 
 const createSampleReport = (idSuffix: number, category: string, userName: string, status: ReportData['status'], reportType: 'palmistry' | 'numerology'): ReportData => {
   const baseDate = new Date();
@@ -172,10 +173,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [userName, setUserName] = useState<string | null>(null);
   const [reports, setReports] = useState<ReportData[]>([]);
   const [isOperationInProgress, setIsOperationInProgress] = useState(false);
-  const [hasPaid, setHasPaid] = useState(false);
+  const [hasPaid, _setHasPaid] = useState(false);
   const [isEditor, setIsEditor] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
+
+  const setHasPaid = (paid: boolean) => {
+    _setHasPaid(paid);
+    if (typeof window !== 'undefined') {
+        if (paid) {
+            sessionStorage.setItem(HAS_PAID_STORAGE_KEY, 'true');
+        } else {
+            sessionStorage.removeItem(HAS_PAID_STORAGE_KEY);
+        }
+    }
+  };
 
   const persistReports = (updatedReports: ReportData[]) => {
     setReports(updatedReports);
@@ -205,6 +217,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const storedIsEditor = sessionStorage.getItem('palmverse_isEditor');
         const storedIsAdmin = sessionStorage.getItem('palmverse_isAdmin');
         const storedReports = localStorage.getItem(REPORTS_STORAGE_KEY);
+        const storedHasPaid = sessionStorage.getItem(HAS_PAID_STORAGE_KEY);
+        
+        if (storedHasPaid === 'true') {
+            _setHasPaid(true);
+        }
 
         if (storedAuth === 'true' && storedName) {
             setIsAuthenticated(true);
@@ -271,6 +288,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.removeItem('palmverse_userName');
     sessionStorage.removeItem('palmverse_isEditor');
     sessionStorage.removeItem('palmverse_isAdmin');
+    sessionStorage.removeItem(HAS_PAID_STORAGE_KEY);
 
     router.push('/');
   };
