@@ -42,13 +42,11 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
   const [category, setCategory] = useState(categoryFromQuery || '');
 
   const router = useRouter();
-  const searchParams = useSearchParams();
   const {
     startOperation,
     stopOperation,
     isOperationInProgress,
     hasPaid,
-    userName,
     createInitialReportPlaceholder,
     updateReportWithGeneratedContent,
     markReportAsGenerationFailed,
@@ -63,7 +61,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
       reader.onloadend = () => {
         setPreview(reader.result as string);
       };
-      reader.readAsDataURL(file);
+      reader.readDataURL(file);
     } else {
         setFile(null);
         setPreview(null);
@@ -75,7 +73,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = reject;
-      reader.readAsDataURL(file);
+      reader.readDataURL(file);
     });
   };
 
@@ -125,7 +123,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
       };
 
       initialReportId = createInitialReportPlaceholder(finalReportInputDetails);
-      toast({ title: "Request Received", description: "Your report is being prepared and will be available under 'My Reading'. Redirecting to Home...", duration: 5000 });
+      toast({ title: "Request Received", description: "Your report is being prepared and will be available under 'My Reading'.", duration: 5000 });
 
       const aiFlowInput: GeneratePalmReadingInput = {
         leftPalmDataUri: leftPalmDataUriFromFile,
@@ -158,91 +156,20 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     handleSubmitOrProceedToPayment();
   };
 
-  const attemptAutoSubmitAfterPayment = useCallback(async () => {
-    if (searchParams && searchParams.get('payment_success') === 'true' && hasPaid && userName) {
-      const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
-
-      const currentSearchParamsString = searchParams.toString();
-      const newParams = new URLSearchParams(currentSearchParamsString);
-      newParams.delete('payment_success');
-
-      const basePath = '/palm-input';
-      const finalRedirectPath = categoryFromQuery ? `${basePath}?category=${encodeURIComponent(categoryFromQuery)}` : basePath;
-      router.replace(finalRedirectPath, { scroll: false });
-
-
-      if (persistedFormDataJson) {
-        const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
-
-        setDateOfBirth(persistedData.dateOfBirth || '');
-        setPlaceOfBirth(persistedData.placeOfBirth || '');
-        setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
-        setDominantHand(persistedData.dominantHand || '');
-        setCategory(categoryFromQuery || persistedData.category || '');
-        setLeftPalmPreview(persistedData.leftPalmDataUri || null);
-        setRightPalmPreview(persistedData.rightPalmDataUri || null);
-
-        if (
-          persistedData.leftPalmDataUri &&
-          persistedData.rightPalmDataUri &&
-          persistedData.dateOfBirth &&
-          persistedData.placeOfBirth &&
-          persistedData.dominantHand &&
-          (categoryFromQuery || persistedData.category)
-        ) {
-          sessionStorage.removeItem(SESSION_STORAGE_KEY);
-          startOperation();
-          let initialReportId = '';
-          try {
-            const finalCategoryForReport = categoryFromQuery || persistedData.category;
-            const reportDetailsForPlaceholder: ReportPalmInputDetails = {
-                ...persistedData,
-                category: finalCategoryForReport!,
-            };
-
-            initialReportId = createInitialReportPlaceholder(reportDetailsForPlaceholder);
-            toast({ title: "Request Received", description: "Your report is being prepared and will be available under 'My Reading'. Redirecting to Home...", duration: 5000 });
-
-            const aiFlowInput: GeneratePalmReadingInput = {
-              leftPalmDataUri: persistedData.leftPalmDataUri,
-              rightPalmDataUri: persistedData.rightPalmDataUri,
-              dateOfBirth: persistedData.dateOfBirth,
-              placeOfBirth: persistedData.placeOfBirth,
-              timeOfBirth: persistedData.timeOfBirth || "Not specified",
-              dominantHand: persistedData.dominantHand,
-              category: finalCategoryForReport!,
-            };
-
-            const result = await generatePalmReading(aiFlowInput);
-            updateReportWithGeneratedContent(initialReportId, result.report);
-            router.push('/');
-          } catch (error) {
-            console.error("Error auto-generating palm reading:", error);
-            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during auto-generation.";
-            if (initialReportId) {
-               markReportAsGenerationFailed(initialReportId, `Auto-generation failed after payment: ${errorMessage}`);
-            }
-            toast({ title: "Auto-Generation Error", description: `An issue occurred while automatically preparing your report. Please try submitting your details again from the palm input page.`, variant: "destructive" });
-            router.push('/');
-          } finally {
-            if(isOperationInProgress) stopOperation();
-          }
-        } else {
-          toast({ title: "Payment Successful", description: "Please complete any missing fields and upload images if necessary, then click 'Generate Palm Reading'." });
-          if (isOperationInProgress) stopOperation();
-        }
-      } else {
-        setCategory(categoryFromQuery || '');
-        toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
-        if (isOperationInProgress) stopOperation();
-      }
-    }
-  }, [searchParams, hasPaid, userName, router, toast, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, isOperationInProgress, categoryFromQuery]);
-
-
+  // Pre-fill form from session storage on initial load
   useEffect(() => {
-    attemptAutoSubmitAfterPayment();
-  }, [attemptAutoSubmitAfterPayment]);
+    const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (persistedFormDataJson) {
+      const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
+      setDateOfBirth(persistedData.dateOfBirth || '');
+      setPlaceOfBirth(persistedData.placeOfBirth || '');
+      setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
+      setDominantHand(persistedData.dominantHand || '');
+      setCategory(categoryFromQuery || persistedData.category || '');
+      setLeftPalmPreview(persistedData.leftPalmDataUri || null);
+      setRightPalmPreview(persistedData.rightPalmDataUri || null);
+    }
+  }, [categoryFromQuery]);
 
   const renderImagePreview = (previewUrl: string | null, palmName: string, dataAiHint: string) => (
     <div className="w-full h-48 border-2 border-dashed border-primary/50 rounded-lg flex items-center justify-center bg-muted/50 relative overflow-hidden">
@@ -260,8 +187,8 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
   );
 
   const isReadyForManualSubmitAfterPayment =
-    leftPalmImageFile &&
-    rightPalmImageFile &&
+    (leftPalmImageFile || leftPalmPreview) &&
+    (rightPalmImageFile || rightPalmPreview) &&
     dateOfBirth &&
     placeOfBirth &&
     dominantHand &&

@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import PalmInputForm from '@/components/palm-reading/PalmInputForm';
-import { useAppContext } from '@/context/AppContext';
+import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext';
 import { Loader2, Sparkles, ArrowRight, Search, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { generatePalmReading, type GeneratePalmReadingInput } from '@/ai/flows/generate-palm-reading';
+import { useToast } from '@/hooks/use-toast';
 
 
 const productCategories = [
@@ -29,10 +31,23 @@ const readingTypes = [
 
 
 function PalmInputPageComponent() {
-  const { isAuthenticated, isInitializing } = useAppContext();
+  const { 
+    isAuthenticated, 
+    isInitializing,
+    hasPaid, 
+    userName, 
+    startOperation, 
+    stopOperation, 
+    isOperationInProgress, 
+    createInitialReportPlaceholder,
+    updateReportWithGeneratedContent,
+    markReportAsGenerationFailed
+  } = useAppContext();
+  const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const categoryFromQuery = searchParams ? searchParams.get('category') : null;
   const selectedReadingType = readingTypes.find(rt => rt.query === categoryFromQuery);
@@ -52,6 +67,83 @@ function PalmInputPageComponent() {
     }
   }, [isAuthenticated, router, isInitializing]);
 
+  const attemptAutoSubmitAfterPayment = useCallback(async () => {
+    if (searchParams && searchParams.get('payment_success') === 'true' && hasPaid && userName) {
+      setIsProcessingPayment(true);
+      const persistedFormDataJson = sessionStorage.getItem('palmVerseCheckoutForm');
+
+      const currentSearchParamsString = searchParams.toString();
+      const newParams = new URLSearchParams(currentSearchParamsString);
+      newParams.delete('payment_success');
+
+      const basePath = '/palm-input';
+      const finalRedirectPath = categoryFromQuery ? `${basePath}?category=${encodeURIComponent(categoryFromQuery)}` : basePath;
+      router.replace(finalRedirectPath, { scroll: false });
+
+
+      if (persistedFormDataJson) {
+        const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
+        
+        const canAutoSubmit = persistedData.leftPalmDataUri &&
+                              persistedData.rightPalmDataUri &&
+                              persistedData.dateOfBirth &&
+                              persistedData.placeOfBirth &&
+                              persistedData.dominantHand &&
+                              (categoryFromQuery || persistedData.category);
+
+        if (canAutoSubmit) {
+          sessionStorage.removeItem('palmVerseCheckoutForm');
+          startOperation();
+          let initialReportId = '';
+          try {
+            const finalCategoryForReport = categoryFromQuery || persistedData.category;
+            const reportDetailsForPlaceholder: ReportPalmInputDetails = {
+                ...persistedData,
+                category: finalCategoryForReport!,
+            };
+
+            initialReportId = createInitialReportPlaceholder(reportDetailsForPlaceholder);
+            toast({ title: "Request Received", description: "Your report is being prepared.", duration: 5000 });
+
+            const aiFlowInput: GeneratePalmReadingInput = {
+              leftPalmDataUri: persistedData.leftPalmDataUri!,
+              rightPalmDataUri: persistedData.rightPalmDataUri!,
+              dateOfBirth: persistedData.dateOfBirth,
+              placeOfBirth: persistedData.placeOfBirth,
+              timeOfBirth: persistedData.timeOfBirth || "Not specified",
+              dominantHand: persistedData.dominantHand,
+              category: finalCategoryForReport!,
+            };
+
+            const result = await generatePalmReading(aiFlowInput);
+            updateReportWithGeneratedContent(initialReportId, result.report);
+            router.push('/');
+          } catch (error) {
+            console.error("Error auto-generating palm reading:", error);
+            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during auto-generation.";
+            if (initialReportId) {
+               markReportAsGenerationFailed(initialReportId, `Auto-generation failed after payment: ${errorMessage}`);
+            }
+            toast({ title: "Auto-Generation Error", description: `An issue occurred. Please try submitting again.`, variant: "destructive" });
+            router.push('/');
+          } finally {
+            if(isOperationInProgress) stopOperation();
+          }
+        } else {
+          setIsProcessingPayment(false);
+          toast({ title: "Payment Successful", description: "Please complete any missing fields and upload images if necessary, then click 'Generate Palm Reading'." });
+        }
+      } else {
+        setIsProcessingPayment(false);
+        toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
+      }
+    }
+  }, [searchParams, hasPaid, userName, router, toast, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, isOperationInProgress, categoryFromQuery]);
+
+  useEffect(() => {
+    attemptAutoSubmitAfterPayment();
+  }, [attemptAutoSubmitAfterPayment]);
+
 
   if (isInitializing || !authCheckComplete) {
     return (
@@ -62,12 +154,19 @@ function PalmInputPageComponent() {
     );
   }
 
+  if (isProcessingPayment) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Payment successful! Preparing your report...</p>
+        <p className="text-sm text-muted-foreground mt-2">Please wait, you will be redirected shortly.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative space-y-8 md:space-y-10">
-      {/* Background Image removed as it's too much with integrated nav potentially */}
       <div className="relative z-10">
-        {/* Navigation menu has been moved to Header.tsx and SubHeaderNavigation is removed */}
         {isValidCategorySelected ? (
           <>
             <PalmInputForm categoryFromQuery={categoryFromQuery} categoryDescription={categoryDescription} />

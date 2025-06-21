@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -44,6 +45,8 @@ function NumerologyInputPageComponent() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
 
   const serviceQuery = searchParams ? searchParams.get('service') : null;
   const selectedService = numerologyServicesConst.find(s => s.query === serviceQuery);
@@ -62,9 +65,12 @@ function NumerologyInputPageComponent() {
 
   const attemptAutoSubmitAfterPayment = useCallback(async () => {
     if (searchParams && searchParams.get('payment_success') === 'true' && hasPaid && userName && serviceQuery) {
+       setIsProcessingPayment(true);
+
       const storageKey = SESSION_STORAGE_KEYS[serviceQuery as keyof typeof SESSION_STORAGE_KEYS];
       if (!storageKey) {
         toast({ title: "Error", description: "Invalid service type for auto-submission.", variant: "destructive" });
+        setIsProcessingPayment(false);
         return;
       }
       const persistedFormDataJson = sessionStorage.getItem(storageKey);
@@ -95,18 +101,21 @@ function NumerologyInputPageComponent() {
           startOperation();
           try {
             createInitialNumerologyReportPlaceholder(persistedData, serviceQuery); 
-            toast({ title: "Numerology Request Received", description: "Your report is being prepared and will be available under 'My Reading'. Redirecting to Home...", duration: 5000 });
+            toast({ title: "Numerology Request Received", description: "Your report is being prepared and will be available under 'My Reading'.", duration: 5000 });
             router.push('/');
           } catch (error) {
             console.error(`Error auto-submitting ${serviceQuery} request:`, error);
             toast({ title: "Auto-Submission Error", description: "Failed to automatically submit your request. Please review and submit manually.", variant: "destructive" });
+            router.push('/');
           } finally {
             if(isOperationInProgress) stopOperation();
           }
         } else {
+          setIsProcessingPayment(false);
           toast({ title: "Payment Successful", description: "Please complete any missing fields and then click 'Generate Report'." });
         }
       } else {
+        setIsProcessingPayment(false);
         toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
       }
     }
@@ -126,6 +135,15 @@ function NumerologyInputPageComponent() {
     );
   }
 
+  if (isProcessingPayment) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Payment successful! Preparing your report...</p>
+        <p className="text-sm text-muted-foreground mt-2">Please wait, you will be redirected shortly.</p>
+      </div>
+    );
+  }
 
   const renderForm = () => {
     if (!selectedService) {
