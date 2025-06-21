@@ -111,7 +111,9 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
       if (otp === '123456') {
         login(mobileNumber);
         toast({ title: mode === 'register' ? "Registration Successful" : "Login Successful", description: "Welcome to PalmVerse!" });
-        router.push('/palm-input');
+        const redirectPath = sessionStorage.getItem('palmverse_redirectAfterLogin') || '/palm-input';
+        sessionStorage.removeItem('palmverse_redirectAfterLogin');
+        router.push(redirectPath);
       } else {
         toast({ title: "Invalid OTP", description: "The OTP you entered is incorrect.", variant: "destructive" });
       }

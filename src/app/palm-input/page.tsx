@@ -44,6 +44,8 @@ function PalmInputPageComponent() {
     if (!isInitializing) {
       const timer = setTimeout(() => {
         if (!isAuthenticated) {
+          const redirectPath = window.location.pathname + window.location.search;
+          sessionStorage.setItem('palmverse_redirectAfterLogin', redirectPath);
           router.push('/');
         }
         setAuthCheckComplete(true);
@@ -174,5 +176,3 @@ export default function PalmInputPage() {
     </Suspense>
   );
 }
-
-    
