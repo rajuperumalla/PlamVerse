@@ -59,6 +59,9 @@ const processUserReportFeedbackFlow = ai.defineFlow(
     // For more complex scenarios, you might store the feedback in a database here,
     // or trigger other actions. For now, we just process it with the LLM for acknowledgment.
     const {output} = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error("The AI model did not return a valid output. Please try again.");
+    }
+    return output;
   }
 );

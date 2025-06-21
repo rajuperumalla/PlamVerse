@@ -86,6 +86,9 @@ const generatePalmReadingFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error("The AI model did not return a valid output. Please try again.");
+    }
+    return output;
   }
 );
