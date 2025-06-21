@@ -174,7 +174,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
-                        <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress || !!categoryFromQuery} required>
+                        <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress} required>
                         <SelectTrigger id="category">
                             <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
