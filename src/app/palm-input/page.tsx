@@ -1,4 +1,3 @@
-
 "use client";
 import { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -42,15 +41,13 @@ function PalmInputPageComponent() {
 
   useEffect(() => {
     if (!isInitializing) {
-      const timer = setTimeout(() => {
-        if (!isAuthenticated) {
-          const redirectPath = window.location.pathname + window.location.search;
-          sessionStorage.setItem('palmverse_redirectAfterLogin', redirectPath);
-          router.push('/');
-        }
+      if (!isAuthenticated) {
+        const redirectPath = window.location.pathname + window.location.search;
+        sessionStorage.setItem('palmverse_redirectAfterLogin', redirectPath);
+        router.push('/');
+      } else {
         setAuthCheckComplete(true);
-      }, 100);
-      return () => clearTimeout(timer);
+      }
     }
   }, [isAuthenticated, router, isInitializing]);
 
