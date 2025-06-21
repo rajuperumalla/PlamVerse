@@ -68,66 +68,50 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     }
   };
 
-  const fileToDataUri = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readDataURL(file);
-    });
-  };
+  const handleSubmit = async () => {
+    // 1. Validate all required fields upfront
+    if (!leftPalmPreview) {
+      toast({ title: "Missing Image", description: "Please upload an image of your left palm.", variant: "destructive" });
+      return;
+    }
+    if (!rightPalmPreview) {
+      toast({ title: "Missing Image", description: "Please upload an image of your right palm.", variant: "destructive" });
+      return;
+    }
+    if (!dateOfBirth || !placeOfBirth || !dominantHand || !category) {
+      toast({ title: "Missing Information", description: "Please fill all required fields: Date of Birth, Place of Birth, Dominant Hand, and Category.", variant: "destructive" });
+      return;
+    }
 
-  const handleSubmitOrProceedToPayment = async () => {
+    // 2. Create details object and save to session storage
     const reportInputDetails: ReportPalmInputDetails = {
-      leftPalmDataUri: leftPalmPreview || undefined,
-      rightPalmDataUri: rightPalmPreview || undefined,
+      leftPalmDataUri: leftPalmPreview,
+      rightPalmDataUri: rightPalmPreview,
       dateOfBirth,
       placeOfBirth,
       timeOfBirth: timeOfBirth || "Not specified",
       dominantHand,
       category,
     };
-
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(reportInputDetails));
 
+    // 3. Route to payment if not paid
     if (!hasPaid) {
-      if (!category) {
-        toast({ title: "Missing Category", description: "Please select a reading category before proceeding to payment.", variant: "destructive" });
-        return;
-      }
       const returnPath = `/palm-input${category ? `?category=${encodeURIComponent(category)}` : ''}`;
       router.push(`/payment?service_type=palmistry&return_path=${encodeURIComponent(returnPath)}`);
       return;
     }
 
-    if (!leftPalmImageFile || !rightPalmImageFile || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
-      toast({ title: "Missing Information", description: "Please fill all required fields and upload both palm images to generate your report.", variant: "destructive" });
-      return;
-    }
-
-    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    // 4. If paid, proceed with generation
     startOperation();
     let initialReportId = '';
     try {
-      const leftPalmDataUriFromFile = await fileToDataUri(leftPalmImageFile);
-      const rightPalmDataUriFromFile = await fileToDataUri(rightPalmImageFile);
-
-      const finalReportInputDetails: ReportPalmInputDetails = {
-        leftPalmDataUri: leftPalmDataUriFromFile,
-        rightPalmDataUri: rightPalmDataUriFromFile,
-        dateOfBirth,
-        placeOfBirth,
-        timeOfBirth: timeOfBirth || "Not specified",
-        dominantHand,
-        category,
-      };
-
-      initialReportId = createInitialReportPlaceholder(finalReportInputDetails);
+      initialReportId = createInitialReportPlaceholder(reportInputDetails);
       toast({ title: "Request Received", description: "Your report is being prepared and will be available under 'My Reading'.", duration: 5000 });
 
       const aiFlowInput: GeneratePalmReadingInput = {
-        leftPalmDataUri: leftPalmDataUriFromFile,
-        rightPalmDataUri: rightPalmDataUriFromFile,
+        leftPalmDataUri: leftPalmPreview,
+        rightPalmDataUri: rightPalmPreview,
         dateOfBirth,
         placeOfBirth,
         timeOfBirth: timeOfBirth || "Not specified",
@@ -137,6 +121,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
 
       const result = await generatePalmReading(aiFlowInput);
       updateReportWithGeneratedContent(initialReportId, result.report);
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
       router.push('/');
     } catch (error) {
       console.error("Error generating palm reading:", error);
@@ -145,7 +130,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
         markReportAsGenerationFailed(initialReportId, `Report generation failed: ${errorMessage}`);
       }
       toast({ title: "Generation Error", description: "Failed to generate palm reading. Please try again.", variant: "destructive" });
-      router.push('/');
+      router.push('/'); // Redirect home even on failure to avoid getting stuck
     } finally {
       stopOperation();
     }
@@ -153,11 +138,11 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
 
   const onFormSubmit = (e: FormEvent) => {
     e.preventDefault();
-    handleSubmitOrProceedToPayment();
+    handleSubmit();
   };
 
-  // Pre-fill form from session storage on initial load
   useEffect(() => {
+    setCategory(categoryFromQuery || '');
     const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (persistedFormDataJson) {
       const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
@@ -165,7 +150,10 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
       setPlaceOfBirth(persistedData.placeOfBirth || '');
       setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
       setDominantHand(persistedData.dominantHand || '');
-      setCategory(categoryFromQuery || persistedData.category || '');
+      // The category from URL should take precedence
+      if (!categoryFromQuery) {
+        setCategory(persistedData.category || '');
+      }
       setLeftPalmPreview(persistedData.leftPalmDataUri || null);
       setRightPalmPreview(persistedData.rightPalmDataUri || null);
     }
@@ -185,22 +173,6 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
        {!previewUrl && <Image src={`https://placehold.co/300x200.png`} data-ai-hint={dataAiHint} alt={`${palmName} placeholder`} layout="fill" objectFit="cover" className="opacity-20" />}
     </div>
   );
-
-  const isReadyForManualSubmitAfterPayment =
-    (leftPalmImageFile || leftPalmPreview) &&
-    (rightPalmImageFile || rightPalmPreview) &&
-    dateOfBirth &&
-    placeOfBirth &&
-    dominantHand &&
-    category;
-
-  let finalButtonDisabled = isOperationInProgress;
-  if (hasPaid) {
-    if (!isReadyForManualSubmitAfterPayment) {
-      finalButtonDisabled = true;
-    }
-  }
-
 
   return (
     <div className="flex justify-center items-center py-8">
@@ -237,12 +209,12 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
                 <div className="space-y-2">
                     <Label htmlFor="leftPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Left Palm Image *</Label>
                     {renderImagePreview(leftPalmPreview, "Left Palm", "palm hand")}
-                    <Input id="leftPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setLeftPalmImageFile, setLeftPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress} required={hasPaid}/>
+                    <Input id="leftPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setLeftPalmImageFile, setLeftPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="rightPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Right Palm Image *</Label>
                     {renderImagePreview(rightPalmPreview, "Right Palm", "palm hand")}
-                    <Input id="rightPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setRightPalmImageFile, setRightPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress} required={hasPaid}/>
+                    <Input id="rightPalm" type="file" accept="image/jpeg, image/png" onChange={(e) => handleImageChange(e, setRightPalmImageFile, setRightPalmPreview)} className="mt-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" disabled={isOperationInProgress} />
                 </div>
                 </div>
 
@@ -293,20 +265,20 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
                 <Button
                 type="submit"
                 className="w-full text-lg py-6 mt-8"
-                disabled={finalButtonDisabled}
+                disabled={isOperationInProgress}
                 >
                 {isOperationInProgress ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                 ) : (
-                    hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
+                    <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</>
                 )}
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">* Required fields{hasPaid ? " when generating report after payment" : " before proceeding to payment"}.</p>
+                <p className="text-xs text-muted-foreground text-center">* All fields required to generate your report.</p>
             </form>
             </CardContent>
             <CardFooter className="mt-4">
             <p className="text-xs text-muted-foreground text-center w-full">
-                Your information is used solely for generating your palm reading. Payment is required for report generation.
+                Your information is used solely for generating your palm reading. Payment may be required.
             </p>
             </CardFooter>
         </div>
