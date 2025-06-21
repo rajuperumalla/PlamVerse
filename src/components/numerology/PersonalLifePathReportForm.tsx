@@ -1,7 +1,6 @@
-
 "use client";
 import { useState, type FormEvent, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,22 +23,23 @@ const PersonalLifePathReportForm = ({ serviceDescription }: PersonalLifePathRepo
   const [timeOfBirth, setTimeOfBirth] = useState('');
 
   const router = useRouter();
-  const searchParams = useSearchParams();
   const {
     startOperation,
     stopOperation,
     isOperationInProgress,
     hasPaid,
-    userName,
     createInitialNumerologyReportPlaceholder,
   } = useAppContext();
   const { toast } = useToast();
 
-  const areRequiredFieldsFilled = () => {
-    return fullName && dateOfBirth;
-  };
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
 
-  const handleSubmitOrProceedToPayment = async () => {
+    if (!fullName || !dateOfBirth) {
+      toast({ title: "Missing Information", description: "Please fill all required fields (Full Name, Date of Birth).", variant: "destructive" });
+      return;
+    }
+
     const reportInputDetails: ReportNumerologyInputDetails_PersonalReport = {
       serviceQuery: SERVICE_QUERY,
       fullName,
@@ -50,21 +50,12 @@ const PersonalLifePathReportForm = ({ serviceDescription }: PersonalLifePathRepo
     sessionStorage.setItem(SESSION_STORAGE_KEY_PERSONAL_REPORT, JSON.stringify(reportInputDetails));
 
     if (!hasPaid) {
-      if (!areRequiredFieldsFilled()) {
-        toast({ title: "Missing Information", description: "Please fill all required fields (Full Name, Date of Birth) before proceeding.", variant: "destructive" });
-        return;
-      }
       const returnPath = `/numerology-input?service=${SERVICE_QUERY}`;
       router.push(`/payment?service_type=numerology&return_path=${encodeURIComponent(returnPath)}`);
       return;
     }
 
     // Post-payment submission logic
-    if (!areRequiredFieldsFilled()) {
-      toast({ title: "Missing Information", description: "Please fill all required fields to generate your report.", variant: "destructive" });
-      return;
-    }
-
     sessionStorage.removeItem(SESSION_STORAGE_KEY_PERSONAL_REPORT);
     startOperation();
     try {
@@ -79,14 +70,7 @@ const PersonalLifePathReportForm = ({ serviceDescription }: PersonalLifePathRepo
     }
   };
 
-  const onFormSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    handleSubmitOrProceedToPayment();
-  };
-
-  const attemptAutoSubmitAfterPayment = useCallback(async () => {
-    // This logic is primarily handled by the parent NumerologyInputPageComponent now.
-    // This form just ensures it's pre-filled if session data exists.
+  const loadPersistedData = useCallback(() => {
     const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY_PERSONAL_REPORT);
     if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportNumerologyInputDetails_PersonalReport;
@@ -97,17 +81,9 @@ const PersonalLifePathReportForm = ({ serviceDescription }: PersonalLifePathRepo
   }, []);
 
   useEffect(() => {
-    attemptAutoSubmitAfterPayment();
-  }, [attemptAutoSubmitAfterPayment]);
+    loadPersistedData();
+  }, [loadPersistedData]);
   
-  let finalButtonDisabled = isOperationInProgress;
-  if (hasPaid) {
-    if (!areRequiredFieldsFilled()) {
-      finalButtonDisabled = true;
-    }
-  }
-
-
   return (
     <div className="flex justify-center items-center py-8">
       <Card className="w-full max-w-xl shadow-xl animate-fade-in relative overflow-hidden">
@@ -129,7 +105,7 @@ const PersonalLifePathReportForm = ({ serviceDescription }: PersonalLifePathRepo
             <CardDescription>{serviceDescription || "Enter your birth details to uncover insights into your life's journey."}</CardDescription>
             </CardHeader>
             <CardContent>
-            <form onSubmit={onFormSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="space-y-2">
                     <Label htmlFor="fullName" className="text-base flex items-center gap-2"><UserCircle className="h-5 w-5 text-primary"/>Full Name (as per official documents) *</Label>
                     <Input id="fullName" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g., John Michael Doe" disabled={isOperationInProgress} required />
@@ -150,13 +126,12 @@ const PersonalLifePathReportForm = ({ serviceDescription }: PersonalLifePathRepo
                 <Button 
                     type="submit" 
                     className="w-full text-lg py-6 mt-8" 
-                    disabled={finalButtonDisabled}
-                    title={!areRequiredFieldsFilled() && !hasPaid ? "Please fill all required fields first" : (hasPaid && !areRequiredFieldsFilled() ? "Please fill all required fields to generate" : "")}
+                    disabled={isOperationInProgress}
                 >
                     {isOperationInProgress ? ( 
                         <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                     ) : (
-                        hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Personal Report</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
+                        <><Sparkles className="mr-2 h-5 w-5" /> Generate Report</>
                     )}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">* Required fields.</p>
@@ -164,7 +139,7 @@ const PersonalLifePathReportForm = ({ serviceDescription }: PersonalLifePathRepo
             </CardContent>
             <CardFooter className="mt-4">
             <p className="text-xs text-muted-foreground text-center w-full">
-                Your information is used solely for generating your numerology report. Payment is required.
+                Your information is used solely for generating your numerology report. Payment may be required.
             </p>
             </CardFooter>
         </div>

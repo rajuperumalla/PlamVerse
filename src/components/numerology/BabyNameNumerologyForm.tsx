@@ -1,7 +1,6 @@
-
 "use client";
 import { useState, type FormEvent, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,13 +28,11 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
   const [parent2DOB, setParent2DOB] = useState('');
 
   const router = useRouter();
-  const searchParams = useSearchParams();
   const {
     startOperation,
     stopOperation,
     isOperationInProgress,
     hasPaid,
-    userName,
     createInitialNumerologyReportPlaceholder,
   } = useAppContext();
   const { toast } = useToast();
@@ -44,14 +41,15 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
     return text.split('\n').map(name => name.trim()).filter(name => name.length > 0);
   };
   
-  const areMinimumFieldsFilled = () => {
-    const namesArray = parseProposedNames(proposedNamesText);
-    return namesArray.length > 0 && childDOB;
-  };
-
-  const handleSubmitOrProceedToPayment = async () => {
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
     const proposedNamesArray = parseProposedNames(proposedNamesText);
     
+    if (proposedNamesArray.length === 0 || !childDOB) {
+      toast({ title: "Missing Information", description: "Please fill all required fields (Proposed Names, Child's DOB).", variant: "destructive" });
+      return;
+    }
+
     const reportInputDetails: ReportNumerologyInputDetails_BabyName = {
       serviceQuery: SERVICE_QUERY,
       proposedNames: proposedNamesArray,
@@ -66,21 +64,12 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
     sessionStorage.setItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY, JSON.stringify(reportInputDetails));
 
     if (!hasPaid) {
-      if (!areMinimumFieldsFilled()) {
-        toast({ title: "Missing Information", description: "Please fill all required fields (Proposed Names, Child's DOB) before proceeding.", variant: "destructive" });
-        return;
-      }
       const returnPath = `/numerology-input?service=${SERVICE_QUERY}`;
       router.push(`/payment?service_type=numerology&return_path=${encodeURIComponent(returnPath)}`);
       return;
     }
 
     // Post-payment submission logic
-    if (!areMinimumFieldsFilled()) {
-      toast({ title: "Missing Information", description: "Please fill all required fields (Proposed Names, Child's DOB) to generate your report.", variant: "destructive" });
-      return;
-    }
-
     sessionStorage.removeItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY);
     startOperation();
     try {
@@ -95,14 +84,7 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
     }
   };
 
-  const onFormSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    handleSubmitOrProceedToPayment();
-  };
-
-  const attemptAutoSubmitAfterPayment = useCallback(async () => {
-    // This logic is primarily handled by the parent NumerologyInputPageComponent now.
-    // This form just ensures it's pre-filled if session data exists.
+  const loadPersistedData = useCallback(() => {
     const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY);
     if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportNumerologyInputDetails_BabyName;
@@ -113,24 +95,13 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
         setParent1DOB(persistedData.parent1DOB || '');
         setParent2FullName(persistedData.parent2FullName || '');
         setParent2DOB(persistedData.parent2DOB || '');
-
-        // If payment was successful and minimum data is present, parent component handles auto-submit.
-        // If not, user needs to complete the form.
     }
   }, []); 
 
   useEffect(() => {
-    attemptAutoSubmitAfterPayment();
-  }, [attemptAutoSubmitAfterPayment]);
+    loadPersistedData();
+  }, [loadPersistedData]);
   
-  let finalButtonDisabled = isOperationInProgress;
-  if (hasPaid) {
-    if (!areMinimumFieldsFilled()) {
-      finalButtonDisabled = true;
-    }
-  }
-
-
   return (
     <div className="flex justify-center items-center py-8">
       <Card className="w-full max-w-2xl shadow-xl animate-fade-in relative overflow-hidden">
@@ -152,7 +123,7 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
             <CardDescription>{serviceDescription || "Find harmonious names based on your child's birth details."}</CardDescription>
             </CardHeader>
             <CardContent>
-            <form onSubmit={onFormSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="space-y-2">
                     <Label htmlFor="proposedNamesText" className="text-base flex items-center gap-2"><Baby className="h-5 w-5 text-primary"/>Child's Proposed Names *</Label>
                     <Textarea id="proposedNamesText" value={proposedNamesText} onChange={(e) => setProposedNamesText(e.target.value)} placeholder="Enter potential names, one per line" disabled={isOperationInProgress} rows={4} required />
@@ -205,13 +176,12 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
                 <Button 
                     type="submit" 
                     className="w-full text-lg py-6 mt-8" 
-                    disabled={finalButtonDisabled}
-                    title={!areMinimumFieldsFilled() && !hasPaid ? "Please fill all required fields first" : (hasPaid && !areMinimumFieldsFilled() ? "Please fill all required fields to generate" : "")}
+                    disabled={isOperationInProgress}
                 >
                     {isOperationInProgress ? ( 
                         <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                     ) : (
-                        hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Baby Name Report</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
+                        <><Sparkles className="mr-2 h-5 w-5" /> Generate Report</>
                     )}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">* Required fields are marked with an asterisk if not already obvious.</p>
@@ -219,7 +189,7 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
             </CardContent>
             <CardFooter className="mt-4">
             <p className="text-xs text-muted-foreground text-center w-full">
-                Your information is used solely for generating your numerology report. Payment is required for report generation.
+                Your information is used solely for generating your numerology report. Payment may be required.
             </p>
             </CardFooter>
         </div>

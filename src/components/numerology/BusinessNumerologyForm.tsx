@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, type FormEvent, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -27,18 +26,23 @@ const BusinessNumerologyForm = ({ serviceDescription }: BusinessNumerologyFormPr
   const [founderTOB, setFounderTOB] = useState('');
 
   const router = useRouter();
-  const searchParams = useSearchParams();
   const {
     startOperation,
     stopOperation,
     isOperationInProgress,
     hasPaid,
-    userName,
     createInitialNumerologyReportPlaceholder,
   } = useAppContext();
   const { toast } = useToast();
 
-  const handleSubmitOrProceedToPayment = async () => {
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!businessName || !founderFullName || !founderDOB) {
+      toast({ title: "Missing Information", description: "Please fill all required fields (Business Name, Founder's Name, Founder's DOB).", variant: "destructive" });
+      return;
+    }
+
     const reportInputDetails: ReportNumerologyInputDetails_Business = {
       serviceQuery: SERVICE_QUERY,
       businessName,
@@ -51,21 +55,12 @@ const BusinessNumerologyForm = ({ serviceDescription }: BusinessNumerologyFormPr
     sessionStorage.setItem(SESSION_STORAGE_KEY_BUSINESS_NUMEROLOGY, JSON.stringify(reportInputDetails));
 
     if (!hasPaid) {
-      if (!businessName || !founderFullName || !founderDOB) {
-        toast({ title: "Missing Information", description: "Please fill all required fields (Business Name, Founder's Name, Founder's DOB) before proceeding.", variant: "destructive" });
-        return;
-      }
       const returnPath = `/numerology-input?service=${SERVICE_QUERY}`;
       router.push(`/payment?service_type=numerology&return_path=${encodeURIComponent(returnPath)}`);
       return;
     }
 
     // Post-payment submission logic
-    if (!businessName || !founderFullName || !founderDOB) {
-      toast({ title: "Missing Information", description: "Please fill all required fields to generate your report.", variant: "destructive" });
-      return;
-    }
-
     sessionStorage.removeItem(SESSION_STORAGE_KEY_BUSINESS_NUMEROLOGY);
     startOperation();
     try {
@@ -80,14 +75,7 @@ const BusinessNumerologyForm = ({ serviceDescription }: BusinessNumerologyFormPr
     }
   };
 
-  const onFormSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    handleSubmitOrProceedToPayment();
-  };
-
-  const attemptAutoSubmitAfterPayment = useCallback(async () => {
-    // This logic is primarily handled by the parent NumerologyInputPageComponent now.
-    // This form just ensures it's pre-filled if session data exists.
+  const loadPersistedData = useCallback(() => {
     const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY_BUSINESS_NUMEROLOGY);
     if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportNumerologyInputDetails_Business;
@@ -100,22 +88,9 @@ const BusinessNumerologyForm = ({ serviceDescription }: BusinessNumerologyFormPr
   }, []);
 
   useEffect(() => {
-    attemptAutoSubmitAfterPayment();
-  }, [attemptAutoSubmitAfterPayment]);
+    loadPersistedData();
+  }, [loadPersistedData]);
   
-    const isReadyForManualSubmitAfterPayment = 
-    businessName && 
-    founderFullName && 
-    founderDOB;
-
-  let finalButtonDisabled = isOperationInProgress;
-  if (hasPaid) {
-    if (!isReadyForManualSubmitAfterPayment) {
-      finalButtonDisabled = true;
-    }
-  }
-
-
   return (
     <div className="flex justify-center items-center py-8">
       <Card className="w-full max-w-2xl shadow-xl animate-fade-in relative overflow-hidden">
@@ -137,7 +112,7 @@ const BusinessNumerologyForm = ({ serviceDescription }: BusinessNumerologyFormPr
             <CardDescription>{serviceDescription || "Enter details for your business name analysis."}</CardDescription>
             </CardHeader>
             <CardContent>
-            <form onSubmit={onFormSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="space-y-2">
                     <Label htmlFor="businessName" className="text-base flex items-center gap-2"><Briefcase className="h-5 w-5 text-primary"/>Primary Business Name *</Label>
                     <Input id="businessName" type="text" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="e.g., PalmVerse Dynamics" disabled={isOperationInProgress} required />
@@ -167,13 +142,12 @@ const BusinessNumerologyForm = ({ serviceDescription }: BusinessNumerologyFormPr
                 <Button 
                     type="submit" 
                     className="w-full text-lg py-6 mt-8" 
-                    disabled={finalButtonDisabled}
-                    title={!isReadyForManualSubmitAfterPayment && !hasPaid ? "Please fill all required fields first" : (hasPaid && !isReadyForManualSubmitAfterPayment ? "Please fill all required fields to generate" : "")}
+                    disabled={isOperationInProgress}
                 >
                     {isOperationInProgress ? ( 
                         <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                     ) : (
-                        hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Business Numerology Report</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
+                        <><Sparkles className="mr-2 h-5 w-5" /> Generate Report</>
                     )}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">* Required fields.</p>
@@ -181,7 +155,7 @@ const BusinessNumerologyForm = ({ serviceDescription }: BusinessNumerologyFormPr
             </CardContent>
             <CardFooter className="mt-4">
             <p className="text-xs text-muted-foreground text-center w-full">
-                Your information is used solely for generating your numerology report. Payment is required for report generation.
+                Your information is used solely for generating your numerology report. Payment may be required.
             </p>
             </CardFooter>
         </div>

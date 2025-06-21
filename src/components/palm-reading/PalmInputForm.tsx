@@ -1,6 +1,6 @@
 "use client";
 import { useState, type ChangeEvent, type FormEvent, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,7 +67,9 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
     // 1. Validate all required fields upfront
     if (!leftPalmPreview || !rightPalmPreview) {
         toast({ title: "Missing Images", description: "Please upload both palm images to proceed.", variant: "destructive" });
@@ -132,11 +134,6 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     } finally {
       if(isOperationInProgress) stopOperation();
     }
-  };
-
-  const onFormSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    handleSubmit();
   };
 
   useEffect(() => {
@@ -210,7 +207,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
               </CardDescription>
             </CardHeader>
             <CardContent>
-            <form onSubmit={onFormSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="leftPalm" className="text-base flex items-center gap-2"><UploadCloud className="h-5 w-5 text-primary"/>Left Palm Image *</Label>
@@ -276,7 +273,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
                     {isOperationInProgress ? (
                         <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                     ) : (
-                        hasPaid ? <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</> : <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
+                        <><Sparkles className="mr-2 h-5 w-5" /> Generate Analysis</>
                     )}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">* All fields required to generate your report.</p>
