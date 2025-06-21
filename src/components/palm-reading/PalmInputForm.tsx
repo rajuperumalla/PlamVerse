@@ -88,78 +88,34 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     };
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(reportInputDetails));
 
-    if (!hasPaid) {
-      const returnPath = `/palm-input${category ? `?category=${encodeURIComponent(category)}` : ''}`;
-      router.push(`/payment?service_type=palmistry&return_path=${encodeURIComponent(returnPath)}`);
-      return;
-    }
-
-    // This part runs only if hasPaid is true (i.e., after returning from payment but auto-submit failed).
-    startOperation();
-    let initialReportId = '';
-    try {
-      initialReportId = createInitialReportPlaceholder(reportInputDetails);
-      toast({
-        title: "Request Submitted for Review",
-        description: "Your palm reading information has been sent to our experts. Your report will be available in 'My Reading' once ready.",
-        duration: 5000
-      });
-
-      const aiFlowInput: GeneratePalmReadingInput = {
-        leftPalmDataUri: leftPalmPreview,
-        rightPalmDataUri: rightPalmPreview,
-        dateOfBirth,
-        placeOfBirth,
-        timeOfBirth: timeOfBirth || "Not specified",
-        dominantHand,
-        category,
-      };
-
-      const result = await generatePalmReading(aiFlowInput);
-      if (!result || !result.report) {
-          throw new Error("The AI model did not return a valid report.");
-      }
-      updateReportWithGeneratedContent(initialReportId, result.report);
-      router.push('/');
-    } catch (error) {
-      console.error("Error generating palm reading:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during report generation.";
-      if (initialReportId) {
-        markReportAsGenerationFailed(initialReportId, `Report generation failed: ${errorMessage}`);
-      }
-      toast({ title: "Generation Error", description: "Failed to generate palm reading. Please try again.", variant: "destructive" });
-      router.push('/');
-    } finally {
-      sessionStorage.removeItem(SESSION_STORAGE_KEY);
-      if(isOperationInProgress) stopOperation();
-    }
+    const returnPath = `/palm-input${category ? `?category=${encodeURIComponent(category)}` : ''}`;
+    router.push(`/payment?service_type=palmistry&return_path=${encodeURIComponent(returnPath)}`);
   };
 
-  const loadPersistedData = useCallback(() => {
+  useEffect(() => {
     const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (persistedFormDataJson) {
       try {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
+        // Pre-fill text fields for convenience on refresh
         setDateOfBirth(persistedData.dateOfBirth || '');
         setPlaceOfBirth(persistedData.placeOfBirth || '');
-        setTimeOfBirth(persistedData.timeOfBirth === "Not specified" ? '' : persistedData.timeOfBirth || '');
+        setTimeOfBirth(persistedData.timeOfBirth === 'Not specified' ? '' : persistedData.timeOfBirth || '');
         setDominantHand(persistedData.dominantHand || '');
+        // The category from the URL always overrides any stored category
         setCategory(categoryFromQuery || persistedData.category || '');
-        setLeftPalmPreview(persistedData.leftPalmDataUri || null);
-        setRightPalmPreview(persistedData.rightPalmDataUri || null);
       } catch (e) {
-          console.error("Failed to parse form data from session storage", e);
-          sessionStorage.removeItem(SESSION_STORAGE_KEY);
-          setCategory(categoryFromQuery || '');
+        console.error("Failed to parse form data from session storage", e);
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        // Fallback to URL category if parsing fails
+        setCategory(categoryFromQuery || '');
       }
-    } else if(categoryFromQuery) {
-        setCategory(categoryFromQuery);
+    } else if (categoryFromQuery) {
+      // If there's no session data, just initialize with the category from the URL
+      setCategory(categoryFromQuery);
     }
+    // Image previews are intentionally not restored from session to ensure a clean slate
   }, [categoryFromQuery]);
-
-  useEffect(() => {
-    loadPersistedData();
-  }, [loadPersistedData]);
 
 
   const renderImagePreview = (previewUrl: string | null, palmName: string, dataAiHint: string) => (
@@ -173,7 +129,6 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
           <p className="text-xs">(Max 5MB, JPG/PNG)</p>
         </div>
       )}
-       {!previewUrl && <Image src={`https://placehold.co/300x200.png`} data-ai-hint={dataAiHint} alt={`${palmName} placeholder`} layout="fill" objectFit="cover" className="opacity-20" />}
     </div>
   );
 
@@ -271,7 +226,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
                     disabled={isOperationInProgress}
                 >
                     <Sparkles className="mr-2 h-5 w-5" />
-                    Generate Palm Reading
+                    Proceed to Payment
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">* All fields required to generate your report.</p>
