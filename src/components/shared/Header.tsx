@@ -73,54 +73,52 @@ const Header = () => {
           </Link>
         </ClientOnly>
 
-        <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-6 flex-grow">
-          <Link href="/" className={getLinkClassName(isHomePageActive)}>
-            <HomeIcon className="mr-1.5 h-4 w-4" /> Home
-          </Link>
+        <ClientOnly>
+          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-6 flex-grow">
+            <Link href="/" className={getLinkClassName(isHomePageActive)}>
+              <HomeIcon className="mr-1.5 h-4 w-4" /> Home
+            </Link>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className={getDropdownTriggerClassName(isPalmInputPageActive)}>
-                <Handshake className="mr-1.5 h-4 w-4" /> Palmistry <ChevronDown className="ml-1 h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
-              {readingTypes.map((type) => (
-                <DropdownMenuItem key={type.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                  <Link href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="w-full">
-                    {type.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className={getDropdownTriggerClassName(isPalmInputPageActive)}>
+                  <Handshake className="mr-1.5 h-4 w-4" /> Palmistry <ChevronDown className="ml-1 h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
+                {readingTypes.map((type) => (
+                  <DropdownMenuItem key={type.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
+                    <Link href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="w-full">
+                      {type.name}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className={getDropdownTriggerClassName(isNumerologyInputPageActive)}>
-                <Calculator className="mr-1.5 h-4 w-4" /> Numerology <ChevronDown className="ml-1 h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
-              {numerologyServicesConst.map((service) => (
-                <DropdownMenuItem key={service.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                  <Link href={`/numerology-input?service=${encodeURIComponent(service.query)}`} className="w-full">
-                    {service.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className={getDropdownTriggerClassName(isNumerologyInputPageActive)}>
+                  <Calculator className="mr-1.5 h-4 w-4" /> Numerology <ChevronDown className="ml-1 h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
+                {numerologyServicesConst.map((service) => (
+                  <DropdownMenuItem key={service.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
+                    <Link href={`/numerology-input?service=${encodeURIComponent(service.query)}`} className="w-full">
+                      {service.name}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          <ClientOnly>
             {isAuthenticated && (
-              <Link href="/report" className={getLinkClassName(isReportPageActive)}>
-                <BookOpen className="mr-1.5 h-4 w-4" /> My Reading
-              </Link>
+                <Link href="/report" className={getLinkClassName(isReportPageActive)}>
+                  <BookOpen className="mr-1.5 h-4 w-4" /> My Reading
+                </Link>
             )}
-          </ClientOnly>
-          
-          <ClientOnly>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                  <Button variant="ghost" className={getDropdownTriggerClassName(isProductsPageActive)}>
@@ -139,12 +137,12 @@ const Header = () => {
                 <DropdownMenuItem disabled className="opacity-70 italic">More coming soon!</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </ClientOnly>
 
-          <Link href="#remedies" className={getLinkClassName(false) + " opacity-70 cursor-not-allowed"} onClick={(e) => e.preventDefault()}>
-            <Zap className="mr-1.5 h-4 w-4" /> Remedies
-          </Link>
-        </nav>
+            <Link href="#remedies" className={getLinkClassName(false) + " opacity-70 cursor-not-allowed"} onClick={(e) => e.preventDefault()}>
+              <Zap className="mr-1.5 h-4 w-4" /> Remedies
+            </Link>
+          </nav>
+        </ClientOnly>
 
         <div className="flex items-center gap-2 ml-auto">
           <ClientOnly>
@@ -184,7 +182,14 @@ const Header = () => {
                       </Link>
                     </DropdownMenuItem>
                   )}
-                  {(isEditor || isAdmin) && <DropdownMenuSeparator className="bg-primary-foreground/20"/>}
+                   {isAuthenticated && !isEditor && !isAdmin && (
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
+                          <Link href="/report">
+                              <BookOpen className="mr-2 h-4 w-4" /> My Reading
+                          </Link>
+                      </DropdownMenuItem>
+                    )}
+                  {(isEditor || isAdmin || (isAuthenticated && !isEditor && !isAdmin)) && <DropdownMenuSeparator className="bg-primary-foreground/20"/>}
                   <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-300 hover:!bg-red-500/50 focus:!bg-red-500/50 hover:!text-white">
                     <LogOut className="mr-2 h-4 w-4" /> Logout
                   </DropdownMenuItem>
