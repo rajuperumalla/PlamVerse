@@ -202,25 +202,21 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         setIsInitializing(true);
         const storedAuth = sessionStorage.getItem('palmverse_isAuthenticated');
         const storedName = sessionStorage.getItem('palmverse_userName');
-        const storedPaid = sessionStorage.getItem('palmverse_hasPaid');
         const storedIsEditor = sessionStorage.getItem('palmverse_isEditor');
         const storedIsAdmin = sessionStorage.getItem('palmverse_isAdmin');
         const storedReports = localStorage.getItem(REPORTS_STORAGE_KEY);
 
         if (storedAuth === 'true' && storedName) {
-        setIsAuthenticated(true);
-        setUserName(storedName);
-        if (storedIsEditor === 'true') {
-            setIsEditor(true);
+            setIsAuthenticated(true);
+            setUserName(storedName);
+            if (storedIsEditor === 'true') {
+                setIsEditor(true);
+            }
+            if (storedIsAdmin === 'true') {
+                setIsAdmin(true);
+            }
         }
-        if (storedIsAdmin === 'true') {
-            setIsAdmin(true);
-        }
-        }
-        if (storedPaid === 'true') {
-        setHasPaidState(true);
-        }
-
+        
         if (storedReports) {
         try {
             const parsedReports = JSON.parse(storedReports) as ReportData[];
@@ -274,7 +270,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     sessionStorage.removeItem('palmverse_isAuthenticated');
     sessionStorage.removeItem('palmverse_userName');
-    sessionStorage.removeItem('palmverse_hasPaid');
     sessionStorage.removeItem('palmverse_isEditor');
     sessionStorage.removeItem('palmverse_isAdmin');
 
@@ -424,7 +419,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const setHasPaid = (paid: boolean) => {
     setHasPaidState(paid);
-    sessionStorage.setItem('palmverse_hasPaid', paid ? 'true' : 'false');
   };
 
   return (
@@ -465,4 +459,3 @@ export const useAppContext = () => {
   }
   return context;
 };
-
