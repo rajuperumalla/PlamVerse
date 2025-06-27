@@ -202,10 +202,9 @@ function PalmInputPageComponent() {
                           <Image
                             src={category.imageUrl}
                             alt={category.name}
-                            layout="fill"
-                            objectFit="cover"
+                            fill
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
                             data-ai-hint={category.imageHint}
-                            className="transition-transform duration-300 group-hover:scale-105"
                           />
                         </div>
                         <CardHeader className="p-4">

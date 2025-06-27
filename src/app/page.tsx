@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAppContext } from '@/context/AppContext';
@@ -90,8 +91,8 @@ export default function HomePage() {
         <Image
           src="https://placehold.co/1920x1080.png"
           alt="Sacred Geometry Page Background"
-          layout="fill"
-          objectFit="cover"
+          fill
+          className="object-cover"
           data-ai-hint="sacred geometry pattern"
           priority
         />
@@ -104,7 +105,6 @@ export default function HomePage() {
           alt="Left Sacred Geometry Decoration" 
           width={300} 
           height={600} 
-          layout="responsive" 
           data-ai-hint="sacred geometry vertical" 
         />
       </div>
@@ -116,7 +116,6 @@ export default function HomePage() {
           alt="Right Sacred Geometry Decoration" 
           width={300} 
           height={600} 
-          layout="responsive" 
           data-ai-hint="sacred geometry vertical" 
         />
       </div>
@@ -180,10 +179,9 @@ export default function HomePage() {
                       <Image
                         src={category.imageUrl}
                         alt={category.name}
-                        layout="fill"
-                        objectFit="cover"
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                         data-ai-hint={category.imageHint}
-                        className="transition-transform duration-300 group-hover:scale-105"
                       />
                     </div>
                     <CardHeader className="p-3">

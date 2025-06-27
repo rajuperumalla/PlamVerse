@@ -107,7 +107,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
   const renderImagePreview = (previewUrl: string | null, palmName: string, dataAiHint: string) => (
     <div className="w-full h-48 border-2 border-dashed border-primary/50 rounded-lg flex items-center justify-center bg-muted/50 relative overflow-hidden">
       {previewUrl ? (
-        <Image src={previewUrl} alt={`${palmName} preview`} layout="fill" objectFit="contain" data-ai-hint={dataAiHint}/>
+        <Image src={previewUrl} alt={`${palmName} preview`} fill className="object-contain" data-ai-hint={dataAiHint}/>
       ) : (
         <div className="text-center text-muted-foreground">
           <UploadCloud className="mx-auto h-12 w-12 mb-2" />
@@ -125,8 +125,8 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
             <Image
             src="https://placehold.co/800x1000.png"
             alt="Subtle Geometry Background"
-            layout="fill"
-            objectFit="cover"
+            fill
+            className="object-cover"
             data-ai-hint="mandala pattern"
             />
         </div>

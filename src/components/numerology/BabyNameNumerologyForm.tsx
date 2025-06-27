@@ -112,8 +112,8 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
             <Image
             src="https://placehold.co/800x1200.png"
             alt="Subtle Numerology Background"
-            layout="fill"
-            objectFit="cover"
+            fill
+            className="object-cover"
             data-ai-hint="stars celestial background"
             />
         </div>

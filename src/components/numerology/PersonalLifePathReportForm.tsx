@@ -94,8 +94,8 @@ const PersonalLifePathReportForm = ({ serviceDescription }: PersonalLifePathRepo
             <Image
             src="https://placehold.co/800x900.png"
             alt="Subtle Numerology Background"
-            layout="fill"
-            objectFit="cover"
+            fill
+            className="object-cover"
             data-ai-hint="spiritual path symbols"
             />
         </div>

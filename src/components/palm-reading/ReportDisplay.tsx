@@ -135,8 +135,8 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
             <Image
             src="https://placehold.co/1000x1200.png"
             alt="Subtle Spiritual Background"
-            layout="fill"
-            objectFit="cover"
+            fill
+            className="object-cover"
             data-ai-hint="spiritual symbol"
             />
         </div>

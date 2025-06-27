@@ -101,8 +101,8 @@ const BusinessNumerologyForm = ({ serviceDescription }: BusinessNumerologyFormPr
             <Image
             src="https://placehold.co/800x1000.png"
             alt="Subtle Numerology Background"
-            layout="fill"
-            objectFit="cover"
+            fill
+            className="object-cover"
             data-ai-hint="numbers digits background"
             />
         </div>
