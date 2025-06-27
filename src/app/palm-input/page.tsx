@@ -127,10 +127,10 @@ function PalmInputPageComponent() {
         } else {
           toast({
             title: "Payment Successful",
-            description: "Please complete your details and submit when ready.",
+            description: "Please complete your details on the form and submit when ready.",
             duration: 5000
           });
-          // Do not redirect to home, let user complete the form.
+          router.push('/');
         }
       } else {
         toast({
@@ -138,6 +138,7 @@ function PalmInputPageComponent() {
           description: "We couldn't find your form data. Please fill out the form again to submit.",
           duration: 5000
         });
+        router.push('/');
       }
     }
   }, [searchParams, hasPaid, userName, router, toast, categoryFromQuery, handlePaidSubmission]);
