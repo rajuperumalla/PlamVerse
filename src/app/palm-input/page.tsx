@@ -2,16 +2,14 @@
 "use client";
 import { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import Image from 'next/image';
 import PalmInputForm from '@/components/palm-reading/PalmInputForm';
 import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext';
-import { Loader2, Sparkles, ArrowRight, Search, Info } from 'lucide-react';
+import { Loader2, Sparkles, ArrowRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { generatePalmReading, type GeneratePalmReadingInput } from '@/ai/flows/generate-palm-reading';
 import { useToast } from '@/hooks/use-toast';
-
 
 const productCategories = [
   { name: "Crystal Bracelets", description: "Harness the energy of natural crystals for balance and healing.", imageUrl: "https://placehold.co/400x300.png", imageHint: "crystal bracelet", link: "/products#crystal-bracelets" },
@@ -29,17 +27,16 @@ const readingTypes = [
   { name: "Comprehensive Analysis", query: "Comprehensive Analysis", description: "Receive a holistic view combining insights from all major areas of life, including personality, career, health, and relationships." },
 ];
 
-
 function PalmInputPageComponent() {
-  const { 
-    isAuthenticated, 
+  const {
+    isAuthenticated,
     isInitializing,
     hasPaid,
-    setHasPaid, 
-    userName, 
-    startOperation, 
-    stopOperation, 
-    isOperationInProgress, 
+    setHasPaid,
+    userName,
+    startOperation,
+    stopOperation,
+    isOperationInProgress,
     createInitialReportPlaceholder,
     updateReportWithGeneratedContent,
     markReportAsGenerationFailed
@@ -48,13 +45,11 @@ function PalmInputPageComponent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const categoryFromQuery = searchParams ? searchParams.get('category') : null;
   const selectedReadingType = readingTypes.find(rt => rt.query === categoryFromQuery);
   const isValidCategorySelected = !!selectedReadingType;
   const categoryDescription = selectedReadingType?.description;
-
 
   useEffect(() => {
     if (!isInitializing) {
@@ -68,19 +63,54 @@ function PalmInputPageComponent() {
     }
   }, [isAuthenticated, router, isInitializing]);
 
+  const handlePaidSubmission = useCallback(async (formData: ReportPalmInputDetails) => {
+    startOperation();
+    let initialReportId = '';
+    try {
+      initialReportId = createInitialReportPlaceholder(formData);
+      toast({
+        title: "Request Submitted for Review",
+        description: "Your palm reading information has been sent to our experts. Your report will be available in 'My Reading' once ready.",
+        duration: 5000
+      });
+
+      const aiFlowInput: GeneratePalmReadingInput = {
+        frontPalmDataUri: formData.frontPalmDataUri!,
+        sidePalmDataUri: formData.sidePalmDataUri!,
+        dateOfBirth: formData.dateOfBirth,
+        placeOfBirth: formData.placeOfBirth,
+        timeOfBirth: formData.timeOfBirth || "Not specified",
+        dominantHand: formData.dominantHand,
+        category: formData.category,
+      };
+
+      const result = await generatePalmReading(aiFlowInput);
+      updateReportWithGeneratedContent(initialReportId, result.report);
+      router.push('/');
+    } catch (error) {
+      console.error("Error generating palm reading:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during generation.";
+      if (initialReportId) {
+        markReportAsGenerationFailed(initialReportId, `Manual submission failed: ${errorMessage}`);
+      }
+      toast({ title: "Generation Error", description: `An issue occurred. Please try submitting again.`, variant: "destructive" });
+      router.push('/');
+    } finally {
+      setHasPaid(false);
+      sessionStorage.removeItem('palmVerseCheckoutForm');
+      stopOperation();
+    }
+  }, [userName, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, setHasPaid, router, toast]);
+
   const attemptAutoSubmitAfterPayment = useCallback(async () => {
     if (searchParams && searchParams.get('payment_success') === 'true' && hasPaid && userName) {
-      setIsProcessingPayment(true);
       const persistedFormDataJson = sessionStorage.getItem('palmVerseCheckoutForm');
-
-      const currentSearchParamsString = searchParams.toString();
-      const newParams = new URLSearchParams(currentSearchParamsString);
+      
+      const newParams = new URLSearchParams(searchParams.toString());
       newParams.delete('payment_success');
-
       const basePath = '/palm-input';
       const finalRedirectPath = categoryFromQuery ? `${basePath}?category=${encodeURIComponent(categoryFromQuery)}` : basePath;
       router.replace(finalRedirectPath, { scroll: false });
-
 
       if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
@@ -93,71 +123,30 @@ function PalmInputPageComponent() {
                               (categoryFromQuery || persistedData.category);
 
         if (canAutoSubmit) {
-          startOperation();
-          setHasPaid(false); // Consume the payment voucher immediately
-          let initialReportId = '';
-          try {
-            const finalCategoryForReport = categoryFromQuery || persistedData.category;
-            const reportDetailsForPlaceholder: ReportPalmInputDetails = {
-                ...persistedData,
-                category: finalCategoryForReport!,
-            };
-
-            initialReportId = createInitialReportPlaceholder(reportDetailsForPlaceholder);
-             toast({
-                title: "Request Submitted for Review",
-                description: "Your palm reading information has been sent to our experts. Your report will be available in 'My Reading' once ready.",
-                duration: 5000
-            });
-
-            const aiFlowInput: GeneratePalmReadingInput = {
-              frontPalmDataUri: persistedData.frontPalmDataUri!,
-              sidePalmDataUri: persistedData.sidePalmDataUri!,
-              dateOfBirth: persistedData.dateOfBirth,
-              placeOfBirth: persistedData.placeOfBirth,
-              timeOfBirth: persistedData.timeOfBirth || "Not specified",
-              dominantHand: persistedData.dominantHand,
-              category: finalCategoryForReport!,
-            };
-
-            const result = await generatePalmReading(aiFlowInput);
-            updateReportWithGeneratedContent(initialReportId, result.report);
-            router.push('/');
-          } catch (error) {
-            console.error("Error auto-generating palm reading:", error);
-            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during auto-generation.";
-            if (initialReportId) {
-               markReportAsGenerationFailed(initialReportId, `Auto-generation failed after payment: ${errorMessage}`);
-            }
-            toast({ title: "Auto-Generation Error", description: `An issue occurred. Please try submitting again.`, variant: "destructive" });
-            router.push('/');
-          } finally {
-            sessionStorage.removeItem('palmVerseCheckoutForm');
-            if(isOperationInProgress) stopOperation();
-          }
+          await handlePaidSubmission({ ...persistedData, category: categoryFromQuery || persistedData.category });
         } else {
           toast({
             title: "Payment Successful",
-            description: "Your payment was processed. Please complete your details on the form and submit when ready.",
+            description: "Please complete your details and submit when ready.",
             duration: 5000
           });
-          router.push('/');
+          // Do not redirect to home, let user complete the form.
         }
       } else {
         toast({
           title: "Payment Successful",
-          description: "Your payment was processed, but we couldn't find your form data. Please fill out the form again to submit.",
+          description: "We couldn't find your form data. Please fill out the form again to submit.",
           duration: 5000
         });
-        router.push('/');
       }
     }
-  }, [searchParams, hasPaid, setHasPaid, userName, router, toast, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, isOperationInProgress, categoryFromQuery]);
+  }, [searchParams, hasPaid, userName, router, toast, categoryFromQuery, handlePaidSubmission]);
 
   useEffect(() => {
-    attemptAutoSubmitAfterPayment();
-  }, [attemptAutoSubmitAfterPayment]);
-
+    if (authCheckComplete) {
+      attemptAutoSubmitAfterPayment();
+    }
+  }, [authCheckComplete, attemptAutoSubmitAfterPayment]);
 
   if (isInitializing || !authCheckComplete) {
     return (
@@ -168,22 +157,16 @@ function PalmInputPageComponent() {
     );
   }
 
-  if (isProcessingPayment) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Payment successful! Preparing your report...</p>
-        <p className="text-sm text-muted-foreground mt-2">Please wait, you will be redirected shortly.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="relative space-y-8 md:space-y-10">
       <div className="relative z-10">
         {isValidCategorySelected ? (
           <>
-            <PalmInputForm categoryFromQuery={categoryFromQuery} categoryDescription={categoryDescription} />
+            <PalmInputForm
+              categoryFromQuery={categoryFromQuery}
+              categoryDescription={categoryDescription}
+              onPaidSubmit={handlePaidSubmission}
+            />
             <div className="w-full space-y-8 mt-12">
               <Card className="shadow-lg bg-card/90 backdrop-blur-sm border border-border">
                 <CardHeader>

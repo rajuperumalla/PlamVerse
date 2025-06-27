@@ -1,6 +1,6 @@
 
 "use client";
-import { useState, type ChangeEvent, type FormEvent, useEffect, useCallback } from 'react';
+import { useState, type ChangeEvent, type FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,6 @@ import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext
 import { useToast } from '@/hooks/use-toast';
 import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { generatePalmReading, type GeneratePalmReadingInput } from '@/ai/flows/generate-palm-reading';
 
 const SESSION_STORAGE_KEY = 'palmVerseCheckoutForm';
 
@@ -28,9 +27,10 @@ const readingCategories = [
 interface PalmInputFormProps {
   categoryFromQuery: string | null;
   categoryDescription?: string;
+  onPaidSubmit: (data: ReportPalmInputDetails) => void;
 }
 
-const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputFormProps) => {
+const PalmInputForm = ({ categoryFromQuery, categoryDescription, onPaidSubmit }: PalmInputFormProps) => {
   const [frontPalmImageFile, setFrontPalmImageFile] = useState<File | null>(null);
   const [sidePalmImageFile, setSidePalmImageFile] = useState<File | null>(null);
   const [frontPalmPreview, setFrontPalmPreview] = useState<string | null>(null);
@@ -44,14 +44,8 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
 
   const router = useRouter();
   const {
-    startOperation,
-    stopOperation,
     isOperationInProgress,
-    createInitialReportPlaceholder,
-    updateReportWithGeneratedContent,
-    markReportAsGenerationFailed,
     hasPaid,
-    setHasPaid
   } = useAppContext();
   const { toast } = useToast();
 
@@ -70,7 +64,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
     if (!frontPalmPreview || !sidePalmPreview || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
@@ -87,49 +81,20 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
       dominantHand,
       category,
     };
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(reportInputDetails));
+    
+    try {
+        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(reportInputDetails));
+    } catch (error) {
+        toast({ title: "Image Too Large", description: "An uploaded image is too large. Please use smaller image files (under 5MB).", variant: "destructive"});
+        console.error("Session storage error:", error);
+        return;
+    }
 
     if (!hasPaid) {
       const returnPath = `/palm-input${category ? `?category=${encodeURIComponent(category)}` : ''}`;
       router.push(`/payment?service_type=palmistry&return_path=${encodeURIComponent(returnPath)}`);
     } else {
-      // Post-payment submission logic
-      startOperation();
-      let initialReportId = '';
-      try {
-        initialReportId = createInitialReportPlaceholder(reportInputDetails);
-        toast({
-          title: "Request Submitted for Review",
-          description: "Your palm reading information has been sent to our experts. Your report will be available in 'My Reading' once ready.",
-          duration: 5000
-        });
-
-        const aiFlowInput: GeneratePalmReadingInput = {
-          frontPalmDataUri: reportInputDetails.frontPalmDataUri!,
-          sidePalmDataUri: reportInputDetails.sidePalmDataUri!,
-          dateOfBirth: reportInputDetails.dateOfBirth,
-          placeOfBirth: reportInputDetails.placeOfBirth,
-          timeOfBirth: reportInputDetails.timeOfBirth || "Not specified",
-          dominantHand: reportInputDetails.dominantHand,
-          category: reportInputDetails.category,
-        };
-
-        const result = await generatePalmReading(aiFlowInput);
-        updateReportWithGeneratedContent(initialReportId, result.report);
-        router.push('/'); // Redirect to home on success
-      } catch (error) {
-        console.error("Error generating palm reading:", error);
-        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during generation.";
-        if (initialReportId) {
-          markReportAsGenerationFailed(initialReportId, `Manual submission failed: ${errorMessage}`);
-        }
-        toast({ title: "Generation Error", description: `An issue occurred. Please try submitting again.`, variant: "destructive" });
-        router.push('/'); // Redirect to home on error too
-      } finally {
-        setHasPaid(false); // Consume payment voucher
-        sessionStorage.removeItem(SESSION_STORAGE_KEY);
-        stopOperation();
-      }
+      onPaidSubmit(reportInputDetails);
     }
   };
 
@@ -137,7 +102,9 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (persistedFormDataJson) {
       try {
-        const persistedData = JSON.parse(persistedFormDataJson);
+        const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
+        setFrontPalmPreview(persistedData.frontPalmDataUri || null);
+        setSidePalmPreview(persistedData.sidePalmDataUri || null);
         setDateOfBirth(persistedData.dateOfBirth || '');
         setPlaceOfBirth(persistedData.placeOfBirth || '');
         setTimeOfBirth(persistedData.timeOfBirth === 'Not specified' ? '' : persistedData.timeOfBirth || '');
@@ -151,12 +118,6 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     } else if (categoryFromQuery) {
       setCategory(categoryFromQuery);
     }
-    
-    // Always clear image previews on component mount
-    setFrontPalmPreview(null);
-    setSidePalmPreview(null);
-    setFrontPalmImageFile(null);
-    setSidePalmImageFile(null);
   }, [categoryFromQuery]);
 
 
