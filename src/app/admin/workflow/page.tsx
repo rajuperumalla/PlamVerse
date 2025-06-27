@@ -95,6 +95,7 @@ export default function AdminWorkflowPage() {
                         <TableRow>
                         <TableHead className="w-[100px]">Report ID</TableHead>
                         <TableHead>User</TableHead>
+                        <TableHead>Source Type</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead>Submitted</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -105,7 +106,13 @@ export default function AdminWorkflowPage() {
                         <TableRow key={report.id}>
                             <TableCell className="font-medium text-xs">{report.id.substring(0, 8)}...</TableCell>
                             <TableCell className="text-xs">{report.userName || 'N/A'}</TableCell>
-                            <TableCell className="text-xs">{report.category}</TableCell>
+                            <TableCell className="text-xs capitalize">{report.reportType}</TableCell>
+                            <TableCell className="text-xs">
+                                {report.reportType === 'numerology'
+                                ? report.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+                                : report.category
+                                }
+                            </TableCell>
                             <TableCell className="text-xs">
                             {report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}
                             </TableCell>
