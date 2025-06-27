@@ -1,4 +1,3 @@
-
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -123,6 +122,7 @@ export default function EditorDashboardPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
+                  <TableHead>Source Type</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Submitted On</TableHead>
                   <TableHead className="text-right">Action</TableHead>
@@ -133,7 +133,13 @@ export default function EditorDashboardPage() {
                   pendingReviewReports.slice(0, 5).map((report) => (
                     <TableRow key={report.id}>
                       <TableCell>{report.userName}</TableCell>
-                      <TableCell>{report.category}</TableCell>
+                      <TableCell className="capitalize">{report.reportType}</TableCell>
+                      <TableCell>
+                        {report.reportType === 'numerology'
+                          ? report.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+                          : report.category
+                        }
+                      </TableCell>
                       <TableCell>
                         {new Date(report.submissionDate).toLocaleDateString()}
                       </TableCell>
@@ -149,7 +155,7 @@ export default function EditorDashboardPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                       No pending reports. Great job!
                     </TableCell>
                   </TableRow>
