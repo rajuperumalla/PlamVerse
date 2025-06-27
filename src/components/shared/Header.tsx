@@ -1,7 +1,7 @@
 
 "use client";
 import Link from 'next/link';
-import { Hand, LogOut, Edit, ShieldCheck, BookOpen, Calculator, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap, Handshake, LayoutDashboard } from 'lucide-react';
+import { Hand, LogOut, Edit, ShieldCheck, BookOpen, Calculator, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap, Handshake, LayoutDashboard, ListChecks, FileCheck2 } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -51,6 +51,8 @@ const Header = () => {
     isNumerologyInputPageActive: false,
     isReportPageActive: false,
     isProductsPageActive: false,
+    isEditorWorkflowPageActive: false,
+    isEditorApprovedPageActive: false,
   });
 
   useEffect(() => {
@@ -63,6 +65,8 @@ const Header = () => {
       isNumerologyInputPageActive: pathname === '/numerology-input' && !!numerologyServicesConst.find(ns => ns.query === numeroServiceFromQuery),
       isReportPageActive: pathname === '/report',
       isProductsPageActive: pathname.startsWith('/products'),
+      isEditorWorkflowPageActive: pathname === '/editor/workflow' || pathname === '/editor' || pathname.startsWith('/editor/review'),
+      isEditorApprovedPageActive: pathname === '/editor/approved',
     });
   }, [pathname, searchParams]);
 
@@ -152,14 +156,33 @@ const Header = () => {
     </>
   );
 
-  const renderSpecializedHeader = (title: string, icon: React.ReactNode) => (
+  const renderEditorHeader = () => (
     <>
-      <Link href={isEditor ? "/editor" : "/admin"} className="flex-shrink-0 flex items-center gap-2 hover:opacity-80 transition-opacity">
-        {icon}
-        <h1 className="text-xl sm:text-2xl font-headline font-bold">{title}</h1>
+      <Link href="/editor" className="flex-shrink-0 flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <Edit className="h-7 w-7 sm:h-8 sm:w-8" />
+        <h1 className="text-xl sm:text-2xl font-headline font-bold">PalmVerse Editor</h1>
       </Link>
       <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-6 flex-grow">
-        {/* Simplified navigation for specialized roles */}
+        <Link href="/editor/workflow" className={getLinkClassName(activeStates.isEditorWorkflowPageActive)}>
+          <ListChecks className="mr-1.5 h-4 w-4" />
+          Pending Reviews
+        </Link>
+        <Link href="/editor/approved" className={getLinkClassName(activeStates.isEditorApprovedPageActive)}>
+          <FileCheck2 className="mr-1.5 h-4 w-4" />
+          Approved Reports
+        </Link>
+      </nav>
+    </>
+  );
+
+  const renderAdminHeader = () => (
+    <>
+      <Link href="/admin" className="flex-shrink-0 flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <ShieldCheck className="h-7 w-7 sm:h-8 sm:w-8" />
+        <h1 className="text-xl sm:text-2xl font-headline font-bold">PalmVerse Admin</h1>
+      </Link>
+      <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-6 flex-grow">
+        {/* Admin nav remains simple in header as sidebar handles complex navigation */}
       </nav>
     </>
   );
@@ -168,8 +191,8 @@ const Header = () => {
     <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-40">
       <div className="container px-4 py-3 flex items-center">
         <ClientOnly>
-          {isEditor ? renderSpecializedHeader("PalmVerse Editor", <Edit className="h-7 w-7 sm:h-8 sm:w-8" />) :
-           isAdmin ? renderSpecializedHeader("PalmVerse Admin", <ShieldCheck className="h-7 w-7 sm:h-8 sm:w-8" />) :
+          {isEditor ? renderEditorHeader() :
+           isAdmin ? renderAdminHeader() :
            renderUserHeader()
           }
         </ClientOnly>
@@ -200,7 +223,7 @@ const Header = () => {
                   <DropdownMenuSeparator className="bg-primary-foreground/20"/>
                   {isEditor && (
                     <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                      <Link href="/editor">
+                      <Link href="/editor/workflow">
                         <LayoutDashboard className="mr-2 h-4 w-4" /> Editor Dashboard
                       </Link>
                     </DropdownMenuItem>
@@ -239,7 +262,6 @@ const Header = () => {
                 <ClientOnly>
                   {isEditor ? (
                     <>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor">Dashboard</Link></DropdownMenuItem>
                       <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor/workflow">Pending Reviews</Link></DropdownMenuItem>
                       <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor/approved">Approved Reports</Link></DropdownMenuItem>
                     </>
