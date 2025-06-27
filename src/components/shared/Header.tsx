@@ -51,6 +51,7 @@ const Header = () => {
     isNumerologyInputPageActive: false,
     isReportPageActive: false,
     isProductsPageActive: false,
+    isEditorDashboardActive: false,
     isEditorWorkflowPageActive: false,
     isEditorApprovedPageActive: false,
   });
@@ -65,7 +66,8 @@ const Header = () => {
       isNumerologyInputPageActive: pathname === '/numerology-input' && !!numerologyServicesConst.find(ns => ns.query === numeroServiceFromQuery),
       isReportPageActive: pathname === '/report',
       isProductsPageActive: pathname.startsWith('/products'),
-      isEditorWorkflowPageActive: pathname === '/editor/workflow' || pathname === '/editor' || pathname.startsWith('/editor/review'),
+      isEditorDashboardActive: pathname === '/editor',
+      isEditorWorkflowPageActive: pathname === '/editor/workflow' || pathname.startsWith('/editor/review'),
       isEditorApprovedPageActive: pathname === '/editor/approved',
     });
   }, [pathname, searchParams]);
@@ -163,6 +165,10 @@ const Header = () => {
         <h1 className="text-xl sm:text-2xl font-headline font-bold">PalmVerse Editor</h1>
       </Link>
       <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-6 flex-grow">
+        <Link href="/editor" className={getLinkClassName(activeStates.isEditorDashboardActive)}>
+          <LayoutDashboard className="mr-1.5 h-4 w-4" />
+          Dashboard
+        </Link>
         <Link href="/editor/workflow" className={getLinkClassName(activeStates.isEditorWorkflowPageActive)}>
           <ListChecks className="mr-1.5 h-4 w-4" />
           Pending Reviews
@@ -223,7 +229,7 @@ const Header = () => {
                   <DropdownMenuSeparator className="bg-primary-foreground/20"/>
                   {isEditor && (
                     <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                      <Link href="/editor/workflow">
+                      <Link href="/editor">
                         <LayoutDashboard className="mr-2 h-4 w-4" /> Editor Dashboard
                       </Link>
                     </DropdownMenuItem>
@@ -262,6 +268,7 @@ const Header = () => {
                 <ClientOnly>
                   {isEditor ? (
                     <>
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor">Dashboard</Link></DropdownMenuItem>
                       <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor/workflow">Pending Reviews</Link></DropdownMenuItem>
                       <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor/approved">Approved Reports</Link></DropdownMenuItem>
                     </>
