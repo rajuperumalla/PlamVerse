@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertTriangle, LogIn } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export default function ManagerLayout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isManager, isInitializing } = useAppContext();
@@ -69,5 +70,3 @@ export default function ManagerLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
-    
