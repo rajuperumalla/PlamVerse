@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const SESSION_STORAGE_KEY = 'palmVerseCheckoutForm';
 
@@ -161,7 +162,23 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
             <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <Label htmlFor="dominantHand" className="text-base flex items-center gap-2"><UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *</Label>
+                        <div className="flex items-center gap-1.5">
+                            <Label htmlFor="dominantHand" className="text-base flex items-center gap-2">
+                                <UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *
+                            </Label>
+                            <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button type="button" onClick={e => e.preventDefault()} className="inline-flex items-center justify-center p-0 bg-transparent border-none">
+                                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Hand that you use most?</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
                         <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress} required>
                         <SelectTrigger id="dominantHand">
                             <SelectValue placeholder="Select your dominant hand" />
