@@ -8,11 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { Phone, KeyRound, UserPlus, ArrowLeft, Edit, ShieldCheck } from 'lucide-react';
+import { Phone, KeyRound, UserPlus, ArrowLeft, Edit, ShieldCheck, Briefcase } from 'lucide-react';
 
 interface OtpFormProps {
   onBack?: () => void;
-  mode?: 'login' | 'register' | 'editor' | 'admin';
+  mode?: 'login' | 'register' | 'editor' | 'admin' | 'manager';
 }
 
 const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
@@ -50,6 +50,16 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     otpPlaceholder = "Editor OTP (use '000000')";
     formIcon = <Edit className="h-10 w-10 text-primary" />;
     inputType = 'text';
+  } else if (mode === 'manager') {
+    cardTitle = "Manager Portal Access";
+    cardDescription = "Enter manager credentials to proceed.";
+    primaryButtonText = "Send Manager OTP";
+    verifyButtonText = "Verify OTP & Login as Manager";
+    identifierLabel = "Manager ID";
+    identifierPlaceholder = "Enter Manager ID (use 'manager')";
+    otpPlaceholder = "Manager OTP (use '222222')";
+    formIcon = <Briefcase className="h-10 w-10 text-purple-600" />;
+    inputType = 'text';
   } else if (mode === 'admin') {
     cardTitle = "Admin Portal Access";
     cardDescription = "Enter admin credentials to proceed.";
@@ -69,6 +79,11 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
         toast({ title: "Invalid Editor ID", description: "Please enter the correct Editor ID.", variant: "destructive" });
         return;
       }
+    } else if (mode === 'manager') {
+      if (mobileNumber !== 'manager') {
+        toast({ title: "Invalid Manager ID", description: "Please enter the correct Manager ID.", variant: "destructive" });
+        return;
+      }
     } else if (mode === 'admin') {
       if (mobileNumber !== 'admin') {
         toast({ title: "Invalid Admin ID", description: "Please enter the correct Admin ID.", variant: "destructive" });
@@ -82,7 +97,7 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     setOtpSent(true);
     setIsLoading(false);
-    const simulatedOtp = mode === 'editor' ? '000000' : (mode === 'admin' ? '111111' : '123456');
+    const simulatedOtp = mode === 'editor' ? '000000' : (mode === 'admin' ? '111111' : (mode === 'manager' ? '222222' : '123456'));
     toast({ title: "OTP Sent", description: `An OTP has been sent (simulated: ${simulatedOtp}).` });
   };
 
@@ -99,11 +114,19 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
       } else {
         toast({ title: "Invalid Editor Credentials", description: "The Editor ID or OTP is incorrect.", variant: "destructive" });
       }
+    } else if (mode === 'manager') {
+      if (mobileNumber === 'manager' && otp === '222222') {
+        login('manager_user');
+        toast({ title: "Manager Login Successful", description: "Redirecting to Manager Panel..." });
+        router.push('/manager');
+      } else {
+        toast({ title: "Invalid Manager Credentials", description: "The Manager ID or OTP is incorrect.", variant: "destructive" });
+      }
     } else if (mode === 'admin') {
       if (mobileNumber === 'admin' && otp === '111111') {
         login('admin_user');
         toast({ title: "Admin Login Successful", description: "Redirecting to Admin Panel..." });
-        router.push('/admin'); // New route for Ecommerce Admin
+        router.push('/admin'); 
       } else {
         toast({ title: "Invalid Admin Credentials", description: "The Admin ID or OTP is incorrect.", variant: "destructive" });
       }
@@ -125,7 +148,7 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
     <div className="flex justify-center items-center py-12">
       <Card className="w-full max-w-md shadow-xl animate-fade-in">
         <CardHeader className="text-center">
-          <div className={`mx-auto ${mode === 'admin' ? 'bg-accent/10' : 'bg-primary/10'} p-3 rounded-full w-fit mb-4`}>
+          <div className={`mx-auto ${mode === 'admin' ? 'bg-accent/10' : (mode === 'manager' ? 'bg-purple-500/10' : 'bg-primary/10')} p-3 rounded-full w-fit mb-4`}>
             {formIcon}
           </div>
           <CardTitle className="font-headline text-3xl">{cardTitle}</CardTitle>
@@ -137,7 +160,7 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
               <div className="space-y-2">
                 <Label htmlFor="identifier" className="text-base">{identifierLabel}</Label>
                 <div className="flex items-center gap-2 border rounded-md px-3 focus-within:ring-2 focus-within:ring-ring">
-                  {mode === 'login' || mode === 'register' ? <Phone className="h-5 w-5 text-muted-foreground" /> : (mode === 'editor' ? <Edit className="h-5 w-5 text-muted-foreground" /> : <ShieldCheck className="h-5 w-5 text-muted-foreground" />)}
+                  {mode === 'login' || mode === 'register' ? <Phone className="h-5 w-5 text-muted-foreground" /> : (mode === 'editor' ? <Edit className="h-5 w-5 text-muted-foreground" /> : (mode === 'manager' ? <Briefcase className="h-5 w-5 text-muted-foreground" /> : <ShieldCheck className="h-5 w-5 text-muted-foreground" />))}
                   <Input
                     id="identifier"
                     type={inputType}
@@ -198,3 +221,5 @@ const OtpForm = ({ onBack, mode = 'login' }: OtpFormProps) => {
 };
 
 export default OtpForm;
+
+    

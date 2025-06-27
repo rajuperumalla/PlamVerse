@@ -15,7 +15,7 @@ import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvement
 import { Loader2, CheckCircle, AlertTriangle, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, ThumbsUp, Brain } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-export default function EditorReviewReportPage() {
+export default function ManagerReviewReportPage() {
   const { reportId } = useParams() as { reportId: string };
   const router = useRouter();
   const {
@@ -25,7 +25,7 @@ export default function EditorReviewReportPage() {
     stopOperation,
     isOperationInProgress,
     isAuthenticated,
-    isEditor,
+    isManager,
     isInitializing
   } = useAppContext();
   const { toast } = useToast();
@@ -43,7 +43,7 @@ export default function EditorReviewReportPage() {
     if (!isInitializing) {
       if (!isAuthenticated) {
         router.push('/');
-      } else if (!isEditor) {
+      } else if (!isManager) {
         toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
         router.push('/');
       } else {
@@ -52,7 +52,7 @@ export default function EditorReviewReportPage() {
       }
       setAuthCheckComplete(true);
     }
-  }, [isAuthenticated, isEditor, reportId, getReportById, router, toast, isInitializing]);
+  }, [isAuthenticated, isManager, reportId, getReportById, router, toast, isInitializing]);
 
   const handleGetAiSuggestions = async () => {
     if (!report || !report.content) {
@@ -109,7 +109,7 @@ export default function EditorReviewReportPage() {
     try {
       approveReport(report.id, generatedReportPreview);
       toast({ title: "Report Approved & Live", description: `Report ID ${report.id.substring(0,10)}... has been approved with your guided content.` });
-      router.push('/editor/approved');
+      router.push('/manager/approved');
     } catch (error) {
       console.error("Error during final approval:", error);
       toast({ title: "Final Approval Error", description: `Failed to approve report. Please try again.`, variant: "destructive" });
@@ -123,7 +123,7 @@ export default function EditorReviewReportPage() {
     startOperation();
     approveReport(report.id, report.content);
     toast({ title: "Original Report Approved As-Is", description: `Report ID ${report.id.substring(0,10)}... (initial AI version) has been approved.` });
-    router.push('/editor/approved');
+    router.push('/manager/approved');
     stopOperation();
   };
 
@@ -142,7 +142,7 @@ export default function EditorReviewReportPage() {
         <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
         <h1 className="text-2xl font-bold">Report Not Found</h1>
         <p className="text-muted-foreground mb-4">The report you are looking for does not exist or could not be loaded.</p>
-        <Button onClick={() => router.push('/editor/workflow')}><ArrowLeft className="mr-2 h-4 w-4" />Back to Workflow</Button>
+        <Button onClick={() => router.push('/manager/workflow')}><ArrowLeft className="mr-2 h-4 w-4" />Back to Workflow</Button>
       </div>
     );
   }
@@ -153,7 +153,7 @@ export default function EditorReviewReportPage() {
         <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
         <h1 className="text-2xl font-bold">Report Not Pending Review</h1>
         <p className="text-muted-foreground mb-4">This report (ID: {report.id.substring(0,10)}...) is not currently pending review. Its status is: {report.status}.</p>
-        <Button onClick={() => router.push('/editor/workflow')}><ArrowLeft className="mr-2 h-4 w-4" />Back to Workflow</Button>
+        <Button onClick={() => router.push('/manager/workflow')}><ArrowLeft className="mr-2 h-4 w-4" />Back to Workflow</Button>
       </div>
     );
   }
@@ -162,7 +162,7 @@ export default function EditorReviewReportPage() {
 
   return (
     <div className="container mx-auto py-8 max-w-4xl">
-      <Button onClick={() => router.push('/editor/workflow')} variant="outline" className="mb-6">
+      <Button onClick={() => router.push('/manager/workflow')} variant="outline" className="mb-6">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Workflow
       </Button>
 
@@ -249,7 +249,7 @@ export default function EditorReviewReportPage() {
           </div>
 
           <div className="space-y-2 border-t pt-6">
-            <Label htmlFor="expertAnalysisNotes" className="text-md font-medium flex items-center gap-1.5"><Brain className="h-5 w-5 text-primary"/>Editor's Expert Analysis & Directives for AI</Label>
+            <Label htmlFor="expertAnalysisNotes" className="text-md font-medium flex items-center gap-1.5"><Brain className="h-5 w-5 text-primary"/>Expert Analysis & Directives for AI</Label>
             <Textarea
               id="expertAnalysisNotes"
               value={expertAnalysisNotes}
