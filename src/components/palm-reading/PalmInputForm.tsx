@@ -13,6 +13,7 @@ import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext
 import { useToast } from '@/hooks/use-toast';
 import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { generatePalmReading, type GeneratePalmReadingInput } from '@/ai/flows/generate-palm-reading';
 
 const SESSION_STORAGE_KEY = 'palmVerseCheckoutForm';
 
@@ -47,6 +48,10 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     stopOperation,
     isOperationInProgress,
     createInitialReportPlaceholder,
+    updateReportWithGeneratedContent,
+    markReportAsGenerationFailed,
+    hasPaid,
+    setHasPaid
   } = useAppContext();
   const { toast } = useToast();
 
@@ -84,8 +89,48 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
     };
     sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(reportInputDetails));
 
-    const returnPath = `/palm-input${category ? `?category=${encodeURIComponent(category)}` : ''}`;
-    router.push(`/payment?service_type=palmistry&return_path=${encodeURIComponent(returnPath)}`);
+    if (!hasPaid) {
+      const returnPath = `/palm-input${category ? `?category=${encodeURIComponent(category)}` : ''}`;
+      router.push(`/payment?service_type=palmistry&return_path=${encodeURIComponent(returnPath)}`);
+    } else {
+      // Post-payment submission logic
+      startOperation();
+      let initialReportId = '';
+      try {
+        initialReportId = createInitialReportPlaceholder(reportInputDetails);
+        toast({
+          title: "Request Submitted for Review",
+          description: "Your palm reading information has been sent to our experts. Your report will be available in 'My Reading' once ready.",
+          duration: 5000
+        });
+
+        const aiFlowInput: GeneratePalmReadingInput = {
+          frontPalmDataUri: reportInputDetails.frontPalmDataUri!,
+          sidePalmDataUri: reportInputDetails.sidePalmDataUri!,
+          dateOfBirth: reportInputDetails.dateOfBirth,
+          placeOfBirth: reportInputDetails.placeOfBirth,
+          timeOfBirth: reportInputDetails.timeOfBirth || "Not specified",
+          dominantHand: reportInputDetails.dominantHand,
+          category: reportInputDetails.category,
+        };
+
+        const result = await generatePalmReading(aiFlowInput);
+        updateReportWithGeneratedContent(initialReportId, result.report);
+        router.push('/'); // Redirect to home on success
+      } catch (error) {
+        console.error("Error generating palm reading:", error);
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during generation.";
+        if (initialReportId) {
+          markReportAsGenerationFailed(initialReportId, `Manual submission failed: ${errorMessage}`);
+        }
+        toast({ title: "Generation Error", description: `An issue occurred. Please try submitting again.`, variant: "destructive" });
+        router.push('/'); // Redirect to home on error too
+      } finally {
+        setHasPaid(false); // Consume payment voucher
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        stopOperation();
+      }
+    }
   };
 
   useEffect(() => {
@@ -241,8 +286,13 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription }: PalmInputForm
                     className="w-full text-lg py-6 mt-8"
                     disabled={isOperationInProgress}
                 >
-                    <Sparkles className="mr-2 h-5 w-5" />
-                    Proceed to Payment
+                    {isOperationInProgress ? (
+                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
+                    ) : hasPaid ? (
+                    <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</>
+                    ) : (
+                    <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
+                    )}
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">* All fields required to generate your report.</p>

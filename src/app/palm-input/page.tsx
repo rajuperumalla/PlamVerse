@@ -136,12 +136,20 @@ function PalmInputPageComponent() {
             if(isOperationInProgress) stopOperation();
           }
         } else {
-          setIsProcessingPayment(false);
-          toast({ title: "Payment Successful", description: "Please complete any missing fields and upload images if necessary, then click 'Generate Palm Reading'." });
+          toast({
+            title: "Payment Successful",
+            description: "Your payment was processed. Please complete your details on the form and submit when ready.",
+            duration: 5000
+          });
+          router.push('/');
         }
       } else {
-        setIsProcessingPayment(false);
-        toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
+        toast({
+          title: "Payment Successful",
+          description: "Your payment was processed, but we couldn't find your form data. Please fill out the form again to submit.",
+          duration: 5000
+        });
+        router.push('/');
       }
     }
   }, [searchParams, hasPaid, setHasPaid, userName, router, toast, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, isOperationInProgress, categoryFromQuery]);

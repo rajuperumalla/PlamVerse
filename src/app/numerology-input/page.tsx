@@ -71,7 +71,7 @@ function NumerologyInputPageComponent() {
       const storageKey = SESSION_STORAGE_KEYS[serviceQuery as keyof typeof SESSION_STORAGE_KEYS];
       if (!storageKey) {
         toast({ title: "Error", description: "Invalid service type for auto-submission.", variant: "destructive" });
-        setIsProcessingPayment(false);
+        router.push('/');
         return;
       }
       const persistedFormDataJson = sessionStorage.getItem(storageKey);
@@ -113,12 +113,20 @@ function NumerologyInputPageComponent() {
             if(isOperationInProgress) stopOperation();
           }
         } else {
-          setIsProcessingPayment(false);
-          toast({ title: "Payment Successful", description: "Please complete any missing fields and then click 'Generate Report'." });
+          toast({
+            title: "Payment Successful",
+            description: "Your payment was processed. Please complete your details on the form and submit when ready.",
+            duration: 5000
+          });
+          router.push('/');
         }
       } else {
-        setIsProcessingPayment(false);
-        toast({ title: "Payment Successful", description: "Please fill your details to generate the report." });
+        toast({
+          title: "Payment Successful",
+          description: "Your payment was processed, but we couldn't find your form data. Please fill out the form again to submit.",
+          duration: 5000
+        });
+        router.push('/');
       }
     }
   }, [searchParams, hasPaid, setHasPaid, userName, serviceQuery, router, toast, startOperation, stopOperation, createInitialNumerologyReportPlaceholder, isOperationInProgress]);

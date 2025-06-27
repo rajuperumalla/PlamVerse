@@ -176,15 +176,17 @@ const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormPr
                     </div>
                 </Card>
                 
-                <Button 
-                    type="submit" 
-                    className="w-full text-lg py-6 mt-8" 
+                <Button
+                    type="submit"
+                    className="w-full text-lg py-6 mt-8"
                     disabled={isOperationInProgress}
                 >
-                    {isOperationInProgress ? ( 
-                        <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
+                    {isOperationInProgress ? (
+                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
+                    ) : hasPaid ? (
+                    <><Sparkles className="mr-2 h-5 w-5" /> Generate Report</>
                     ) : (
-                        <><Sparkles className="mr-2 h-5 w-5" /> Generate Report</>
+                    <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
                     )}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">* Required fields are marked with an asterisk if not already obvious.</p>
