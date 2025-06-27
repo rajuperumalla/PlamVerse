@@ -41,7 +41,7 @@ const productMenuItems = [
 ];
 
 const Header = () => {
-  const { isAuthenticated, logout, userName, isEditor, isAdmin, isManager } = useAppContext();
+  const { isAuthenticated, logout, userName, isEditor, isAdmin } = useAppContext();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -54,9 +54,6 @@ const Header = () => {
     isEditorDashboardActive: false,
     isEditorWorkflowPageActive: false,
     isEditorApprovedPageActive: false,
-    isManagerDashboardActive: false,
-    isManagerWorkflowPageActive: false,
-    isManagerApprovedPageActive: false,
   });
 
   useEffect(() => {
@@ -72,9 +69,6 @@ const Header = () => {
       isEditorDashboardActive: pathname === '/editor',
       isEditorWorkflowPageActive: pathname === '/editor/workflow' || pathname.startsWith('/editor/review'),
       isEditorApprovedPageActive: pathname === '/editor/approved',
-      isManagerDashboardActive: pathname === '/manager',
-      isManagerWorkflowPageActive: pathname === '/manager/workflow' || pathname.startsWith('/manager/review'),
-      isManagerApprovedPageActive: pathname === '/manager/approved',
     });
   }, [pathname, searchParams]);
 
@@ -186,29 +180,6 @@ const Header = () => {
       </nav>
     </>
   );
-  
-  const renderManagerHeader = () => (
-    <>
-      <Link href="/manager" className="flex-shrink-0 flex items-center gap-2 hover:opacity-80 transition-opacity">
-        <Briefcase className="h-7 w-7 sm:h-8 sm:w-8" />
-        <h1 className="text-xl sm:text-2xl font-headline font-bold">PalmVerse Manager</h1>
-      </Link>
-      <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-6 flex-grow">
-        <Link href="/manager" className={getLinkClassName(activeStates.isManagerDashboardActive)}>
-          <LayoutDashboard className="mr-1.5 h-4 w-4" />
-          Dashboard
-        </Link>
-        <Link href="/manager/workflow" className={getLinkClassName(activeStates.isManagerWorkflowPageActive)}>
-          <ListChecks className="mr-1.5 h-4 w-4" />
-          Report Workflow
-        </Link>
-        <Link href="/manager/approved" className={getLinkClassName(activeStates.isManagerApprovedPageActive)}>
-          <FileCheck2 className="mr-1.5 h-4 w-4" />
-          Approved Reports
-        </Link>
-      </nav>
-    </>
-  );
 
   const renderAdminHeader = () => (
     <>
@@ -217,7 +188,7 @@ const Header = () => {
         <h1 className="text-xl sm:text-2xl font-headline font-bold">PalmVerse Admin</h1>
       </Link>
       <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-6 flex-grow">
-        {/* Admin nav remains simple in header as sidebar handles complex navigation */}
+        {/* Admin nav is now handled by the dedicated sidebar in the admin layout */}
       </nav>
     </>
   );
@@ -227,7 +198,6 @@ const Header = () => {
       <div className="container px-4 py-3 flex items-center">
         <ClientOnly>
           {isEditor ? renderEditorHeader() :
-           isManager ? renderManagerHeader() :
            isAdmin ? renderAdminHeader() :
            renderUserHeader()
           }
@@ -247,9 +217,9 @@ const Header = () => {
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        {isEditor ? "Editor" : isAdmin ? "Admin" : isManager ? "Manager" : (userName || "User")}
+                        {isEditor ? "Editor" : isAdmin ? "Admin" : (userName || "User")}
                       </p>
-                      {!(isEditor || isAdmin || isManager) && userName && (
+                      {!(isEditor || isAdmin) && userName && (
                           <p className="text-xs leading-none text-primary-foreground/80">
                           {userName.includes('@') ? userName : `${userName.substring(0,10)}...`}
                           </p>
@@ -264,13 +234,6 @@ const Header = () => {
                       </Link>
                     </DropdownMenuItem>
                   )}
-                  {isManager && (
-                    <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                      <Link href="/manager">
-                        <LayoutDashboard className="mr-2 h-4 w-4" /> Manager Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
                   {isAdmin && (
                     <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
                       <Link href="/admin">
@@ -278,14 +241,14 @@ const Header = () => {
                       </Link>
                     </DropdownMenuItem>
                   )}
-                 {isAuthenticated && !isEditor && !isAdmin && !isManager && (
+                 {isAuthenticated && !isEditor && !isAdmin && (
                     <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
                         <Link href="/report">
                             <BookOpen className="mr-2 h-4 w-4" /> My Reading
                         </Link>
                     </DropdownMenuItem>
                   )}
-                {(isEditor || isAdmin || isManager || (isAuthenticated && !isEditor && !isAdmin && !isManager)) && <DropdownMenuSeparator className="bg-primary-foreground/20"/>}
+                {(isEditor || isAdmin) && <DropdownMenuSeparator className="bg-primary-foreground/20"/>}
                 <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-300 hover:!bg-red-500/50 focus:!bg-red-500/50 hover:!text-white">
                   <LogOut className="mr-2 h-4 w-4" /> Logout
                 </DropdownMenuItem>
@@ -308,12 +271,6 @@ const Header = () => {
                       <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor">Dashboard</Link></DropdownMenuItem>
                       <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor/workflow">Pending Reviews</Link></DropdownMenuItem>
                       <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor/approved">Approved Reports</Link></DropdownMenuItem>
-                    </>
-                  ) : isManager ? (
-                    <>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/manager">Dashboard</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/manager/workflow">Report Workflow</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/manager/approved">Approved Reports</Link></DropdownMenuItem>
                     </>
                   ) : isAdmin ? (
                      <>
@@ -347,5 +304,3 @@ const Header = () => {
 };
 
 export default Header;
-
-    

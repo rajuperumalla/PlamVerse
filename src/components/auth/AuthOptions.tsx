@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const AuthOptions = () => {
   const [showOtpForm, setShowOtpForm] = useState(false);
-  const [otpMode, setOtpMode] = useState<'login' | 'register' | 'editor' | 'admin' | 'manager'>('login');
+  const [otpMode, setOtpMode] = useState<'login' | 'register' | 'editor' | 'admin'>('login');
   const { login } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
@@ -39,11 +39,6 @@ const AuthOptions = () => {
 
   const handleShowAdminLogin = () => {
     setOtpMode('admin');
-    setShowOtpForm(true);
-  };
-
-  const handleShowManagerLogin = () => {
-    setOtpMode('manager');
     setShowOtpForm(true);
   };
 
@@ -97,13 +92,10 @@ const AuthOptions = () => {
             <Button onClick={handleShowEditorLogin} variant="ghost" className="w-full text-sm py-3 border border-primary/50 hover:bg-primary/10 text-primary">
                 <Edit className="mr-2 h-5 w-5" /> Editor Login
             </Button>
-             <Button onClick={handleShowManagerLogin} variant="ghost" className="w-full text-sm py-3 border border-purple-500/50 hover:bg-purple-500/10 text-purple-600">
-                <Briefcase className="mr-2 h-5 w-5" /> Manager Login
+             <Button onClick={handleShowAdminLogin} variant="ghost" className="w-full text-sm py-3 border border-accent/70 hover:bg-accent/10 text-accent col-span-full sm:col-span-1">
+                <ShieldCheck className="mr-2 h-5 w-5" /> Admin Login
             </Button>
         </div>
-        <Button onClick={handleShowAdminLogin} variant="ghost" className="w-full text-sm py-3 border border-accent/70 hover:bg-accent/10 text-accent">
-          <ShieldCheck className="mr-2 h-5 w-5" /> Admin Login
-        </Button>
       </CardContent>
       <CardFooter className="mt-2">
         <p className="text-xs text-muted-foreground text-center w-full">
@@ -115,5 +107,3 @@ const AuthOptions = () => {
 };
 
 export default AuthOptions;
-
-    

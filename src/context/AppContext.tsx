@@ -66,7 +66,6 @@ interface AppState {
   hasPaid: boolean;
   isEditor: boolean;
   isAdmin: boolean;
-  isManager: boolean;
   isInitializing: boolean;
 }
 
@@ -177,7 +176,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [hasPaid, _setHasPaid] = useState(false);
   const [isEditor, setIsEditor] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isManager, setIsManager] = useState(false);
   const router = useRouter();
 
   const setHasPaid = (paid: boolean) => {
@@ -218,7 +216,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const storedName = sessionStorage.getItem('palmverse_userName');
         const storedIsEditor = sessionStorage.getItem('palmverse_isEditor');
         const storedIsAdmin = sessionStorage.getItem('palmverse_isAdmin');
-        const storedIsManager = sessionStorage.getItem('palmverse_isManager');
         const storedReports = localStorage.getItem(REPORTS_STORAGE_KEY);
         const storedHasPaid = sessionStorage.getItem(HAS_PAID_STORAGE_KEY);
         
@@ -231,7 +228,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             setUserName(storedName);
             if (storedIsEditor === 'true') setIsEditor(true);
             if (storedIsAdmin === 'true') setIsAdmin(true);
-            if (storedIsManager === 'true') setIsManager(true);
         }
         
         if (storedReports) {
@@ -262,15 +258,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     const isEditorLogin = name === 'editor_user';
     const isAdminLogin = name === 'admin_user';
-    const isManagerLogin = name === 'manager_user';
 
     setIsEditor(isEditorLogin);
     setIsAdmin(isAdminLogin);
-    setIsManager(isManagerLogin);
 
     sessionStorage.setItem('palmverse_isEditor', isEditorLogin ? 'true' : 'false');
     sessionStorage.setItem('palmverse_isAdmin', isAdminLogin ? 'true' : 'false');
-    sessionStorage.setItem('palmverse_isManager', isManagerLogin ? 'true' : 'false');
   };
 
   const logout = () => {
@@ -278,13 +271,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUserName(null);
     setIsEditor(false);
     setIsAdmin(false);
-    setIsManager(false);
 
     sessionStorage.removeItem('palmverse_isAuthenticated');
     sessionStorage.removeItem('palmverse_userName');
     sessionStorage.removeItem('palmverse_isEditor');
     sessionStorage.removeItem('palmverse_isAdmin');
-    sessionStorage.removeItem('palmverse_isManager');
     sessionStorage.removeItem(HAS_PAID_STORAGE_KEY);
 
     router.push('/');
@@ -453,7 +444,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       clearCurrentUserReportStorage,
       isEditor,
       isAdmin,
-      isManager,
       loadSampleReports,
       updateReportContent,
       isInitializing,
@@ -470,5 +460,3 @@ export const useAppContext = () => {
   }
   return context;
 };
-
-    
