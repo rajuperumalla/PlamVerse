@@ -1,7 +1,6 @@
 
 "use client";
 import { useState, type ChangeEvent, type FormEvent, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,8 +13,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-const SESSION_STORAGE_KEY = 'palmVerseCheckoutForm';
-
 const readingCategories = [
   { value: "General Personality", label: "General Personality" },
   { value: "Career & Finance", label: "Career & Finance" },
@@ -27,10 +24,11 @@ const readingCategories = [
 interface PalmInputFormProps {
   categoryFromQuery: string | null;
   categoryDescription?: string;
-  onPaidSubmit: (data: ReportPalmInputDetails) => void;
+  onSubmit: (data: ReportPalmInputDetails) => void;
+  hasPaid: boolean;
 }
 
-const PalmInputForm = ({ categoryFromQuery, categoryDescription, onPaidSubmit }: PalmInputFormProps) => {
+const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPaid }: PalmInputFormProps) => {
   const [frontPalmImageFile, setFrontPalmImageFile] = useState<File | null>(null);
   const [sidePalmImageFile, setSidePalmImageFile] = useState<File | null>(null);
   const [frontPalmPreview, setFrontPalmPreview] = useState<string | null>(null);
@@ -42,11 +40,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onPaidSubmit }:
   const [dominantHand, setDominantHand] = useState('');
   const [category, setCategory] = useState(categoryFromQuery || '');
 
-  const router = useRouter();
-  const {
-    isOperationInProgress,
-    hasPaid,
-  } = useAppContext();
+  const { isOperationInProgress } = useAppContext();
   const { toast } = useToast();
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setFile: (file: File | null) => void, setPreview: (url: string | null) => void) => {
@@ -82,40 +76,29 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onPaidSubmit }:
       category,
     };
     
-    try {
-        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(reportInputDetails));
-    } catch (error) {
-        toast({ title: "Image Too Large", description: "An uploaded image is too large. Please use smaller image files (under 5MB).", variant: "destructive"});
-        console.error("Session storage error:", error);
-        return;
-    }
-
-    if (!hasPaid) {
-      const returnPath = `/palm-input${category ? `?category=${encodeURIComponent(category)}` : ''}`;
-      router.push(`/payment?service_type=palmistry&return_path=${encodeURIComponent(returnPath)}`);
-    } else {
-      onPaidSubmit(reportInputDetails);
-    }
+    onSubmit(reportInputDetails);
   };
 
   useEffect(() => {
-    const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    const persistedFormDataJson = sessionStorage.getItem('palmVerseCheckoutForm');
     if (persistedFormDataJson) {
       try {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
-        setFrontPalmPreview(persistedData.frontPalmDataUri || null);
-        setSidePalmPreview(persistedData.sidePalmDataUri || null);
+        // DO NOT set image previews from storage.
         setDateOfBirth(persistedData.dateOfBirth || '');
         setPlaceOfBirth(persistedData.placeOfBirth || '');
         setTimeOfBirth(persistedData.timeOfBirth === 'Not specified' ? '' : persistedData.timeOfBirth || '');
         setDominantHand(persistedData.dominantHand || '');
+        // ALWAYS use the category from the URL if it exists.
         setCategory(categoryFromQuery || persistedData.category || '');
       } catch (e) {
         console.error("Failed to parse form data from session storage", e);
-        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        sessionStorage.removeItem('palmVerseCheckoutForm');
+        // On error, just use the category from query.
         setCategory(categoryFromQuery || '');
       }
     } else if (categoryFromQuery) {
+      // If no session data, still respect the category from query.
       setCategory(categoryFromQuery);
     }
   }, [categoryFromQuery]);

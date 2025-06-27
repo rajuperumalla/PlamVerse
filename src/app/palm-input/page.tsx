@@ -68,12 +68,7 @@ function PalmInputPageComponent() {
     let initialReportId = '';
     try {
       initialReportId = createInitialReportPlaceholder(formData);
-      toast({
-        title: "Request Submitted for Review",
-        description: "Your palm reading information has been sent to our experts. Your report will be available in 'My Reading' once ready.",
-        duration: 5000
-      });
-
+      
       const aiFlowInput: GeneratePalmReadingInput = {
         frontPalmDataUri: formData.frontPalmDataUri!,
         sidePalmDataUri: formData.sidePalmDataUri!,
@@ -86,6 +81,12 @@ function PalmInputPageComponent() {
 
       const result = await generatePalmReading(aiFlowInput);
       updateReportWithGeneratedContent(initialReportId, result.report);
+
+      toast({
+        title: "Request Submitted for Review",
+        description: "Your palm reading information has been sent to our experts. Your report will be available in 'My Reading' once ready.",
+        duration: 5000
+      });
       router.push('/');
     } catch (error) {
       console.error("Error generating palm reading:", error);
@@ -98,9 +99,26 @@ function PalmInputPageComponent() {
     } finally {
       setHasPaid(false);
       sessionStorage.removeItem('palmVerseCheckoutForm');
-      stopOperation();
+      if (isOperationInProgress) stopOperation();
     }
-  }, [userName, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, setHasPaid, router, toast]);
+  }, [userName, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, setHasPaid, router, toast, isOperationInProgress]);
+
+  const handleFormSubmit = (formData: ReportPalmInputDetails) => {
+    try {
+        sessionStorage.setItem('palmVerseCheckoutForm', JSON.stringify(formData));
+    } catch (error) {
+        toast({ title: "Image Too Large", description: "An uploaded image is too large. Please use smaller image files (under 5MB).", variant: "destructive"});
+        console.error("Session storage error:", error);
+        return;
+    }
+
+    if (!hasPaid) {
+      const returnPath = `/palm-input${formData.category ? `?category=${encodeURIComponent(formData.category)}` : ''}`;
+      router.push(`/payment?service_type=palmistry&return_path=${encodeURIComponent(returnPath)}`);
+    } else {
+      handlePaidSubmission(formData);
+    }
+  };
 
   const attemptAutoSubmitAfterPayment = useCallback(async () => {
     if (searchParams && searchParams.get('payment_success') === 'true' && hasPaid && userName) {
@@ -108,9 +126,7 @@ function PalmInputPageComponent() {
       
       const newParams = new URLSearchParams(searchParams.toString());
       newParams.delete('payment_success');
-      const basePath = '/palm-input';
-      const finalRedirectPath = categoryFromQuery ? `${basePath}?category=${encodeURIComponent(categoryFromQuery)}` : basePath;
-      router.replace(finalRedirectPath, { scroll: false });
+      router.replace(`/palm-input?${newParams.toString()}`, { scroll: false });
 
       if (persistedFormDataJson) {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
@@ -120,10 +136,10 @@ function PalmInputPageComponent() {
                               persistedData.dateOfBirth &&
                               persistedData.placeOfBirth &&
                               persistedData.dominantHand &&
-                              (categoryFromQuery || persistedData.category);
+                              persistedData.category;
 
         if (canAutoSubmit) {
-          await handlePaidSubmission({ ...persistedData, category: categoryFromQuery || persistedData.category });
+          await handlePaidSubmission(persistedData);
         } else {
           toast({
             title: "Payment Successful",
@@ -141,7 +157,7 @@ function PalmInputPageComponent() {
         router.push('/');
       }
     }
-  }, [searchParams, hasPaid, userName, router, toast, categoryFromQuery, handlePaidSubmission]);
+  }, [searchParams, hasPaid, userName, router, toast, handlePaidSubmission]);
 
   useEffect(() => {
     if (authCheckComplete) {
@@ -166,7 +182,8 @@ function PalmInputPageComponent() {
             <PalmInputForm
               categoryFromQuery={categoryFromQuery}
               categoryDescription={categoryDescription}
-              onPaidSubmit={handlePaidSubmission}
+              onSubmit={handleFormSubmit}
+              hasPaid={hasPaid}
             />
             <div className="w-full space-y-8 mt-12">
               <Card className="shadow-lg bg-card/90 backdrop-blur-sm border border-border">
