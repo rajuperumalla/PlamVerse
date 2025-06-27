@@ -36,18 +36,6 @@ export default function EditorLayout({ children }: { children: ReactNode }) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === '/editor' || pathname === '/editor/'}
-                  tooltip={{ children: 'Dashboard', side: 'right', className: "md:block hidden" }}
-                >
-                  <Link href="/editor">
-                    <LayoutDashboard />
-                    <span>Dashboard</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
                   isActive={pathname === '/editor/workflow'}
                   tooltip={{ children: 'Pending Reviews', side: 'right', className: "md:block hidden" }}
                 >

@@ -1,6 +1,7 @@
+
 "use client";
 import Link from 'next/link';
-import { Hand, LogOut, Edit, ShieldCheck, BookOpen, Calculator, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap, Handshake } from 'lucide-react';
+import { Hand, LogOut, Edit, ShieldCheck, BookOpen, Calculator, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap, Handshake, LayoutDashboard } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -44,7 +45,6 @@ const Header = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // State to hold active status, calculated only on the client to prevent hydration errors
   const [activeStates, setActiveStates] = useState({
     isHomePageActive: false,
     isPalmInputPageActive: false,
@@ -53,7 +53,6 @@ const Header = () => {
     isProductsPageActive: false,
   });
 
-  // Calculate active states in useEffect to avoid hydration mismatch
   useEffect(() => {
     const palmCategoryFromQuery = searchParams ? searchParams.get('category') : null;
     const numeroServiceFromQuery = searchParams ? searchParams.get('service') : null;
@@ -75,84 +74,105 @@ const Header = () => {
     return `transition-colors px-2 py-1.5 rounded-md text-sm flex items-center hover:bg-primary/80 focus:bg-primary/80 ${isActive ? 'bg-primary/70 font-semibold' : 'hover:bg-primary/60'}`;
   }
 
+  const renderUserHeader = () => (
+    <>
+      <Link href="/" className="flex-shrink-0 flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <Handshake className="h-7 w-7 sm:h-8 sm:w-8" />
+        <h1 className="text-xl sm:text-2xl font-headline font-bold">PalmVerse</h1>
+      </Link>
+    
+      <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-6 flex-grow">
+        <Link href="/" className={getLinkClassName(activeStates.isHomePageActive)}>
+          <HomeIcon className="mr-1.5 h-4 w-4" /> Home
+        </Link>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className={getDropdownTriggerClassName(activeStates.isPalmInputPageActive)}>
+              <Hand className="mr-1.5 h-4 w-4" /> Palmistry <ChevronDown className="ml-1 h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
+            {readingTypes.map((type) => (
+              <DropdownMenuItem key={type.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
+                <Link href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="w-full">
+                  {type.name}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className={getDropdownTriggerClassName(activeStates.isNumerologyInputPageActive)}>
+              <Calculator className="mr-1.5 h-4 w-4" /> Numerology <ChevronDown className="ml-1 h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
+            {numerologyServicesConst.map((service) => (
+              <DropdownMenuItem key={service.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
+                <Link href={`/numerology-input?service=${encodeURIComponent(service.query)}`} className="w-full">
+                  {service.name}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        {isAuthenticated && (
+            <Link href="/report" className={getLinkClassName(activeStates.isReportPageActive)}>
+              <BookOpen className="mr-1.5 h-4 w-4" /> My Reading
+            </Link>
+        )}
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className={getDropdownTriggerClassName(activeStates.isProductsPageActive)}>
+              <ShoppingBag className="mr-1.5 h-4 w-4" /> Products <ChevronDown className="ml-1 h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
+            {productMenuItems.map((item) => (
+              <DropdownMenuItem key={item.name} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
+                <Link href={item.link} className="w-full">
+                  {item.name}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator className="bg-primary-foreground/20"/>
+            <DropdownMenuItem disabled className="opacity-70 italic">More coming soon!</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Link href="#remedies" className={getLinkClassName(false) + " opacity-70 cursor-not-allowed"} onClick={(e) => e.preventDefault()}>
+          <Zap className="mr-1.5 h-4 w-4" /> Remedies
+        </Link>
+      </nav>
+    </>
+  );
+
+  const renderSpecializedHeader = (title: string, icon: React.ReactNode) => (
+    <>
+      <Link href={isEditor ? "/editor" : "/admin"} className="flex-shrink-0 flex items-center gap-2 hover:opacity-80 transition-opacity">
+        {icon}
+        <h1 className="text-xl sm:text-2xl font-headline font-bold">{title}</h1>
+      </Link>
+      <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-6 flex-grow">
+        {/* Simplified navigation for specialized roles */}
+      </nav>
+    </>
+  );
+  
   return (
     <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-40">
       <div className="container px-4 py-3 flex items-center">
-        <Link href="/" className="flex-shrink-0 flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <Handshake className="h-7 w-7 sm:h-8 sm:w-8" />
-          <h1 className="text-xl sm:text-2xl font-headline font-bold">PalmVerse</h1>
-        </Link>
-      
-        <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 ml-6 flex-grow">
-          <Link href="/" className={getLinkClassName(activeStates.isHomePageActive)}>
-            <HomeIcon className="mr-1.5 h-4 w-4" /> Home
-          </Link>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className={getDropdownTriggerClassName(activeStates.isPalmInputPageActive)}>
-                <Hand className="mr-1.5 h-4 w-4" /> Palmistry <ChevronDown className="ml-1 h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
-              {readingTypes.map((type) => (
-                <DropdownMenuItem key={type.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                  <Link href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="w-full">
-                    {type.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className={getDropdownTriggerClassName(activeStates.isNumerologyInputPageActive)}>
-                <Calculator className="mr-1.5 h-4 w-4" /> Numerology <ChevronDown className="ml-1 h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
-              {numerologyServicesConst.map((service) => (
-                <DropdownMenuItem key={service.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                  <Link href={`/numerology-input?service=${encodeURIComponent(service.query)}`} className="w-full">
-                    {service.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <ClientOnly>
-            {isAuthenticated && (
-                <Link href="/report" className={getLinkClassName(activeStates.isReportPageActive)}>
-                  <BookOpen className="mr-1.5 h-4 w-4" /> My Reading
-                </Link>
-            )}
-          </ClientOnly>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-               <Button variant="ghost" className={getDropdownTriggerClassName(activeStates.isProductsPageActive)}>
-                <ShoppingBag className="mr-1.5 h-4 w-4" /> Products <ChevronDown className="ml-1 h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
-              {productMenuItems.map((item) => (
-                <DropdownMenuItem key={item.name} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                  <Link href={item.link} className="w-full">
-                    {item.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator className="bg-primary-foreground/20"/>
-              <DropdownMenuItem disabled className="opacity-70 italic">More coming soon!</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Link href="#remedies" className={getLinkClassName(false) + " opacity-70 cursor-not-allowed"} onClick={(e) => e.preventDefault()}>
-            <Zap className="mr-1.5 h-4 w-4" /> Remedies
-          </Link>
-        </nav>
+        <ClientOnly>
+          {isEditor ? renderSpecializedHeader("PalmVerse Editor", <Edit className="h-7 w-7 sm:h-8 sm:w-8" />) :
+           isAdmin ? renderSpecializedHeader("PalmVerse Admin", <ShieldCheck className="h-7 w-7 sm:h-8 sm:w-8" />) :
+           renderUserHeader()
+          }
+        </ClientOnly>
 
         <div className="flex items-center gap-2 ml-auto">
           <ClientOnly>
@@ -181,14 +201,14 @@ const Header = () => {
                   {isEditor && (
                     <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
                       <Link href="/editor">
-                        <Edit className="mr-2 h-4 w-4" /> Editor Panel
+                        <LayoutDashboard className="mr-2 h-4 w-4" /> Editor Dashboard
                       </Link>
                     </DropdownMenuItem>
                   )}
                   {isAdmin && (
                     <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
                       <Link href="/admin">
-                        <ShieldCheck className="mr-2 h-4 w-4" /> Admin Panel
+                        <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Dashboard
                       </Link>
                     </DropdownMenuItem>
                   )}
@@ -207,6 +227,7 @@ const Header = () => {
               </DropdownMenu>
             )}
           </ClientOnly>
+          {/* Mobile Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="md:hidden h-9 w-9 p-0 sm:h-10 sm:w-10 hover:bg-primary/80">
@@ -214,19 +235,37 @@ const Header = () => {
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-primary border-primary-foreground/20 text-primary-foreground md:hidden w-48">
-                 <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/">Home</Link></DropdownMenuItem>
-                 <DropdownMenuSeparator className="bg-primary-foreground/20"/>
-                 <DropdownMenuLabel>Palmistry</DropdownMenuLabel>
-                 {readingTypes.map(item => <DropdownMenuItem key={item.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href={`/palm-input?category=${encodeURIComponent(item.query)}`}>{item.name}</Link></DropdownMenuItem>)}
-                 <DropdownMenuSeparator className="bg-primary-foreground/20"/>
-                 <DropdownMenuLabel>Numerology</DropdownMenuLabel>
-                 {numerologyServicesConst.map(item => <DropdownMenuItem key={item.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href={`/numerology-input?service=${encodeURIComponent(item.query)}`}>{item.name}</Link></DropdownMenuItem>)}
-                 <DropdownMenuSeparator className="bg-primary-foreground/20"/>
-                 <ClientOnly>
-                    {isAuthenticated && <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/report">My Reading</Link></DropdownMenuItem>}
-                 </ClientOnly>
-                 <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/products">Products</Link></DropdownMenuItem>
+            <DropdownMenuContent align="end" className="bg-primary border-primary-foreground/20 text-primary-foreground md:hidden w-56">
+                <ClientOnly>
+                  {isEditor ? (
+                    <>
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor">Dashboard</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor/workflow">Pending Reviews</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor/approved">Approved Reports</Link></DropdownMenuItem>
+                    </>
+                  ) : isAdmin ? (
+                     <>
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/admin">Dashboard</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/admin/workflow">Report Workflow</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/admin/products">Products</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/admin/orders">Orders</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/admin/settings">Settings</Link></DropdownMenuItem>
+                     </>
+                  ) : (
+                    <>
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/">Home</Link></DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-primary-foreground/20"/>
+                      <DropdownMenuLabel>Palmistry</DropdownMenuLabel>
+                      {readingTypes.map(item => <DropdownMenuItem key={item.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href={`/palm-input?category=${encodeURIComponent(item.query)}`}>{item.name}</Link></DropdownMenuItem>)}
+                      <DropdownMenuSeparator className="bg-primary-foreground/20"/>
+                      <DropdownMenuLabel>Numerology</DropdownMenuLabel>
+                      {numerologyServicesConst.map(item => <DropdownMenuItem key={item.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href={`/numerology-input?service=${encodeURIComponent(item.query)}`}>{item.name}</Link></DropdownMenuItem>)}
+                      <DropdownMenuSeparator className="bg-primary-foreground/20"/>
+                      {isAuthenticated && <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/report">My Reading</Link></DropdownMenuItem>}
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/products">Products</Link></DropdownMenuItem>
+                    </>
+                  )}
+                </ClientOnly>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
