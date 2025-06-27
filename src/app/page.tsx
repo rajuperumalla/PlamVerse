@@ -32,31 +32,6 @@ const coreServices = [
 export default function HomePage() {
   const { isAuthenticated, userName } = useAppContext();
 
-  const renderUnauthenticatedView = () => (
-    <>
-      <div className="relative z-10 w-full max-w-3xl text-center mb-10">
-        <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-4">
-          Unlock the Secrets of Your Palm
-        </h1>
-        <p className="text-muted-foreground text-lg md:text-xl mb-8">
-          Discover your destiny, understand your personality, and unlock insights into your future.
-        </p>
-        <Button 
-          asChild 
-          size="lg" 
-          className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg md:text-xl py-3 md:py-4 px-6 md:px-8 shadow-lg animate-pulse-subtle mb-10"
-        >
-          <Link href="/palm-input?category=Comprehensive%20Analysis">
-            <Sparkles className="mr-2 h-5 w-5" /> Get your Palm Reading
-          </Link>
-        </Button>
-      </div>
-      <div className="w-full lg:w-2/5 flex-shrink-0 mb-10 lg:mb-0">
-        <AuthOptions />
-      </div>
-    </>
-  );
-
   const renderAuthenticatedView = () => (
     <div className="w-full max-w-5xl space-y-10">
       <section>
@@ -121,13 +96,38 @@ export default function HomePage() {
       </div>
       
       <div className="relative z-10 w-full max-w-5xl px-4 space-y-12">
-        {isAuthenticated ? renderAuthenticatedView() : renderUnauthenticatedView()}
+        {isAuthenticated ? (
+          renderAuthenticatedView()
+        ) : (
+          <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-10 lg:gap-16 w-full">
+            {/* Left side: Hero Text */}
+            <div className="relative z-10 w-full max-w-md text-center lg:text-left">
+              <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-4">
+                Unlock the Secrets of Your Palm
+              </h1>
+              <p className="text-muted-foreground text-lg md:text-xl mb-8">
+                Discover your destiny, understand your personality, and unlock insights into your future.
+              </p>
+              <Button
+                asChild
+                size="lg"
+                className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg md:text-xl py-3 md:py-4 px-6 md:px-8 shadow-lg animate-pulse-subtle"
+              >
+                <Link href="/palm-input?category=Comprehensive%20Analysis">
+                  <Sparkles className="mr-2 h-5 w-5" /> Get your Palm Reading
+                </Link>
+              </Button>
+            </div>
+
+            {/* Right side: Auth Form */}
+            <div className="w-full lg:w-2/5 flex-shrink-0">
+              <AuthOptions />
+            </div>
+          </div>
+        )}
 
         {/* Common Sections */}
         <section id="learn-palmistry" className="scroll-mt-20">
-          <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-6 text-foreground">
-            Unlock the Secrets in Your Palm
-          </h2>
           <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-border overflow-hidden">
             <CardContent className="p-6">
               <div className="w-full max-w-md mx-auto mb-6">
@@ -165,7 +165,6 @@ export default function HomePage() {
         </section>
 
         <section id="spiritual-products">
-          <h2 className="font-headline text-3xl md:text-4xl font-bold text-center mb-6 text-foreground">Enhance Your Journey</h2>
           <Card className="shadow-lg bg-card/90 backdrop-blur-sm border border-border">
             <CardHeader>
               <CardTitle className="font-headline text-2xl md:text-3xl text-foreground">Curated Spiritual Products</CardTitle>
