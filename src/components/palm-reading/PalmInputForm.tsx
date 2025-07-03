@@ -207,6 +207,10 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                 <div className="space-y-2">
                     <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth *</Label>
                     <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} required />
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
+                        <Info className="h-3.5 w-3.5" />
+                        Place and Time of Birth are used for integrating future astrological calculations.
+                    </p>
                 </div>
                 
                 <div className="space-y-4">
