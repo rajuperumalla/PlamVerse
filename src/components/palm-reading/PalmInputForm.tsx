@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Textarea } from '@/components/ui/textarea';
 import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info } from 'lucide-react';
+import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info, Camera, Sun, Focus, Maximize, MoveHorizontal } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const readingCategories = [
@@ -45,6 +45,11 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setFile: (file: File | null) => void, setPreview: (url: string | null) => void) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) { // 5MB size limit
+        toast({ title: "Image Too Large", description: "Please select an image file smaller than 5MB.", variant: "destructive"});
+        e.target.value = ''; // Clear the input
+        return;
+      }
       setFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -212,6 +217,33 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                     </p>
                 </div>
                 
+                 <Card className="bg-primary/5 border-primary/20 p-4">
+                    <CardHeader className="p-2 text-left">
+                        <CardTitle className="text-lg flex items-center gap-2"><Camera className="h-5 w-5 text-primary"/>Photo Guide</CardTitle>
+                        <CardDescription>Follow these tips for the best reading results.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-2 text-sm">
+                        <ul className="space-y-3">
+                            <li className="flex items-center gap-3">
+                                <Sun className="h-5 w-5 text-amber-500 shrink-0"/>
+                                <div><span className="font-semibold">Good Lighting:</span> Use bright, indirect natural light. Avoid shadows.</div>
+                            </li>
+                            <li className="flex items-center gap-3">
+                                <Focus className="h-5 w-5 text-blue-500 shrink-0"/>
+                                <div><span className="font-semibold">In Focus:</span> Make sure the palm lines are clear and sharp, not blurry.</div>
+                            </li>
+                             <li className="flex items-center gap-3">
+                                <Maximize className="h-5 w-5 text-green-500 shrink-0"/>
+                                <div><span className="font-semibold">Full Palm:</span> Capture your entire palm, from wrist to fingertips.</div>
+                            </li>
+                            <li className="flex items-center gap-3">
+                                <MoveHorizontal className="h-5 w-5 text-purple-500 shrink-0"/>
+                                <div><span className="font-semibold">Both Views:</span> Upload both a front and a side view of your dominant hand.</div>
+                            </li>
+                        </ul>
+                    </CardContent>
+                </Card>
+
                 <div className="space-y-4">
                     <p className="text-base font-medium">Upload Palm Images *</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
