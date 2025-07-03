@@ -146,7 +146,6 @@ function PalmInputPageComponent() {
             description: "Please complete your details on the form and submit when ready.",
             duration: 5000
           });
-          router.push('/');
         }
       } else {
         toast({
@@ -154,7 +153,6 @@ function PalmInputPageComponent() {
           description: "We couldn't find your form data. Please fill out the form again to submit.",
           duration: 5000
         });
-        router.push('/');
       }
     }
   }, [searchParams, hasPaid, userName, router, toast, handlePaidSubmission]);

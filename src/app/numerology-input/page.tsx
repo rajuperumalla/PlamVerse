@@ -66,14 +66,12 @@ function NumerologyInputPageComponent() {
 
   const attemptAutoSubmitAfterPayment = useCallback(async () => {
     if (searchParams && searchParams.get('payment_success') === 'true' && hasPaid && userName && serviceQuery) {
-       setIsProcessingPayment(true);
-
       const storageKey = SESSION_STORAGE_KEYS[serviceQuery as keyof typeof SESSION_STORAGE_KEYS];
       if (!storageKey) {
         toast({ title: "Error", description: "Invalid service type for auto-submission.", variant: "destructive" });
-        router.push('/');
         return;
       }
+      
       const persistedFormDataJson = sessionStorage.getItem(storageKey);
       
       const currentSearchParamsString = searchParams.toString();
@@ -98,6 +96,7 @@ function NumerologyInputPageComponent() {
         }
 
         if (canAutoSubmit) {
+          setIsProcessingPayment(true);
           startOperation();
           try {
             createInitialNumerologyReportPlaceholder(persistedData, serviceQuery); 
@@ -106,34 +105,36 @@ function NumerologyInputPageComponent() {
           } catch (error) {
             console.error(`Error auto-submitting ${serviceQuery} request:`, error);
             toast({ title: "Auto-Submission Error", description: "Failed to automatically submit your request. Please review and submit manually.", variant: "destructive" });
-            router.push('/');
+            setIsProcessingPayment(false); 
           } finally {
-            setHasPaid(false); // Consume payment token
+            setHasPaid(false); 
             sessionStorage.removeItem(storageKey);
             if(isOperationInProgress) stopOperation();
           }
         } else {
+          setIsProcessingPayment(false);
           toast({
             title: "Payment Successful",
             description: "Your payment was processed. Please complete your details on the form and submit when ready.",
             duration: 5000
           });
-          router.push('/');
         }
       } else {
+        setIsProcessingPayment(false);
         toast({
           title: "Payment Successful",
           description: "Your payment was processed, but we couldn't find your form data. Please fill out the form again to submit.",
           duration: 5000
         });
-        router.push('/');
       }
     }
   }, [searchParams, hasPaid, setHasPaid, userName, serviceQuery, router, toast, startOperation, stopOperation, createInitialNumerologyReportPlaceholder, isOperationInProgress]);
 
   useEffect(() => {
-    attemptAutoSubmitAfterPayment();
-  }, [attemptAutoSubmitAfterPayment]);
+    if (authCheckComplete) {
+      attemptAutoSubmitAfterPayment();
+    }
+  }, [authCheckComplete, attemptAutoSubmitAfterPayment]);
 
 
   if (isInitializing || !authCheckComplete) {
