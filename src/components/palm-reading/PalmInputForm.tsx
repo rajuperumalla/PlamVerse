@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, type ChangeEvent, type FormEvent, useEffect } from 'react';
 import Image from 'next/image';
@@ -246,10 +245,16 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                 <p className="text-xs text-muted-foreground text-center">* All fields required to generate your report.</p>
             </form>
             </CardContent>
-            <CardFooter className="mt-4">
-            <p className="text-xs text-muted-foreground text-center w-full">
-                Your information is used solely for generating your palm reading. Payment may be required.
-            </p>
+            <CardFooter className="mt-4 flex-col items-center space-y-3 pt-4 border-t">
+                <div className="text-xs text-muted-foreground text-left w-full flex items-start gap-2 p-3 bg-muted/30 rounded-lg border">
+                    <Info className="h-5 w-5 mt-0.5 shrink-0 text-primary" />
+                    <div>
+                        <span className="font-semibold text-foreground">A Note for Younger Users:</span> For individuals under 18, palm lines are still developing. Readings should be considered as guidance, acknowledging that lines can mature and change over time.
+                    </div>
+                </div>
+                <p className="text-xs text-muted-foreground text-center w-full pt-2">
+                    Your information is used solely for generating your palm reading. Payment may be required.
+                </p>
             </CardFooter>
         </div>
       </Card>
