@@ -111,6 +111,8 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
     if (persistedFormDataJson) {
       try {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
+        if (persistedData.frontPalmDataUri) setFrontPalmPreview(persistedData.frontPalmDataUri);
+        if (persistedData.sidePalmDataUri) setSidePalmPreview(persistedData.sidePalmDataUri);
         if (persistedData.dateOfBirth && !isNaN(new Date(persistedData.dateOfBirth).getTime())) {
           setDateOfBirth(new Date(persistedData.dateOfBirth));
         }
