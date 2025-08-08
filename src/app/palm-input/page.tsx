@@ -96,7 +96,7 @@ function PalmInputPageComponent() {
         markReportAsGenerationFailed(initialReportId, `Manual submission failed: ${errorMessage}`);
       }
       toast({ title: "Generation Error", description: `An issue occurred. Please try submitting again.`, variant: "destructive" });
-      // Do not redirect on failure, let user stay on the page.
+      router.push('/'); // Redirect to home even on failure
     } finally {
       setHasPaid(false);
       sessionStorage.removeItem('palmVerseCheckoutForm');
@@ -288,4 +288,3 @@ export default function PalmInputPage() {
     </Suspense>
   );
 }
-
