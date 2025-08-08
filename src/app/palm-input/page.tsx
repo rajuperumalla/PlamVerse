@@ -85,7 +85,7 @@ function PalmInputPageComponent() {
 
       toast({
         title: "Request Submitted for Review",
-        description: "Your palm reading information has been sent to our experts. Your report will be available in 'My Reading' once ready.",
+        description: "Your request has been sent for expert review. Your report will be available in 'My Reading' shortly.",
         duration: 5000
       });
       router.push('/');
@@ -137,7 +137,8 @@ function PalmInputPageComponent() {
                               persistedData.dateOfBirth &&
                               persistedData.placeOfBirth &&
                               persistedData.dominantHand &&
-                              persistedData.category;
+                              persistedData.category &&
+                              (persistedData.timeOfBirth || persistedData.isTimeOfBirthUnknown);
 
         if (canAutoSubmit) {
           await handlePaidSubmission(persistedData);
@@ -288,4 +289,3 @@ export default function PalmInputPage() {
   );
 }
 
-    
