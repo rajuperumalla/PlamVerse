@@ -1,6 +1,6 @@
 
 "use client";
-import { useState, type ChangeEvent, type FormEvent, useEffect } from 'react';
+import { useState, type ChangeEvent, type FormEvent, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +49,9 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
 
   const { isOperationInProgress } = useAppContext();
   const { toast } = useToast();
+  
+  const timeOfBirthRef = useRef<HTMLInputElement>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>, setFile: (file: File | null) => void, setPreview: (url: string | null) => void) => {
     if (e.target.files && e.target.files[0]) {
@@ -67,6 +70,15 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
     } else {
         setFile(null);
         setPreview(null);
+    }
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setDateOfBirth(date);
+    setIsCalendarOpen(false); // Close the popover
+    // Focus the next input field
+    if (date && timeOfBirthRef.current) {
+        timeOfBirthRef.current.focus();
     }
   };
 
@@ -199,7 +211,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="dob" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Date of Birth *</Label>
-                        <Popover>
+                        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                           <PopoverTrigger asChild>
                               <Button
                                   variant={"outline"}
@@ -217,7 +229,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                               <Calendar
                                   mode="single"
                                   selected={dateOfBirth}
-                                  onSelect={setDateOfBirth}
+                                  onSelect={handleDateSelect}
                                   initialFocus
                                   captionLayout="dropdown-buttons"
                                   fromYear={1920}
@@ -229,7 +241,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth *</Label>
-                        <Input id="tob" type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} disabled={isOperationInProgress || isTimeOfBirthUnknown} required={!isTimeOfBirthUnknown}/>
+                        <Input id="tob" ref={timeOfBirthRef} type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} disabled={isOperationInProgress || isTimeOfBirthUnknown} required={!isTimeOfBirthUnknown}/>
                          <div className="flex items-center space-x-2 pt-2">
                             <Checkbox id="unknown-tob" checked={isTimeOfBirthUnknown} onCheckedChange={(checked) => setIsTimeOfBirthUnknown(checked as boolean)} />
                             <label
