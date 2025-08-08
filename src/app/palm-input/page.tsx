@@ -88,7 +88,7 @@ function PalmInputPageComponent() {
         description: "Your request has been sent for expert review. Your report will be available in 'My Reading' shortly.",
         duration: 5000
       });
-      router.push('/'); // REDIRECT TO HOME PAGE
+      router.push('/'); 
     } catch (error) {
       console.error("Error generating palm reading:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during generation.";
@@ -96,7 +96,7 @@ function PalmInputPageComponent() {
         markReportAsGenerationFailed(initialReportId, `Manual submission failed: ${errorMessage}`);
       }
       toast({ title: "Generation Error", description: `An issue occurred. Please try submitting again.`, variant: "destructive" });
-      router.push('/'); // Redirect to home even on failure
+      router.push('/');
     } finally {
       setHasPaid(false);
       sessionStorage.removeItem('palmVerseCheckoutForm');
