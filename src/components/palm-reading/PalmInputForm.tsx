@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, type ChangeEvent, type FormEvent, useEffect } from 'react';
 import Image from 'next/image';
@@ -9,11 +10,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Textarea } from '@/components/ui/textarea';
 import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info, Camera, Sun, Focus, Maximize, MoveHorizontal } from 'lucide-react';
+import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info, Camera, Sun, Focus, Maximize, MoveHorizontal, Globe, CheckSquare } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '../ui/checkbox';
 
 const readingCategories = [
   { value: "General Personality", label: "General Personality" },
@@ -38,7 +40,10 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
 
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [placeOfBirth, setPlaceOfBirth] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   const [timeOfBirth, setTimeOfBirth] = useState('');
+  const [isTimeOfBirthUnknown, setIsTimeOfBirthUnknown] = useState(false);
   const [dominantHand, setDominantHand] = useState('');
   const [category, setCategory] = useState(categoryFromQuery || '');
 
@@ -68,7 +73,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
-    if (!frontPalmPreview || !sidePalmPreview || !dateOfBirth || !placeOfBirth || !dominantHand || !category) {
+    if (!frontPalmPreview || !sidePalmPreview || !dateOfBirth || !placeOfBirth || !dominantHand || !category || (!timeOfBirth && !isTimeOfBirthUnknown)) {
       toast({ title: "Missing Information", description: "Please complete all required fields and upload both images.", variant: "destructive" });
       return;
     }
@@ -78,7 +83,10 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
       sidePalmDataUri: sidePalmPreview,
       dateOfBirth: format(dateOfBirth, 'yyyy-MM-dd'),
       placeOfBirth,
-      timeOfBirth: timeOfBirth || "Not specified",
+      latitude: latitude || "Not specified",
+      longitude: longitude || "Not specified",
+      timeOfBirth: isTimeOfBirthUnknown ? "Not specified" : timeOfBirth,
+      isTimeOfBirthUnknown,
       dominantHand,
       category,
     };
@@ -91,23 +99,22 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
     if (persistedFormDataJson) {
       try {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
-        // DO NOT set image previews from storage.
         if (persistedData.dateOfBirth && !isNaN(new Date(persistedData.dateOfBirth).getTime())) {
           setDateOfBirth(new Date(persistedData.dateOfBirth));
         }
         setPlaceOfBirth(persistedData.placeOfBirth || '');
+        setLatitude(persistedData.latitude === 'Not specified' ? '' : persistedData.latitude || '');
+        setLongitude(persistedData.longitude === 'Not specified' ? '' : persistedData.longitude || '');
         setTimeOfBirth(persistedData.timeOfBirth === 'Not specified' ? '' : persistedData.timeOfBirth || '');
+        setIsTimeOfBirthUnknown(persistedData.isTimeOfBirthUnknown || false);
         setDominantHand(persistedData.dominantHand || '');
-        // ALWAYS use the category from the URL if it exists.
         setCategory(categoryFromQuery || persistedData.category || '');
       } catch (e) {
         console.error("Failed to parse form data from session storage", e);
         sessionStorage.removeItem('palmVerseCheckoutForm');
-        // On error, just use the category from query.
         setCategory(categoryFromQuery || '');
       }
     } else if (categoryFromQuery) {
-      // If no session data, still respect the category from query.
       setCategory(categoryFromQuery);
     }
   }, [categoryFromQuery]);
@@ -220,15 +227,36 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                           </PopoverContent>
                       </Popover>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth (Optional)</Label>
-                        <Input id="tob" type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} disabled={isOperationInProgress}/>
+                     <div className="space-y-2">
+                        <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth *</Label>
+                        <Input id="tob" type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} disabled={isOperationInProgress || isTimeOfBirthUnknown} required={!isTimeOfBirthUnknown}/>
+                         <div className="flex items-center space-x-2 pt-2">
+                            <Checkbox id="unknown-tob" checked={isTimeOfBirthUnknown} onCheckedChange={(checked) => setIsTimeOfBirthUnknown(checked as boolean)} />
+                            <label
+                                htmlFor="unknown-tob"
+                                className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                                I don't know my time of birth
+                            </label>
+                        </div>
                     </div>
                 </div>
-
-                <div className="space-y-2">
+                 <div className="space-y-2">
                     <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth *</Label>
-                    <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} required />
+                    <div className="relative">
+                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                        <Input id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country (Autocomplete coming soon!)" disabled={isOperationInProgress} required className="pl-10" />
+                    </div>
+                     <div className="grid grid-cols-2 gap-4 pt-2">
+                        <div className="space-y-1">
+                            <Label htmlFor="latitude" className="text-xs">Latitude</Label>
+                            <Input id="latitude" value={latitude} onChange={e => setLatitude(e.target.value)} placeholder="e.g., 17.3850" disabled readOnly className="bg-muted/70 cursor-not-allowed"/>
+                        </div>
+                         <div className="space-y-1">
+                            <Label htmlFor="longitude" className="text-xs">Longitude</Label>
+                            <Input id="longitude" value={longitude} onChange={e => setLongitude(e.target.value)} placeholder="e.g., 78.4867" disabled readOnly className="bg-muted/70 cursor-not-allowed"/>
+                        </div>
+                    </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
                         <Info className="h-3.5 w-3.5" />
                         Your Date, Time, and Place of Birth are used for integrating future astrological calculations.

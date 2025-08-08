@@ -10,7 +10,10 @@ export interface ReportPalmInputDetails {
   sidePalmDataUri?: string;
   dateOfBirth: string;
   placeOfBirth: string;
+  latitude?: string;
+  longitude?: string;
   timeOfBirth?: string;
+  isTimeOfBirthUnknown?: boolean;
   dominantHand: string;
   category: string; // e.g., "General Personality"
 }
@@ -87,6 +90,9 @@ const createSampleReport = (idSuffix: number, category: string, userName: string
     dateOfBirth: `19${80 + idSuffix}-0${(idSuffix % 9) + 1}-0${(idSuffix % 2) + 1}${idSuffix % 9 +1}`,
     placeOfBirth: `City ${idSuffix}, Sample Land`,
     timeOfBirth: `${(10 + idSuffix) % 24}:0${idSuffix % 6}`,
+    isTimeOfBirthUnknown: false,
+    latitude: "28.6139",
+    longitude: "77.2090",
     dominantHand: idSuffix % 2 === 0 ? 'Right' : 'Left',
     category: category,
   };

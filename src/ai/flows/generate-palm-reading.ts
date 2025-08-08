@@ -25,7 +25,9 @@ const GeneratePalmReadingInputSchema = z.object({
     ),
   dateOfBirth: z.string().describe('The date of birth of the user.'),
   placeOfBirth: z.string().describe('The place of birth of the user.'),
-  timeOfBirth: z.string().describe('The time of birth of the user.'),
+  latitude: z.string().optional().describe('The latitude of the place of birth.'),
+  longitude: z.string().optional().describe('The longitude of the place of birth.'),
+  timeOfBirth: z.string().describe('The time of birth of the user. Can be "Not specified".'),
   dominantHand: z.string().describe('The dominant hand of the user.'),
   category: z.string().describe('The category for the palm reading report: General Personality, Career & Finance, Health & Wellness, Marriage & Relationships, Comprehensive Analysis.'),
   expertAnalysis: z.string().optional().describe('Detailed analysis and interpretation notes provided by a human expert. This should guide the AI generation if present.'),
@@ -56,7 +58,7 @@ const prompt = ai.definePrompt({
   Front of Dominant Palm: {{media url=frontPalmDataUri}}
   Side of Dominant Palm: {{media url=sidePalmDataUri}}
   Date of Birth: {{{dateOfBirth}}}
-  Place of Birth: {{{placeOfBirth}}}
+  Place of Birth: {{{placeOfBirth}}} (Lat: {{latitude}}, Lon: {{longitude}})
   Time of Birth: {{{timeOfBirth}}}
   Dominant Hand: {{{dominantHand}}}
   Category: {{{category}}}
@@ -68,7 +70,7 @@ const prompt = ai.definePrompt({
   Front of Dominant Palm: {{media url=frontPalmDataUri}}
   Side of Dominant Palm: {{media url=sidePalmDataUri}}
   Date of Birth: {{{dateOfBirth}}}
-  Place of Birth: {{{placeOfBirth}}}
+  Place of Birth: {{{placeOfBirth}}} (Lat: {{latitude}}, Lon: {{longitude}})
   Time of Birth: {{{timeOfBirth}}}
   Dominant Hand: {{{dominantHand}}}
   Category: {{{category}}}
