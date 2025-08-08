@@ -168,7 +168,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
               <CardTitle className="font-headline text-3xl">Palm Reading: {category || "Select Category"}</CardTitle>
               <CardDescription className="px-6">
                 {categoryDescription ? (
-                  <span className="block mt-1 text-sm text-accent">
+                  <span className="block mt-1 text-sm text-muted-foreground">
                     {categoryDescription}
                   </span>
                 ) : (
