@@ -5,11 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import PalmInputForm from '@/components/palm-reading/PalmInputForm';
 import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext';
-import { Loader2, Sparkles, ArrowRight, Search } from 'lucide-react';
+import { Loader2, Sparkles, ArrowRight, Search, Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { generatePalmReading, type GeneratePalmReadingInput } from '@/ai/flows/generate-palm-reading';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 const productCategories = [
   { name: "Crystal Bracelets", description: "Harness the energy of natural crystals for balance and healing.", imageUrl: "https://placehold.co/400x300.png", imageHint: "crystal bracelet", link: "/products#crystal-bracelets" },
@@ -232,38 +233,39 @@ function PalmInputPageComponent() {
           </>
         ) : (
           <div className="text-center py-10 md:py-16">
-            <Card className="max-w-2xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
+            <Card className="max-w-3xl mx-auto shadow-xl bg-card/80 backdrop-blur-sm border-border">
               <CardHeader className="items-center">
                 <div className="p-3 bg-primary/10 rounded-full mb-3">
                     <Search className="h-12 w-12 text-primary" />
                 </div>
-                <CardTitle className="font-headline text-3xl md:text-4xl text-primary">Explore Your Chosen Path</CardTitle>
+                <CardTitle className="font-headline text-3xl md:text-4xl text-primary">Choose Your Reading</CardTitle>
                 <CardDescription className="text-lg text-muted-foreground mt-2">
-                    Begin your journey of self-discovery.
+                    Select a palmistry service below to begin your journey of self-discovery.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <p className="text-muted-foreground text-md md:text-lg">
-                  Select a specific reading type from the "Palmistry" menu in the main header to provide your details and receive personalized insights.
-                </p>
-                <div className="w-full max-w-lg mx-auto">
-                  <Image
-                    src="https://placehold.co/600x400.png"
-                    alt="Palmistry Overview"
-                    width={600}
-                    height={400}
-                    className="rounded-lg shadow-lg border border-border object-cover"
-                    data-ai-hint="palm hand"
-                  />
+              <CardContent className="space-y-4 px-4 sm:px-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {readingTypes.map((type) => (
+                    <Link key={type.query} href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="group">
+                      <Card className="text-left h-full hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 cursor-pointer">
+                        <CardHeader>
+                          <div className="flex items-center gap-3">
+                            <Hand className="h-6 w-6 text-primary"/>
+                            <CardTitle className="font-headline text-xl">{type.name}</CardTitle>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-muted-foreground text-sm">{type.description}</p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Each line on your palm tells a unique story. Our AI, guided by ancient wisdom, helps you understand yours.
-                </p>
               </CardContent>
               <CardFooter>
-                <p className="text-xs text-muted-foreground text-center w-full">
-                    Choose a category from the main header menu to proceed.
-                </p>
+                  <p className="text-xs text-muted-foreground text-center w-full">
+                      Choose a category to proceed with your palm reading.
+                  </p>
               </CardFooter>
             </Card>
           </div>
@@ -285,3 +287,5 @@ export default function PalmInputPage() {
     </Suspense>
   );
 }
+
+    
