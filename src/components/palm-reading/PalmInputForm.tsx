@@ -10,6 +10,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info, Camera, Sun, Focus, Maximize, MoveHorizontal } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const readingCategories = [
   { value: "General Personality", label: "General Personality" },
@@ -32,7 +36,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
   const [frontPalmPreview, setFrontPalmPreview] = useState<string | null>(null);
   const [sidePalmPreview, setSidePalmPreview] = useState<string | null>(null);
 
-  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [placeOfBirth, setPlaceOfBirth] = useState('');
   const [timeOfBirth, setTimeOfBirth] = useState('');
   const [dominantHand, setDominantHand] = useState('');
@@ -72,7 +76,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
     const reportInputDetails: ReportPalmInputDetails = {
       frontPalmDataUri: frontPalmPreview,
       sidePalmDataUri: sidePalmPreview,
-      dateOfBirth,
+      dateOfBirth: format(dateOfBirth, 'yyyy-MM-dd'),
       placeOfBirth,
       timeOfBirth: timeOfBirth || "Not specified",
       dominantHand,
@@ -88,7 +92,9 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
       try {
         const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
         // DO NOT set image previews from storage.
-        setDateOfBirth(persistedData.dateOfBirth || '');
+        if (persistedData.dateOfBirth && !isNaN(new Date(persistedData.dateOfBirth).getTime())) {
+          setDateOfBirth(new Date(persistedData.dateOfBirth));
+        }
         setPlaceOfBirth(persistedData.placeOfBirth || '');
         setTimeOfBirth(persistedData.timeOfBirth === 'Not specified' ? '' : persistedData.timeOfBirth || '');
         setDominantHand(persistedData.dominantHand || '');
@@ -186,7 +192,33 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="dob" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Date of Birth *</Label>
-                        <Input id="dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} disabled={isOperationInProgress} required />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                              <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                      "w-full justify-start text-left font-normal",
+                                      !dateOfBirth && "text-muted-foreground"
+                                  )}
+                                  disabled={isOperationInProgress}
+                              >
+                                  <CalendarDays className="mr-2 h-4 w-4" />
+                                  {dateOfBirth ? format(dateOfBirth, "PPP") : <span>Pick a date</span>}
+                              </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                              <Calendar
+                                  mode="single"
+                                  selected={dateOfBirth}
+                                  onSelect={setDateOfBirth}
+                                  initialFocus
+                                  captionLayout="dropdown-buttons"
+                                  fromYear={1920}
+                                  toYear={new Date().getFullYear()}
+                                  disabled={isOperationInProgress}
+                              />
+                          </PopoverContent>
+                      </Popover>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth (Optional)</Label>
