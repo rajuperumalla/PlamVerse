@@ -1,206 +1,204 @@
-
 "use client";
-import { useState, type FormEvent, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { useAppContext, type ReportNumerologyInputDetails_BabyName } from '@/context/AppContext';
-import { useToast } from '@/hooks/use-toast';
-import { Baby, User, CalendarDays, Clock, Loader2, Sparkles, CreditCard, Users, Info } from 'lucide-react';
+
+import { useAppContext } from '@/context/AppContext';
+import AuthOptions from '@/components/auth/AuthOptions';
 import Image from 'next/image';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Sparkles, ArrowRight, Hand, BookOpen, LifeBuoy, Brain, Heart, Star, WandSparkles } from 'lucide-react';
+import Link from 'next/link';
 
-const SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY = 'palmVerseBabyNameNumerologyCheckoutForm';
-const SERVICE_QUERY = 'baby-name-numerology';
 
-interface BabyNameNumerologyFormProps {
-  serviceDescription?: string;
-}
+const productCategories = [
+  { name: "Crystal Bracelets", description: "Harness the energy of natural crystals for balance and healing.", imageUrl: "https://placehold.co/400x300.png", imageHint: "crystal bracelet", link: "#shop/bracelets" },
+  { name: "Sacred Gemstones", description: "Discover the power of authentic gemstones for well-being.", imageUrl: "https://placehold.co/400x300.png", imageHint: "gemstone collection", link: "#shop/gemstones" },
+  { name: "Energized Yantras", description: "Invite prosperity and protection with sacred geometric yantras.", imageUrl: "https://placehold.co/400x300.png", imageHint: "sacred yantra", link: "#shop/yantras" },
+];
 
-const BabyNameNumerologyForm = ({ serviceDescription }: BabyNameNumerologyFormProps) => {
-  const [proposedNamesText, setProposedNamesText] = useState('');
-  const [childDOB, setChildDOB] = useState('');
-  const [childTOB, setChildTOB] = useState('');
-  const [parent1FullName, setParent1FullName] = useState('');
-  const [parent1DOB, setParent1DOB] = useState('');
-  const [parent2FullName, setParent2FullName] = useState('');
-  const [parent2DOB, setParent2DOB] = useState('');
+const palmLines = [
+  { name: "Life Line", icon: LifeBuoy, description: "Represents vitality, physical health, and major life changes. Its length is not an indicator of lifespan." , colorClass: "text-red-500"},
+  { name: "Head Line", icon: Brain, description: "Indicates your intellectual curiosity, learning style, communication, and thirst for knowledge." , colorClass: "text-blue-500"},
+  { name: "Heart Line", icon: Heart, description: "Reveals your emotional stability, romantic perspectives, psychological state, and interpersonal relationships." , colorClass: "text-pink-500"},
+  { name: "Fate Line (Destiny Line)", icon: Star, description: "Shows the impact of external factors on your life path, including career, choices, and life's purpose." , colorClass: "text-purple-500"},
+];
 
-  const router = useRouter();
-  const {
-    startOperation,
-    stopOperation,
-    isOperationInProgress,
-    hasPaid,
-    setHasPaid,
-    createInitialNumerologyReportPlaceholder,
-  } = useAppContext();
-  const { toast } = useToast();
+const coreServices = [
+  { name: "Palmistry", icon: Hand, description: "Delve into the mysteries of your hands. Explore palm lines and understand their meanings.", link: "/palm-input", cta: "Get Palm Reading" },
+];
 
-  const parseProposedNames = (text: string): string[] => {
-    return text.split('\n').map(name => name.trim()).filter(name => name.length > 0);
-  };
-  
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    const proposedNamesArray = parseProposedNames(proposedNamesText);
-    
-    if (proposedNamesArray.length === 0 || !childDOB) {
-      toast({ title: "Missing Information", description: "Please fill all required fields (Proposed Names, Child's DOB).", variant: "destructive" });
-      return;
-    }
+export default function HomePage() {
+  const { isAuthenticated, userName } = useAppContext();
 
-    const reportInputDetails: ReportNumerologyInputDetails_BabyName = {
-      serviceQuery: SERVICE_QUERY,
-      proposedNames: proposedNamesArray,
-      childDOB,
-      childTOB: childTOB || undefined,
-      parent1FullName: parent1FullName || undefined,
-      parent1DOB: parent1DOB || undefined,
-      parent2FullName: parent2FullName || undefined,
-      parent2DOB: parent2DOB || undefined,
-    };
-
-    sessionStorage.setItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY, JSON.stringify(reportInputDetails));
-
-    if (!hasPaid) {
-      const returnPath = `/numerology-input?service=${SERVICE_QUERY}`;
-      router.push(`/payment?service_type=numerology&return_path=${encodeURIComponent(returnPath)}`);
-      return;
-    }
-
-    // Post-payment submission logic
-    startOperation();
-    try {
-      createInitialNumerologyReportPlaceholder(reportInputDetails, SERVICE_QUERY);
-      toast({ title: "Numerology Request Received", description: "Your report is being prepared and will be available under 'My Reading'. Redirecting to Home...", duration: 5000 });
-      router.push('/');
-    } catch (error) {
-      console.error("Error creating baby name numerology report placeholder:", error);
-      toast({ title: "Request Error", description: "Failed to submit your numerology request. Please try again.", variant: "destructive" });
-    } finally {
-      setHasPaid(false); // Consume payment token
-      sessionStorage.removeItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY);
-      stopOperation();
-    }
-  };
-
-  const loadPersistedData = useCallback(() => {
-    const persistedFormDataJson = sessionStorage.getItem(SESSION_STORAGE_KEY_BABY_NAME_NUMEROLOGY);
-    if (persistedFormDataJson) {
-        const persistedData = JSON.parse(persistedFormDataJson) as ReportNumerologyInputDetails_BabyName;
-        setProposedNamesText(persistedData.proposedNames.join('\n'));
-        setChildDOB(persistedData.childDOB || '');
-        setChildTOB(persistedData.childTOB || '');
-        setParent1FullName(persistedData.parent1FullName || '');
-        setParent1DOB(persistedData.parent1DOB || '');
-        setParent2FullName(persistedData.parent2FullName || '');
-        setParent2DOB(persistedData.parent2DOB || '');
-    }
-  }, []); 
-
-  useEffect(() => {
-    loadPersistedData();
-  }, [loadPersistedData]);
-  
-  return (
-    <div className="flex justify-center items-center py-8">
-      <Card className="w-full max-w-2xl shadow-xl animate-fade-in relative overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
-            <Image
-            src="https://placehold.co/800x1200.png"
-            alt="Subtle Numerology Background"
-            fill
-            className="object-cover"
-            data-ai-hint="stars celestial background"
-            />
-        </div>
-        <div className="relative z-10">
-            <CardHeader className="text-center">
-            <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
-                <Baby className="h-10 w-10 text-primary" />
-            </div>
-            <CardTitle className="font-headline text-3xl">Baby Name Numerology</CardTitle>
-            <CardDescription>{serviceDescription || "Find harmonious names based on your child's birth details."}</CardDescription>
-            </CardHeader>
-            <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-8">
-                <div className="space-y-2">
-                    <Label htmlFor="proposedNamesText" className="text-base flex items-center gap-2"><Baby className="h-5 w-5 text-primary"/>Child's Proposed Names *</Label>
-                    <Textarea id="proposedNamesText" value={proposedNamesText} onChange={(e) => setProposedNamesText(e.target.value)} placeholder="Enter potential names, one per line" disabled={isOperationInProgress} rows={4} required />
-                    <p className="text-xs text-muted-foreground">Enter each name on a new line. This is a required field.</p>
+  const renderAuthenticatedView = () => (
+    <div className="w-full max-w-5xl space-y-10">
+      <section>
+        <h2 className="font-headline text-3xl font-bold text-center mb-6 text-foreground">Explore Our Services</h2>
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+          {coreServices.map((service) => (
+            <Card key={service.name} className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col bg-card/90 backdrop-blur-sm">
+              <CardHeader className="items-center text-center">
+                <div className="p-3 bg-primary/10 rounded-full mb-2 w-fit">
+                  <service.icon className="h-8 w-8 text-primary" />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="childDOB" className="text-base flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary"/>Child's Date of Birth *</Label>
-                        <Input id="childDOB" type="date" value={childDOB} onChange={(e) => setChildDOB(e.target.value)} disabled={isOperationInProgress} required />
-                         <p className="text-xs text-muted-foreground">This is a required field.</p>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="childTOB" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Child's Time of Birth (Optional)</Label>
-                        <Input id="childTOB" type="time" value={childTOB} onChange={(e) => setChildTOB(e.target.value)} disabled={isOperationInProgress}/>
-                    </div>
-                </div>
-                
-                <Card className="p-4 bg-muted/30 border-primary/20">
-                    <CardTitle className="text-lg mb-2 flex items-center gap-2"><Users className="h-5 w-5 text-primary"/>Parent Details (Optional)</CardTitle>
-                    <CardDescription className="text-xs text-muted-foreground mb-3 flex items-start gap-1.5">
-                       <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
-                       <span>Providing parent details can help in a more comprehensive analysis to assess harmony and compatibility of the proposed names with parental energies.</span>
-                    </CardDescription>
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="parent1FullName" className="text-base">Parent 1 Full Name</Label>
-                            <Input id="parent1FullName" type="text" value={parent1FullName} onChange={(e) => setParent1FullName(e.target.value)} placeholder="e.g., John Doe" disabled={isOperationInProgress} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="parent1DOB" className="text-base">Parent 1 Date of Birth</Label>
-                            <Input id="parent1DOB" type="date" value={parent1DOB} onChange={(e) => setParent1DOB(e.target.value)} disabled={isOperationInProgress || !parent1FullName} />
-                            {parent1FullName && !parent1DOB && <p className="text-xs text-destructive">Please provide DOB if Parent 1 name is entered.</p>}
-                        </div>
-                    </div>
-                    <hr className="my-4"/>
-                     <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="parent2FullName" className="text-base">Parent 2 Full Name</Label>
-                            <Input id="parent2FullName" type="text" value={parent2FullName} onChange={(e) => setParent2FullName(e.target.value)} placeholder="e.g., Jane Smith" disabled={isOperationInProgress} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="parent2DOB" className="text-base">Parent 2 Date of Birth</Label>
-                            <Input id="parent2DOB" type="date" value={parent2DOB} onChange={(e) => setParent2DOB(e.target.value)} disabled={isOperationInProgress || !parent2FullName} />
-                             {parent2FullName && !parent2DOB && <p className="text-xs text-destructive">Please provide DOB if Parent 2 name is entered.</p>}
-                        </div>
-                    </div>
-                </Card>
-                
-                <Button
-                    type="submit"
-                    className="w-full text-lg py-6 mt-8"
-                    disabled={isOperationInProgress}
-                >
-                    {isOperationInProgress ? (
-                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
-                    ) : hasPaid ? (
-                    <><Sparkles className="mr-2 h-5 w-5" /> Generate Report</>
-                    ) : (
-                    <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
-                    )}
+                <CardTitle className="font-headline text-2xl">{service.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="flex-grow text-center">
+                <p className="text-muted-foreground text-sm mb-4">{service.description}</p>
+              </CardContent>
+              <CardFooter className="justify-center">
+                 <Button asChild className="w-full sm:w-auto">
+                    <Link href={`${service.link}?category=Comprehensive%20Analysis`}>{service.cta}</Link>
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">* Required fields are marked with an asterisk if not already obvious.</p>
-            </form>
-            </CardContent>
-            <CardFooter className="mt-4">
-            <p className="text-xs text-muted-foreground text-center w-full">
-                Your information is used solely for generating your numerology report. Payment may be required.
-            </p>
-            </CardFooter>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
-      </Card>
+      </section>
     </div>
   );
-};
 
-export default BabyNameNumerologyForm;
+  return (
+    <div className="relative flex flex-col items-center py-8 md:py-12 space-y-12 min-h-full">
+      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
+        <Image
+          src="https://placehold.co/1920x1080.png"
+          alt="Sacred Geometry Page Background"
+          fill
+          className="object-cover"
+          data-ai-hint="sacred geometry pattern"
+          priority
+        />
+      </div>
+
+      {/* Left Decorative Image */}
+      <div className="hidden lg:block absolute left-4 top-1/4 w-40 h-auto z-0 opacity-20 pointer-events-none">
+        <Image 
+          src="https://placehold.co/300x600.png" 
+          alt="Left Sacred Geometry Decoration" 
+          width={300} 
+          height={600} 
+          data-ai-hint="sacred geometry vertical" 
+        />
+      </div>
+
+      {/* Right Decorative Image */}
+      <div className="hidden lg:block absolute right-4 top-1/4 w-40 h-auto z-0 opacity-20 pointer-events-none">
+        <Image 
+          src="https://placehold.co/300x600.png" 
+          alt="Right Sacred Geometry Decoration" 
+          width={300} 
+          height={600} 
+          data-ai-hint="sacred geometry vertical" 
+        />
+      </div>
+      
+      <div className="relative z-10 w-full max-w-5xl px-4 space-y-12">
+        {isAuthenticated ? (
+          renderAuthenticatedView()
+        ) : (
+          <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-10 lg:gap-16 w-full">
+            {/* Left side: Hero Text */}
+            <div className="relative z-10 w-full max-w-md text-center lg:text-left">
+              <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-4">
+                Unlock the Secrets of Your Palm
+              </h1>
+              <p className="text-muted-foreground text-lg md:text-xl mb-8">
+                Discover your destiny, understand your personality, and unlock insights into your future.
+              </p>
+              <Button
+                asChild
+                size="lg"
+                className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg md:text-xl py-3 md:py-4 px-6 md:px-8 shadow-lg animate-pulse-subtle"
+              >
+                <Link href="/palm-input?category=Comprehensive%20Analysis">
+                  <Sparkles className="mr-2 h-5 w-5" /> Get your Palm Reading
+                </Link>
+              </Button>
+            </div>
+
+            {/* Right side: Auth Form */}
+            <div className="w-full lg:w-2/5 flex-shrink-0">
+              <AuthOptions />
+            </div>
+          </div>
+        )}
+
+        {/* Common Sections */}
+        <section id="learn-palmistry" className="scroll-mt-20">
+          <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-border overflow-hidden">
+            <CardContent className="p-6">
+              <div className="w-full max-w-md mx-auto mb-6">
+                <Image
+                  src="https://placehold.co/600x400.png"
+                  alt="Annotated Palm Lines"
+                  width={600}
+                  height={400}
+                  className="rounded-lg shadow-lg border border-border object-cover"
+                  data-ai-hint="palmistry chart"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                {palmLines.map((line) => (
+                  <div key={line.name} className="p-4 bg-background/70 rounded-lg border border-border shadow-sm">
+                    <div className="flex items-center mb-2">
+                      <line.icon className={`mr-2 h-6 w-6 ${line.colorClass}`} />
+                      <h3 className="font-headline text-xl font-semibold text-foreground">{line.name}</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{line.description}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section id="spiritual-products">
+          <Card className="shadow-lg bg-card/90 backdrop-blur-sm border border-border">
+            <CardHeader>
+              <CardTitle className="font-headline text-2xl md:text-3xl text-foreground">Curated Spiritual Products</CardTitle>
+              <CardDescription className="text-base md:text-lg">Explore our collection to support your spiritual practice.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {productCategories.map((category) => (
+                  <Card key={category.name} className="overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col">
+                    <div className="relative h-48 w-full">
+                      <Image
+                        src={category.imageUrl}
+                        alt={category.name}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        data-ai-hint={category.imageHint}
+                      />
+                    </div>
+                    <CardHeader className="p-3">
+                      <CardTitle className="font-headline text-lg text-card-foreground">{category.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-3 pt-0 flex-grow">
+                      <p className="text-muted-foreground text-sm line-clamp-2">{category.description}</p>
+                    </CardContent>
+                    <CardFooter className="p-3 border-t border-border flex-col items-center">
+                      <Button variant="outline" className="w-full group text-sm py-2" disabled>
+                        Explore
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                      <p className="text-xs text-center mt-1.5 text-accent font-semibold">Coming Soon!</p>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+            {productCategories.length > 0 && (
+              <CardFooter className="p-4 text-center border-t flex-col items-center">
+                <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground text-md py-3 px-6" disabled>
+                  Visit Our Full Shop <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <p className="text-sm text-center mt-2 text-accent font-semibold">More products coming soon!</p>
+              </CardFooter>
+            )}
+          </Card>
+        </section>
+      </div>
+    </div>
+  );
+}

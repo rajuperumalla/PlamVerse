@@ -6,7 +6,7 @@ import AuthOptions from '@/components/auth/AuthOptions';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Handshake, BookOpen, RefreshCw, LifeBuoy, Brain, Heart, Star, Calculator, WandSparkles } from 'lucide-react';
+import { Sparkles, ArrowRight, Hand, BookOpen, LifeBuoy, Brain, Heart, Star, WandSparkles } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -24,9 +24,7 @@ const palmLines = [
 ];
 
 const coreServices = [
-  { name: "Palmistry", icon: Handshake, description: "Delve into the mysteries of your hands. Explore palm lines and understand their meanings.", link: "/palm-input", cta: "Get Palm Reading" },
-  { name: "Numerology", icon: Calculator, description: "Discover the power of numbers. Calculate your life path, business name compatibility, and more.", link: "/numerology-input", cta: "Explore Numerology" },
-  { name: "Astrology", icon: WandSparkles, description: "Uncover celestial influences on your journey. Personalized horoscope and transit analysis.", link: "#astrology", cta: "Coming Soon", disabled: true },
+  { name: "Palmistry", icon: Hand, description: "Delve into the mysteries of your hands. Explore palm lines and understand their meanings.", link: "/palm-input", cta: "Get Palm Reading" },
 ];
 
 export default function HomePage() {
@@ -36,7 +34,7 @@ export default function HomePage() {
     <div className="w-full max-w-5xl space-y-10">
       <section>
         <h2 className="font-headline text-3xl font-bold text-center mb-6 text-foreground">Explore Our Services</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
           {coreServices.map((service) => (
             <Card key={service.name} className="shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col bg-card/90 backdrop-blur-sm">
               <CardHeader className="items-center text-center">
@@ -49,8 +47,8 @@ export default function HomePage() {
                 <p className="text-muted-foreground text-sm mb-4">{service.description}</p>
               </CardContent>
               <CardFooter className="justify-center">
-                <Button asChild variant={service.disabled ? "outline" : "default"} disabled={service.disabled} className="w-full sm:w-auto">
-                  <Link href={service.link}>{service.cta}</Link>
+                 <Button asChild className="w-full sm:w-auto">
+                    <Link href={`${service.link}?category=Comprehensive%20Analysis`}>{service.cta}</Link>
                 </Button>
               </CardFooter>
             </Card>

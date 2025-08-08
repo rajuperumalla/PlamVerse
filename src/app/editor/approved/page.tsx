@@ -48,7 +48,7 @@ export default function EditorApprovedReportsPage() {
     setIsViewReportDialogOpen(true);
   };
   
-  const palmInputDetails = selectedReportForView?.reportType === 'palmistry' ? selectedReportForView.inputDetails as ReportPalmInputDetails : null;
+  const palmInputDetails = selectedReportForView?.inputDetails as ReportPalmInputDetails | null;
 
   if (isInitializing || !authCheckComplete) {
     return (
@@ -106,7 +106,6 @@ export default function EditorApprovedReportsPage() {
                         <TableRow>
                         <TableHead className="w-[100px]">Report ID</TableHead>
                         <TableHead>User</TableHead>
-                        <TableHead>Source Type</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead>Approved On</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -117,13 +116,7 @@ export default function EditorApprovedReportsPage() {
                         <TableRow key={report.id}>
                             <TableCell className="font-medium text-xs">{report.id.substring(0, 8)}...</TableCell>
                             <TableCell className="text-xs">{report.userName || 'N/A'}</TableCell>
-                            <TableCell className="text-xs capitalize">{report.reportType}</TableCell>
-                            <TableCell className="text-xs">
-                                {report.reportType === 'numerology'
-                                ? report.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-                                : report.category
-                                }
-                            </TableCell>
+                            <TableCell className="text-xs">{report.category}</TableCell>
                             <TableCell className="text-xs">
                             {report.lastUpdateDate && !isNaN(new Date(report.lastUpdateDate).getTime()) ? new Date(report.lastUpdateDate).toLocaleDateString() : 'N/A'}
                             </TableCell>

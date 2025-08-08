@@ -48,7 +48,7 @@ export default function AdminApprovedReportsPage() {
     setIsViewReportDialogOpen(true);
   };
   
-  const palmInputDetails = selectedReportForView?.reportType === 'palmistry' ? selectedReportForView.inputDetails as ReportPalmInputDetails : null;
+  const palmInputDetails = selectedReportForView?.inputDetails as ReportPalmInputDetails;
 
   if (isInitializing || !authCheckComplete) {
     return (
@@ -106,7 +106,6 @@ export default function AdminApprovedReportsPage() {
                         <TableRow>
                         <TableHead className="w-[100px]">Report ID</TableHead>
                         <TableHead>User</TableHead>
-                        <TableHead>Source Type</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead>Approved On</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -117,13 +116,7 @@ export default function AdminApprovedReportsPage() {
                         <TableRow key={report.id}>
                             <TableCell className="font-medium text-xs">{report.id.substring(0, 8)}...</TableCell>
                             <TableCell className="text-xs">{report.userName || 'N/A'}</TableCell>
-                            <TableCell className="text-xs capitalize">{report.reportType}</TableCell>
-                            <TableCell className="text-xs">
-                                {report.reportType === 'numerology'
-                                ? report.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-                                : report.category
-                                }
-                            </TableCell>
+                            <TableCell className="text-xs">{report.category}</TableCell>
                             <TableCell className="text-xs">
                             {report.lastUpdateDate && !isNaN(new Date(report.lastUpdateDate).getTime()) ? new Date(report.lastUpdateDate).toLocaleDateString() : 'N/A'}
                             </TableCell>
@@ -149,22 +142,20 @@ export default function AdminApprovedReportsPage() {
               <DialogDesc>Category: {selectedReportForView.category} | Submitted by: {selectedReportForView.userName || 'N/A'}</DialogDesc>
             </DialogHeader>
             
-            {palmInputDetails && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
-                {palmInputDetails.frontPalmDataUri && 
-                  <div className="text-center">
-                    <Image src={palmInputDetails.frontPalmDataUri} alt={`Front of ${palmInputDetails.dominantHand} Palm`} width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand front"/>
-                    <p className="text-xs text-muted-foreground mt-1">Front of {palmInputDetails.dominantHand} Palm</p>
-                  </div>
-                }
-                {palmInputDetails.sidePalmDataUri && 
-                  <div className="text-center">
-                    <Image src={palmInputDetails.sidePalmDataUri} alt={`Side of ${palmInputDetails.dominantHand} Palm`} width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand side"/>
-                    <p className="text-xs text-muted-foreground mt-1">Side of {palmInputDetails.dominantHand} Palm</p>
-                  </div>
-                }
-              </div>
-            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
+              {palmInputDetails.frontPalmDataUri && 
+                <div className="text-center">
+                  <Image src={palmInputDetails.frontPalmDataUri} alt={`Front of ${palmInputDetails.dominantHand} Palm`} width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand front"/>
+                  <p className="text-xs text-muted-foreground mt-1">Front of {palmInputDetails.dominantHand} Palm</p>
+                </div>
+              }
+              {palmInputDetails.sidePalmDataUri && 
+                <div className="text-center">
+                  <Image src={palmInputDetails.sidePalmDataUri} alt={`Side of ${palmInputDetails.dominantHand} Palm`} width={250} height={180} className="rounded-md border mx-auto" data-ai-hint="palm hand side"/>
+                  <p className="text-xs text-muted-foreground mt-1">Side of {palmInputDetails.dominantHand} Palm</p>
+                </div>
+              }
+            </div>
             
             <Label className="font-semibold">Report Content:</Label>
             <ScrollArea className="h-[250px] w-full rounded-md border p-4 mt-1 bg-muted/10 text-sm">

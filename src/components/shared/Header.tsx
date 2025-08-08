@@ -1,7 +1,7 @@
 
 "use client";
 import Link from 'next/link';
-import { Hand, LogOut, Edit, ShieldCheck, BookOpen, Calculator, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap, Handshake, LayoutDashboard, ListChecks, FileCheck2, Briefcase } from 'lucide-react';
+import { Hand, LogOut, Edit, ShieldCheck, BookOpen, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap, Handshake, LayoutDashboard, ListChecks, FileCheck2 } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -24,14 +24,6 @@ const readingTypes = [
   { name: "Comprehensive Analysis", query: "Comprehensive Analysis" },
 ];
 
-const numerologyServicesConst = [
-  { name: "Business Name Numerology Calculator", query: "business-name-calculator" },
-  { name: "Baby Name Numerology", query: "baby-name-numerology" },
-  { name: "Personal Life Path & Destiny Report", query: "life-path-report" },
-  { name: "Name Correction & Compatibility Checker", query: "name-correction" },
-  { name: "House Number / Address Compatibility", query: "address-compatibility" },
-];
-
 const productMenuItems = [
   { name: "Crystal Bracelets", link: "/products#crystal-bracelets" },
   { name: "Gemstones", link: "/products#gemstones" },
@@ -48,7 +40,6 @@ const Header = () => {
   const [activeStates, setActiveStates] = useState({
     isHomePageActive: false,
     isPalmInputPageActive: false,
-    isNumerologyInputPageActive: false,
     isReportPageActive: false,
     isProductsPageActive: false,
     isEditorDashboardActive: false,
@@ -58,12 +49,10 @@ const Header = () => {
 
   useEffect(() => {
     const palmCategoryFromQuery = searchParams ? searchParams.get('category') : null;
-    const numeroServiceFromQuery = searchParams ? searchParams.get('service') : null;
 
     setActiveStates({
       isHomePageActive: pathname === '/',
       isPalmInputPageActive: pathname === '/palm-input' && !!readingTypes.find(rt => rt.query === palmCategoryFromQuery),
-      isNumerologyInputPageActive: pathname === '/numerology-input' && !!numerologyServicesConst.find(ns => ns.query === numeroServiceFromQuery),
       isReportPageActive: pathname === '/report',
       isProductsPageActive: pathname.startsWith('/products'),
       isEditorDashboardActive: pathname === '/editor',
@@ -103,23 +92,6 @@ const Header = () => {
               <DropdownMenuItem key={type.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
                 <Link href={`/palm-input?category=${encodeURIComponent(type.query)}`} className="w-full">
                   {type.name}
-                </Link>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className={getDropdownTriggerClassName(activeStates.isNumerologyInputPageActive)}>
-              <Calculator className="mr-1.5 h-4 w-4" /> Numerology <ChevronDown className="ml-1 h-3 w-3" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
-            {numerologyServicesConst.map((service) => (
-              <DropdownMenuItem key={service.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20">
-                <Link href={`/numerology-input?service=${encodeURIComponent(service.query)}`} className="w-full">
-                  {service.name}
                 </Link>
               </DropdownMenuItem>
             ))}
@@ -286,9 +258,6 @@ const Header = () => {
                       <DropdownMenuSeparator className="bg-primary-foreground/20"/>
                       <DropdownMenuLabel>Palmistry</DropdownMenuLabel>
                       {readingTypes.map(item => <DropdownMenuItem key={item.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href={`/palm-input?category=${encodeURIComponent(item.query)}`}>{item.name}</Link></DropdownMenuItem>)}
-                      <DropdownMenuSeparator className="bg-primary-foreground/20"/>
-                      <DropdownMenuLabel>Numerology</DropdownMenuLabel>
-                      {numerologyServicesConst.map(item => <DropdownMenuItem key={item.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href={`/numerology-input?service=${encodeURIComponent(item.query)}`}>{item.name}</Link></DropdownMenuItem>)}
                       <DropdownMenuSeparator className="bg-primary-foreground/20"/>
                       {isAuthenticated && <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/report">My Reading</Link></DropdownMenuItem>}
                       <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/products">Products</Link></DropdownMenuItem>

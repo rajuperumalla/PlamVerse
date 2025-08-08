@@ -95,7 +95,7 @@ function PalmInputPageComponent() {
         markReportAsGenerationFailed(initialReportId, `Manual submission failed: ${errorMessage}`);
       }
       toast({ title: "Generation Error", description: `An issue occurred. Please try submitting again.`, variant: "destructive" });
-      router.push('/');
+      // Do not redirect on failure, let user stay on the page.
     } finally {
       setHasPaid(false);
       sessionStorage.removeItem('palmVerseCheckoutForm');
@@ -244,7 +244,7 @@ function PalmInputPageComponent() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <p className="text-muted-foreground text-md md:text-lg">
-                  Select a specific reading type from the "Palmistry" menu or a service from the "Numerology" menu in the main header to provide your details and receive personalized insights.
+                  Select a specific reading type from the "Palmistry" menu in the main header to provide your details and receive personalized insights.
                 </p>
                 <div className="w-full max-w-lg mx-auto">
                   <Image
@@ -257,7 +257,7 @@ function PalmInputPageComponent() {
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Each line on your palm, or number in your life, tells a unique story. Our AI, guided by ancient wisdom, helps you understand yours.
+                  Each line on your palm tells a unique story. Our AI, guided by ancient wisdom, helps you understand yours.
                 </p>
               </CardContent>
               <CardFooter>

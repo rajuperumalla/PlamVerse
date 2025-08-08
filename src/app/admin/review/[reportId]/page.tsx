@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useAppContext, type ReportData, type ReportPalmInputDetails, type ReportNumerologyInputDetails_Business, type ReportNumerologyInputDetails_BabyName, type ReportNumerologyInputDetails_PersonalReport } from '@/context/AppContext';
+import { useAppContext, type ReportData, type ReportPalmInputDetails } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,9 +15,6 @@ import { Loader2, CheckCircle, AlertTriangle, Edit3, Send, Sparkles, FileCheck2,
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import { generatePalmReading } from '@/ai/flows/generate-palm-reading';
-import { generateBusinessNumerologyReport } from '@/ai/flows/generate-business-numerology-report';
-import { generateBabyNameNumerologyReport } from '@/ai/flows/generate-baby-name-numerology-report';
-import { generatePersonalLifePathReport } from '@/ai/flows/generate-personal-life-path-report';
 
 export default function AdminReviewReportPage() {
   const { reportId } = useParams() as { reportId: string };
@@ -89,42 +86,10 @@ export default function AdminReviewReportPage() {
     startOperation();
     setGeneratedReportPreview(null);
     try {
-      let result: { report: string; };
-      const inputDetails = report.inputDetails;
-      
-      if (report.reportType === 'palmistry') {
-        result = await generatePalmReading({
-          ...(inputDetails as ReportPalmInputDetails),
+        const result = await generatePalmReading({
+          ...(report.inputDetails as ReportPalmInputDetails),
           expertAnalysis: expertAnalysisNotes,
         });
-      } else if (report.reportType === 'numerology') {
-        switch (report.category) {
-          case 'business-name-calculator':
-            result = await generateBusinessNumerologyReport({
-              ...(inputDetails as ReportNumerologyInputDetails_Business),
-              expertAnalysis: expertAnalysisNotes,
-            });
-            break;
-          case 'baby-name-numerology':
-            result = await generateBabyNameNumerologyReport({
-              ...(inputDetails as ReportNumerologyInputDetails_BabyName),
-              expertAnalysis: expertAnalysisNotes,
-            });
-            break;
-          case 'life-path-report':
-            result = await generatePersonalLifePathReport({
-              ...(inputDetails as ReportNumerologyInputDetails_PersonalReport),
-              expertAnalysis: expertAnalysisNotes,
-            });
-            break;
-          default:
-            toast({ title: "Unsupported Service", description: `The numerology service '${report.category}' is not yet configured for review.`, variant: "destructive" });
-            throw new Error(`Unsupported numerology category: ${report.category}`);
-        }
-      } else {
-        throw new Error(`Unsupported report type: ${report.reportType}`);
-      }
-
       setGeneratedReportPreview(result.report);
       toast({ title: "AI Report Generated", description: "Review the AI-generated report based on your analysis below." });
     } catch (error) {
@@ -194,7 +159,6 @@ export default function AdminReviewReportPage() {
   }
 
   const palmInputDetails = report.reportType === 'palmistry' ? report.inputDetails as ReportPalmInputDetails : null;
-  const numerologyInputDetails = report.reportType === 'numerology' ? report.inputDetails : null;
 
   return (
     <div className="container mx-auto py-8 max-w-4xl">
@@ -206,7 +170,7 @@ export default function AdminReviewReportPage() {
         <CardHeader>
           <CardTitle className="text-2xl font-headline">Review Report: {report.id.substring(0,10)}...</CardTitle>
           <CardDescription>
-            Category: {report.reportType === 'numerology' ? report.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : report.category} | Submitted by: {report.userName || 'N/A'} on {report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}
+            Category: {report.category} | Submitted by: {report.userName || 'N/A'} on {report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -226,25 +190,6 @@ export default function AdminReviewReportPage() {
                 }
               </div>
            )}
-
-           {numerologyInputDetails && (
-              <div className="space-y-4 my-4 p-4 border rounded-md bg-muted/30">
-                <h3 className="font-semibold text-lg text-primary">Submitted Numerology Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                  {Object.entries(numerologyInputDetails).map(([key, value]) => {
-                    if (key === 'serviceQuery' || value === undefined || value === null || (Array.isArray(value) && value.length === 0)) return null;
-                    const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
-                    const formattedValue = Array.isArray(value) ? value.join(', ') : String(value);
-                    return (
-                      <div key={key}>
-                        <p className="font-medium text-muted-foreground">{formattedKey}:</p>
-                        <p className="font-semibold text-foreground">{formattedValue}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
           <div>
             <Label className="font-semibold text-lg">Initial AI Generated Content (From User Submission):</Label>
