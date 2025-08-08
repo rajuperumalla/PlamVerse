@@ -120,18 +120,17 @@ function PalmInputPageComponent() {
       handlePaidSubmission(formData);
     }
   };
-
+  
   const attemptAutoSubmitAfterPayment = useCallback(async () => {
     const paymentSuccess = searchParams?.get('payment_success') === 'true';
 
     if (paymentSuccess && hasPaid && userName) {
-        const persistedFormDataJson = sessionStorage.getItem('palmVerseCheckoutForm');
+        // Clean up the URL immediately by creating a new URL object and removing the param
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete('payment_success');
+        router.replace(currentUrl.toString(), { scroll: false });
         
-        // Clean up the URL immediately
-        const newParams = new URLSearchParams(searchParams.toString());
-        newParams.delete('payment_success');
-        router.replace(`/palm-input?${newParams.toString()}`, { scroll: false });
-
+        const persistedFormDataJson = sessionStorage.getItem('palmVerseCheckoutForm');
         if (persistedFormDataJson) {
             try {
                 const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
