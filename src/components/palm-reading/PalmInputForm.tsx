@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info, Camera, Sun, Focus, Maximize, MoveHorizontal } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const readingCategories = [
   { value: "General Personality", label: "General Personality" },
@@ -155,23 +154,9 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
             <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <div className="flex items-center gap-1.5">
-                            <Label htmlFor="dominantHand" className="text-base flex items-center gap-2">
-                                <UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *
-                            </Label>
-                            <TooltipProvider delayDuration={100}>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <button type="button" onClick={e => e.preventDefault()} className="inline-flex items-center justify-center p-0 bg-transparent border-none">
-                                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                                        </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Hand that you use most?</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
+                        <Label htmlFor="dominantHand" className="text-base flex items-center gap-2">
+                            <UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *
+                        </Label>
                         <Select onValueChange={setDominantHand} value={dominantHand} disabled={isOperationInProgress} required>
                         <SelectTrigger id="dominantHand">
                             <SelectValue placeholder="Select your dominant hand" />
@@ -181,6 +166,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                             <SelectItem value="Right">Right</SelectItem>
                         </SelectContent>
                         </Select>
+                        <p className="text-xs text-muted-foreground pt-1">Hand that you use most for writing.</p>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
