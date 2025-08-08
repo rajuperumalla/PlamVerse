@@ -18,7 +18,34 @@ export interface ReportPalmInputDetails {
   category: string; // e.g., "General Personality"
 }
 
-export type ReportInputDetails = ReportPalmInputDetails;
+export interface ReportNumerologyInputDetails_Business {
+    serviceQuery: 'business-name-calculator';
+    businessName: string;
+    additionalBusinessNames?: string;
+    founderFullName: string;
+    founderDOB: string;
+    founderTOB?: string;
+}
+
+export interface ReportNumerologyInputDetails_PersonalReport {
+    serviceQuery: 'life-path-report';
+    fullName: string;
+    dateOfBirth: string;
+    timeOfBirth?: string;
+}
+
+export interface ReportNumerologyInputDetails_BabyName {
+    serviceQuery: 'baby-name-numerology';
+    proposedNames: string[];
+    childDOB: string;
+    childTOB?: string;
+    parent1FullName?: string;
+    parent1DOB?: string;
+    parent2FullName?: string;
+    parent2DOB?: string;
+}
+
+export type ReportInputDetails = ReportPalmInputDetails | ReportNumerologyInputDetails_Business | ReportNumerologyInputDetails_PersonalReport | ReportNumerologyInputDetails_BabyName;
 
 export interface ReportData {
   id: string;
@@ -27,7 +54,7 @@ export interface ReportData {
   userName: string | null;
   submissionDate: string;
   lastUpdateDate: string;
-  reportType: 'palmistry'; // Only palmistry is supported now
+  reportType: 'palmistry' | 'numerology'; 
   category: string; 
   inputDetails: ReportInputDetails;
 }
@@ -47,6 +74,7 @@ interface AppContextType extends AppState {
   login: (name: string) => void;
   logout: () => void;
   createInitialReportPlaceholder: (inputData: ReportPalmInputDetails) => string;
+  createInitialNumerologyReportPlaceholder: (inputData: Omit<ReportInputDetails, 'serviceQuery'>, category: string) => string;
   updateReportWithGeneratedContent: (reportId: string, aiContent: string) => void;
   markReportAsGenerationFailed: (reportId: string, errorMessage?: string) => void;
   approveReport: (reportId: string, newContent?: string) => void;
@@ -148,7 +176,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       createSampleReport(3, 'Health & Wellness', 'user_gamma@example.com', 'approved'),
       createSampleReport(4, 'Comprehensive Analysis', 'user_delta@example.com', 'pending_review'),
     ];
-    persistReports(samples.filter(r => r.reportType === 'palmistry')); // only palmistry
+    persistReports(samples);
   }, []);
 
   useEffect(() => {
@@ -175,8 +203,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         if (storedReports) {
         try {
             const parsedReports = JSON.parse(storedReports) as ReportData[];
-            if (Array.isArray(parsedReports) && parsedReports.length > 0 && parsedReports.every(r => typeof r.id === 'string' && typeof r.status === 'string' && r.inputDetails && typeof r.submissionDate === 'string' && typeof r.lastUpdateDate === 'string' && (r.reportType === 'palmistry'))) {
-                setReports(parsedReports.filter(r => r.reportType === 'palmistry'));
+            if (Array.isArray(parsedReports) && parsedReports.length > 0 && parsedReports.every(r => typeof r.id === 'string' && typeof r.status === 'string' && r.inputDetails && typeof r.submissionDate === 'string' && typeof r.lastUpdateDate === 'string' && (r.reportType === 'palmistry' || r.reportType === 'numerology'))) {
+                setReports(parsedReports);
             } else {
                 loadSampleReports();
             }
@@ -233,8 +261,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     const newReport: ReportData = {
       id: newReportId,
-      content: "Palmistry report generation initiated...",
-      status: 'submitted_for_generation',
+      content: "Palmistry report submitted for expert review...",
+      status: 'pending_review',
       userName: userName,
       submissionDate: currentDate,
       lastUpdateDate: currentDate,
@@ -247,6 +275,31 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     persistReports(updatedReports);
     return newReportId;
   };
+
+  const createInitialNumerologyReportPlaceholder = (inputData: Omit<ReportInputDetails, 'serviceQuery'>, category: string): string => {
+    const newReportId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const currentDate = new Date().toISOString();
+
+    const reportsToKeep = reports.filter(r => {
+        return r.userName !== userName || r.status === 'approved';
+    });
+
+    const newReport: ReportData = {
+      id: newReportId,
+      content: `Numerology report (${category}) submitted for expert review...`,
+      status: 'pending_review',
+      userName: userName,
+      submissionDate: currentDate,
+      lastUpdateDate: currentDate,
+      category: category,
+      reportType: 'numerology',
+      inputDetails: inputData,
+    };
+
+    const updatedReports = [...reportsToKeep, newReport];
+    persistReports(updatedReports);
+    return newReportId;
+  }
 
   const updateReportWithGeneratedContent = (reportId: string, aiContent: string) => {
     const updatedReports = reports.map(report => {
@@ -345,6 +398,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       logout,
       reports,
       createInitialReportPlaceholder,
+      createInitialNumerologyReportPlaceholder,
       updateReportWithGeneratedContent,
       markReportAsGenerationFailed,
       approveReport,
@@ -375,3 +429,5 @@ export const useAppContext = () => {
   }
   return context;
 };
+
+    

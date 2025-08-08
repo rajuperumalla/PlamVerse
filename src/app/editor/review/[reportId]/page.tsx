@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useAppContext, type ReportData, type ReportPalmInputDetails } from '@/context/AppContext';
+import { useAppContext, type ReportData, type ReportPalmInputDetails, type ReportNumerologyInputDetails_Business, type ReportNumerologyInputDetails_PersonalReport, type ReportNumerologyInputDetails_BabyName } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,11 +11,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { Loader2, CheckCircle, AlertTriangle, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, ThumbsUp, Brain, Eye } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, Brain, Eye } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { generatePalmReading } from '@/ai/flows/generate-palm-reading';
+import { generateBusinessNumerologyReport } from '@/ai/flows/generate-business-numerology-report';
+import { generatePersonalLifePathReport } from '@/ai/flows/generate-personal-life-path-report';
+import { generateBabyNameNumerologyReport } from '@/ai/flows/generate-baby-name-numerology-report';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export default function EditorReviewReportPage() {
   const { reportId } = useParams() as { reportId: string };
@@ -37,9 +41,6 @@ export default function EditorReviewReportPage() {
   const [imageQualityConfirmed, setImageQualityConfirmed] = useState(false);
 
   const [expertAnalysisNotes, setExpertAnalysisNotes] = useState('');
-  const [adminGuidanceForSuggestions, setAdminGuidanceForSuggestions] = useState('');
-  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
-  const [isAiSuggestionLoading, setIsAiSuggestionLoading] = useState(false);
   const [generatedReportPreview, setGeneratedReportPreview] = useState<string | null>(null);
 
   useEffect(() => {
@@ -52,33 +53,14 @@ export default function EditorReviewReportPage() {
       } else {
         const foundReport = getReportById(reportId);
         setReport(foundReport);
+        // For numerology reports where there's no image, we can consider quality confirmed by default.
+        if (foundReport?.reportType === 'numerology') {
+            setImageQualityConfirmed(true);
+        }
       }
       setAuthCheckComplete(true);
     }
   }, [isAuthenticated, isEditor, reportId, getReportById, router, toast, isInitializing]);
-
-  const handleGetAiSuggestions = async () => {
-    if (!report || !report.content) {
-        toast({ title: "Missing Content", description: "Initial AI report content is missing to get suggestions.", variant: "destructive"});
-        return;
-    }
-    setIsAiSuggestionLoading(true);
-    setAiSuggestion(null);
-    try {
-      const result = await suggestReportImprovements({
-        report: report.content,
-        adminGuidance: adminGuidanceForSuggestions
-      });
-      setAiSuggestion(result.suggestions);
-      toast({ title: "AI Suggestions Ready", description: `AI-powered suggestions generated.`});
-    } catch (error) {
-      console.error("Error getting AI suggestions:", error);
-      setAiSuggestion("Error: Could not fetch suggestions.");
-      toast({ title: "Suggestion Error", description: `Failed to get AI suggestions.`, variant: "destructive" });
-    } finally {
-      setIsAiSuggestionLoading(false);
-    }
-  };
 
   const handleGenerateWithExpertAnalysis = async () => {
     if (!report || !expertAnalysisNotes.trim()) {
@@ -88,16 +70,47 @@ export default function EditorReviewReportPage() {
     startOperation();
     setGeneratedReportPreview(null);
     try {
-        const result = await generatePalmReading({
+      let result;
+      // Branching logic based on report type and category
+      if (report.reportType === 'palmistry') {
+        result = await generatePalmReading({
           ...(report.inputDetails as ReportPalmInputDetails),
           expertAnalysis: expertAnalysisNotes,
         });
+      } else if (report.reportType === 'numerology') {
+          switch(report.category) {
+              case 'business-name-calculator':
+                  result = await generateBusinessNumerologyReport({
+                      ...(report.inputDetails as ReportNumerologyInputDetails_Business),
+                      expertAnalysis: expertAnalysisNotes,
+                  });
+                  break;
+              case 'life-path-report':
+                  result = await generatePersonalLifePathReport({
+                      ...(report.inputDetails as ReportNumerologyInputDetails_PersonalReport),
+                      expertAnalysis: expertAnalysisNotes,
+                  });
+                  break;
+              case 'baby-name-numerology':
+                 result = await generateBabyNameNumerologyReport({
+                    ...(report.inputDetails as ReportNumerologyInputDetails_BabyName),
+                    expertAnalysis: expertAnalysisNotes,
+                 });
+                 break;
+              // Add other numerology service cases here
+              default:
+                  throw new Error(`Unsupported numerology category: ${report.category}`);
+          }
+      } else {
+          throw new Error(`Unsupported report type: ${report.reportType}`);
+      }
 
       setGeneratedReportPreview(result.report);
       toast({ title: "AI Report Generated", description: "Review the AI-generated report based on your analysis below." });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       console.error("Error generating report with expert analysis:", error);
-      toast({ title: "Generation Error", description: `Failed to generate report with your analysis. Please try again.`, variant: "destructive" });
+      toast({ title: "Generation Error", description: `Failed to generate report: ${errorMessage}`, variant: "destructive" });
     } finally {
       stopOperation();
     }
@@ -119,15 +132,6 @@ export default function EditorReviewReportPage() {
     } finally {
       stopOperation();
     }
-  };
-
-  const handleApproveOriginalAsIs = () => {
-    if (!report) return;
-    startOperation();
-    approveReport(report.id, report.content);
-    toast({ title: "Original Report Approved As-Is", description: `Report ID ${report.id.substring(0,10)}... (initial AI version) has been approved.` });
-    router.push('/editor/approved');
-    stopOperation();
   };
 
   if (isInitializing || !authCheckComplete || (report === null && !isInitializing)) {
@@ -161,8 +165,12 @@ export default function EditorReviewReportPage() {
     );
   }
 
-  const palmInputDetails = report.inputDetails as ReportPalmInputDetails;
-  const isAnalysisDisabled = !imageQualityConfirmed || isOperationInProgress;
+  const palmInputDetails = report.reportType === 'palmistry' ? report.inputDetails as ReportPalmInputDetails : null;
+  const businessNumerologyDetails = report.reportType === 'numerology' && report.category === 'business-name-calculator' ? report.inputDetails as ReportNumerologyInputDetails_Business : null;
+  const personalReportDetails = report.reportType === 'numerology' && report.category === 'life-path-report' ? report.inputDetails as ReportNumerologyInputDetails_PersonalReport : null;
+  const babyNameDetails = report.reportType === 'numerology' && report.category === 'baby-name-numerology' ? report.inputDetails as ReportNumerologyInputDetails_BabyName : null;
+
+  const isAnalysisDisabled = report.reportType === 'palmistry' ? !imageQualityConfirmed || isOperationInProgress : isOperationInProgress;
 
   return (
     <div className="container mx-auto py-8 space-y-6 max-w-4xl">
@@ -194,93 +202,70 @@ export default function EditorReviewReportPage() {
                 }
               </div>
            )}
+            {businessNumerologyDetails && (
+                <div className="space-y-4 my-4 text-sm p-4 border rounded-md bg-muted/30">
+                    <h3 className="font-semibold text-base">Submitted Business Numerology Details</h3>
+                    <p><strong>Business Name:</strong> {businessNumerologyDetails.businessName}</p>
+                    {businessNumerologyDetails.additionalBusinessNames && <p><strong>Other Names:</strong> {businessNumerologyDetails.additionalBusinessNames}</p>}
+                    <p><strong>Founder Name:</strong> {businessNumerologyDetails.founderFullName}</p>
+                    <p><strong>Founder DOB:</strong> {new Date(businessNumerologyDetails.founderDOB).toLocaleDateString()}</p>
+                    {businessNumerologyDetails.founderTOB && <p><strong>Founder TOB:</strong> {businessNumerologyDetails.founderTOB}</p>}
+                </div>
+            )}
+            {personalReportDetails && (
+                 <div className="space-y-4 my-4 text-sm p-4 border rounded-md bg-muted/30">
+                    <h3 className="font-semibold text-base">Submitted Personal Report Details</h3>
+                    <p><strong>Full Name:</strong> {personalReportDetails.fullName}</p>
+                    <p><strong>Date of Birth:</strong> {new Date(personalReportDetails.dateOfBirth).toLocaleDateString()}</p>
+                    {personalReportDetails.timeOfBirth && <p><strong>Time of Birth:</strong> {personalReportDetails.timeOfBirth}</p>}
+                </div>
+            )}
+             {babyNameDetails && (
+                 <div className="space-y-4 my-4 text-sm p-4 border rounded-md bg-muted/30">
+                    <h3 className="font-semibold text-base">Submitted Baby Name Details</h3>
+                    <div><strong>Proposed Names:</strong>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                            {babyNameDetails.proposedNames.map((name, i) => <Badge key={i} variant="secondary">{name}</Badge>)}
+                        </div>
+                    </div>
+                    <p><strong>Child's DOB:</strong> {new Date(babyNameDetails.childDOB).toLocaleDateString()}</p>
+                    {babyNameDetails.childTOB && <p><strong>Child's TOB:</strong> {babyNameDetails.childTOB}</p>}
+                    {babyNameDetails.parent1FullName && <p><strong>Parent 1:</strong> {babyNameDetails.parent1FullName} (DOB: {babyNameDetails.parent1DOB ? new Date(babyNameDetails.parent1DOB).toLocaleDateString() : 'N/A'})</p>}
+                    {babyNameDetails.parent2FullName && <p><strong>Parent 2:</strong> {babyNameDetails.parent2FullName} (DOB: {babyNameDetails.parent2DOB ? new Date(babyNameDetails.parent2DOB).toLocaleDateString() : 'N/A'})</p>}
+                </div>
+            )}
         </CardContent>
       </Card>
       
-      <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-800">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-lg"><Eye className="h-5 w-5"/>Step 1: Image Quality Verification</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center space-x-3 rounded-md border border-amber-400/50 bg-amber-100/50 dark:bg-amber-900/30 p-4">
-              <Checkbox id="image-quality-confirm" 
-                onCheckedChange={(checked) => setImageQualityConfirmed(checked as boolean)}
-                checked={imageQualityConfirmed}
-              />
-              <label
-                htmlFor="image-quality-confirm"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-amber-900 dark:text-amber-200"
-              >
-                I confirm the palm images are clear, well-lit, and suitable for analysis.
-              </label>
-            </div>
-          </CardContent>
-      </Card>
+      {report.reportType === 'palmistry' && (
+        <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-lg"><Eye className="h-5 w-5"/>Step 1: Image Quality Verification</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-3 rounded-md border border-amber-400/50 bg-amber-100/50 dark:bg-amber-900/30 p-4">
+                <Checkbox id="image-quality-confirm" 
+                  onCheckedChange={(checked) => setImageQualityConfirmed(checked as boolean)}
+                  checked={imageQualityConfirmed}
+                />
+                <label
+                  htmlFor="image-quality-confirm"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-amber-900 dark:text-amber-200"
+                >
+                  I confirm the palm images are clear, well-lit, and suitable for analysis.
+                </label>
+              </div>
+            </CardContent>
+        </Card>
+      )}
 
 
       <Card className={cn("transition-opacity", isAnalysisDisabled && "opacity-50 pointer-events-none")}>
         <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg"><Brain className="h-5 w-5"/>Step 2: Expert Analysis & Report Generation</CardTitle>
-            <CardDescription>Use the tools below to refine and approve the final report.</CardDescription>
+            <CardDescription>Provide your expert directives below. The AI will generate the report based on your notes.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-            <div>
-              <Label className="font-semibold text-base">Initial AI Generated Content (For Reference):</Label>
-              <ScrollArea className="h-[150px] w-full rounded-md border p-4 mt-1 bg-muted/20 text-sm shadow-inner">
-                {report.content && report.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
-                  <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
-                ))}
-              </ScrollArea>
-            </div>
-
-            <div className="space-y-3 border-t pt-6">
-                <Label htmlFor="adminGuidanceForSuggestions" className="text-md font-medium flex items-center gap-1.5"><MessageCircleQuestion className="h-5 w-5 text-primary"/>Your Guidance for AI Suggestions (Optional Helper)</Label>
-                <Textarea
-                    id="adminGuidanceForSuggestions"
-                    value={adminGuidanceForSuggestions}
-                    onChange={(e) => setAdminGuidanceForSuggestions(e.target.value)}
-                    placeholder="e.g., 'Focus on career aspects for initial suggestions', 'Check clarity on relationships'"
-                    rows={2}
-                    className="text-sm"
-                    disabled={isAnalysisDisabled || isAiSuggestionLoading}
-                />
-                <Button 
-                    onClick={handleGetAiSuggestions} 
-                    variant="outline" 
-                    size="sm"
-                    className="w-full"
-                    disabled={isAnalysisDisabled || isAiSuggestionLoading}
-                >
-                    {isAiSuggestionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                    Get AI Suggestions (to help formulate your analysis)
-                </Button>
-                <p className="text-xs text-muted-foreground mt-1 text-center">
-                  You can revise your guidance above and click again to get new suggestions. These suggestions are for your reference.
-                </p>
-
-                {aiSuggestion && (
-                <Alert variant={aiSuggestion.startsWith("Error:") ? "destructive" : "default"} className="text-sm">
-                    <Sparkles className="h-4 w-4" />
-                    <AlertTitle className="text-md">AI Generated Suggestions (for your reference)</AlertTitle>
-                    <AlertDescription>
-                    <ScrollArea className="h-[100px]">
-                        {aiSuggestion.split('\n').map((line, i) => <p key={i} className="mb-1">{line}</p>)}
-                    </ScrollArea>
-                    </AlertDescription>
-                     {aiSuggestion && !aiSuggestion.startsWith("Error:") && (
-                        <Button 
-                            onClick={() => {
-                                setExpertAnalysisNotes((prev) => prev + (prev ? '\n\n--- Suggestions for consideration ---\n' : '--- Suggestions for consideration ---\n') + aiSuggestion);
-                                toast({title: "AI Suggestions Appended", description: "Suggestions appended to your main analysis notes."})
-                            }}
-                            variant="link" size="sm" className="p-0 h-auto text-xs mt-2">
-                            Append to My Expert Analysis Notes
-                        </Button>
-                    )}
-                </Alert>
-                )}
-            </div>
-            
             <div className="space-y-2 border-t pt-6">
               <Label htmlFor="expertAnalysisNotes" className="text-md font-medium flex items-center gap-1.5"><Brain className="h-5 w-5 text-primary"/>Editor's Expert Analysis & Directives for AI</Label>
               <Textarea
@@ -288,7 +273,7 @@ export default function EditorReviewReportPage() {
                 value={expertAnalysisNotes}
                 onChange={(e) => setExpertAnalysisNotes(e.target.value)}
                 placeholder="Enter your comprehensive analysis, interpretations, and directives here. The AI will use this as the primary basis for generating the report."
-                rows={8}
+                rows={12}
                 className="text-sm"
                 disabled={isAnalysisDisabled}
               />
@@ -322,18 +307,9 @@ export default function EditorReviewReportPage() {
               </div>
             )}
         </CardContent>
-        <CardFooter className="border-t pt-6 flex flex-col sm:flex-row justify-end gap-3">
-            <Button 
-                onClick={handleApproveOriginalAsIs} 
-                variant="secondary" 
-                disabled={isAnalysisDisabled || !!generatedReportPreview} 
-                title={generatedReportPreview ? "A new version based on your analysis exists. Approve that or clear it first." : "Approve the initial AI report (from user submission) without your direct analysis."}
-                className="w-full sm:w-auto"
-            >
-                <ThumbsUp className="mr-2 h-4 w-4" /> Approve Original As-Is
-            </Button>
-        </CardFooter>
       </Card>
     </div>
   );
 }
+
+    

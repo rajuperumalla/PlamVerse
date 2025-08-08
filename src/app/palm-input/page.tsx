@@ -8,7 +8,6 @@ import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext
 import { Loader2, Sparkles, ArrowRight, Search, Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { generatePalmReading, type GeneratePalmReadingInput } from '@/ai/flows/generate-palm-reading';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
@@ -39,8 +38,6 @@ function PalmInputPageComponent() {
     stopOperation,
     isOperationInProgress,
     createInitialReportPlaceholder,
-    updateReportWithGeneratedContent,
-    markReportAsGenerationFailed
   } = useAppContext();
   const { toast } = useToast();
   const router = useRouter();
@@ -66,23 +63,9 @@ function PalmInputPageComponent() {
 
   const handlePaidSubmission = useCallback(async (formData: ReportPalmInputDetails) => {
     startOperation();
-    let initialReportId = '';
     try {
-      initialReportId = createInitialReportPlaceholder(formData);
+      createInitialReportPlaceholder(formData);
       
-      const aiFlowInput: GeneratePalmReadingInput = {
-        frontPalmDataUri: formData.frontPalmDataUri!,
-        sidePalmDataUri: formData.sidePalmDataUri!,
-        dateOfBirth: formData.dateOfBirth,
-        placeOfBirth: formData.placeOfBirth,
-        timeOfBirth: formData.timeOfBirth || "Not specified",
-        dominantHand: formData.dominantHand,
-        category: formData.category,
-      };
-
-      const result = await generatePalmReading(aiFlowInput);
-      updateReportWithGeneratedContent(initialReportId, result.report);
-
       toast({
         title: "Request Submitted for Review",
         description: "Your request has been sent for expert review. Your report will be available in 'My Reading' shortly.",
@@ -90,19 +73,16 @@ function PalmInputPageComponent() {
       });
       router.push('/'); 
     } catch (error) {
-      console.error("Error generating palm reading:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during generation.";
-      if (initialReportId) {
-        markReportAsGenerationFailed(initialReportId, `Manual submission failed: ${errorMessage}`);
-      }
-      toast({ title: "Generation Error", description: `An issue occurred. Please try submitting again.`, variant: "destructive" });
+      console.error("Error creating palm reading placeholder:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during submission.";
+      toast({ title: "Submission Error", description: `An issue occurred. ${errorMessage}`, variant: "destructive" });
       router.push('/');
     } finally {
       setHasPaid(false);
       sessionStorage.removeItem('palmVerseCheckoutForm');
       if (isOperationInProgress) stopOperation();
     }
-  }, [userName, startOperation, stopOperation, createInitialReportPlaceholder, updateReportWithGeneratedContent, markReportAsGenerationFailed, setHasPaid, router, toast, isOperationInProgress]);
+  }, [userName, startOperation, stopOperation, createInitialReportPlaceholder, setHasPaid, router, toast, isOperationInProgress]);
 
   const handleFormSubmit = (formData: ReportPalmInputDetails) => {
     try {
@@ -295,3 +275,5 @@ export default function PalmInputPage() {
     </Suspense>
   );
 }
+
+    
