@@ -11,9 +11,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { Loader2, CheckCircle, AlertTriangle, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, ThumbsUp, Brain } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, ThumbsUp, Brain, Eye } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { generatePalmReading } from '@/ai/flows/generate-palm-reading';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function EditorReviewReportPage() {
   const { reportId } = useParams() as { reportId: string };
@@ -32,6 +33,7 @@ export default function EditorReviewReportPage() {
 
   const [report, setReport] = useState<ReportData | null | undefined>(null);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
+  const [imageQualityConfirmed, setImageQualityConfirmed] = useState(false);
 
   const [expertAnalysisNotes, setExpertAnalysisNotes] = useState('');
   const [adminGuidanceForSuggestions, setAdminGuidanceForSuggestions] = useState('');
@@ -159,6 +161,7 @@ export default function EditorReviewReportPage() {
   }
 
   const palmInputDetails = report.inputDetails as ReportPalmInputDetails;
+  const isAnalysisDisabled = !imageQualityConfirmed || isOperationInProgress;
 
   return (
     <div className="container mx-auto py-8 max-w-4xl">
@@ -191,109 +194,132 @@ export default function EditorReviewReportPage() {
               </div>
            )}
 
-          <div>
-            <Label className="font-semibold text-lg">Initial AI Generated Content (From User Submission):</Label>
-            <ScrollArea className="h-[150px] w-full rounded-md border p-4 mt-1 bg-muted/20 text-sm shadow-inner">
-              {report.content && report.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
-                <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
-              ))}
-            </ScrollArea>
-          </div>
+            <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-lg"><Eye className="h-5 w-5"/>Step 1: Image Quality Verification</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-3 rounded-md border border-amber-400/50 bg-amber-100/50 dark:bg-amber-900/30 p-4">
+                    <Checkbox id="image-quality-confirm" 
+                      onCheckedChange={(checked) => setImageQualityConfirmed(checked as boolean)}
+                      checked={imageQualityConfirmed}
+                    />
+                    <label
+                      htmlFor="image-quality-confirm"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-amber-900 dark:text-amber-200"
+                    >
+                      I confirm the palm images are clear, well-lit, and suitable for analysis.
+                    </label>
+                  </div>
+                </CardContent>
+            </Card>
 
-          <div className="space-y-3 border-t pt-6">
-              <Label htmlFor="adminGuidanceForSuggestions" className="text-md font-medium flex items-center gap-1.5"><MessageCircleQuestion className="h-5 w-5 text-primary"/>Your Guidance for AI Suggestions (Optional Helper)</Label>
-              <Textarea
-                  id="adminGuidanceForSuggestions"
-                  value={adminGuidanceForSuggestions}
-                  onChange={(e) => setAdminGuidanceForSuggestions(e.target.value)}
-                  placeholder="e.g., 'Focus on career aspects for initial suggestions', 'Check clarity on relationships'"
-                  rows={2}
-                  className="text-sm"
-                  disabled={isOperationInProgress || isAiSuggestionLoading}
-              />
-              <Button
-                  onClick={handleGetAiSuggestions}
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  disabled={isOperationInProgress || isAiSuggestionLoading}
-              >
-                  {isAiSuggestionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Get AI Suggestions (to help formulate your analysis)
-              </Button>
-              <p className="text-xs text-muted-foreground mt-1 text-center">
-                You can revise your guidance above and click again to get new suggestions. These suggestions are for your reference.
-              </p>
 
-              {aiSuggestion && (
-              <Alert variant={aiSuggestion.startsWith("Error:") ? "destructive" : "default"} className="text-sm">
-                  <Sparkles className="h-4 w-4" />
-                  <AlertTitle className="text-md">AI Generated Suggestions (for your reference)</AlertTitle>
-                  <AlertDescription>
-                  <ScrollArea className="h-[100px]">
-                      {aiSuggestion.split('\n').map((line, i) => <p key={i} className="mb-1">{line}</p>)}
-                  </ScrollArea>
-                  </AlertDescription>
-                   {aiSuggestion && !aiSuggestion.startsWith("Error:") && (
-                      <Button
-                          onClick={() => {
-                              setExpertAnalysisNotes((prev) => prev + (prev ? '\n\n--- Suggestions for consideration ---\n' : '--- Suggestions for consideration ---\n') + aiSuggestion);
-                              toast({title: "AI Suggestions Appended", description: "Suggestions appended to your main analysis notes."})
-                          }}
-                          variant="link" size="sm" className="p-0 h-auto text-xs mt-2">
-                          Append to My Expert Analysis Notes
-                      </Button>
+          <div className={cn("space-y-6 transition-opacity", isAnalysisDisabled && "opacity-50 pointer-events-none")}>
+              <div>
+                <Label className="font-semibold text-lg">Initial AI Generated Content (From User Submission):</Label>
+                <ScrollArea className="h-[150px] w-full rounded-md border p-4 mt-1 bg-muted/20 text-sm shadow-inner">
+                  {report.content && report.content.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
+                    <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
+                  ))}
+                </ScrollArea>
+              </div>
+
+              <div className="space-y-3 border-t pt-6">
+                  <Label htmlFor="adminGuidanceForSuggestions" className="text-md font-medium flex items-center gap-1.5"><MessageCircleQuestion className="h-5 w-5 text-primary"/>Your Guidance for AI Suggestions (Optional Helper)</Label>
+                  <Textarea
+                      id="adminGuidanceForSuggestions"
+                      value={adminGuidanceForSuggestions}
+                      onChange={(e) => setAdminGuidanceForSuggestions(e.target.value)}
+                      placeholder="e.g., 'Focus on career aspects for initial suggestions', 'Check clarity on relationships'"
+                      rows={2}
+                      className="text-sm"
+                      disabled={isAnalysisDisabled || isAiSuggestionLoading}
+                  />
+                  <Button 
+                      onClick={handleGetAiSuggestions} 
+                      variant="outline" 
+                      size="sm"
+                      className="w-full"
+                      disabled={isAnalysisDisabled || isAiSuggestionLoading}
+                  >
+                      {isAiSuggestionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                      Get AI Suggestions (to help formulate your analysis)
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1 text-center">
+                    You can revise your guidance above and click again to get new suggestions. These suggestions are for your reference.
+                  </p>
+
+                  {aiSuggestion && (
+                  <Alert variant={aiSuggestion.startsWith("Error:") ? "destructive" : "default"} className="text-sm">
+                      <Sparkles className="h-4 w-4" />
+                      <AlertTitle className="text-md">AI Generated Suggestions (for your reference)</AlertTitle>
+                      <AlertDescription>
+                      <ScrollArea className="h-[100px]">
+                          {aiSuggestion.split('\n').map((line, i) => <p key={i} className="mb-1">{line}</p>)}
+                      </ScrollArea>
+                      </AlertDescription>
+                       {aiSuggestion && !aiSuggestion.startsWith("Error:") && (
+                          <Button 
+                              onClick={() => {
+                                  setExpertAnalysisNotes((prev) => prev + (prev ? '\n\n--- Suggestions for consideration ---\n' : '--- Suggestions for consideration ---\n') + aiSuggestion);
+                                  toast({title: "AI Suggestions Appended", description: "Suggestions appended to your main analysis notes."})
+                              }}
+                              variant="link" size="sm" className="p-0 h-auto text-xs mt-2">
+                              Append to My Expert Analysis Notes
+                          </Button>
+                      )}
+                  </Alert>
                   )}
-              </Alert>
+              </div>
+              
+              <div className="space-y-2 border-t pt-6">
+                <Label htmlFor="expertAnalysisNotes" className="text-md font-medium flex items-center gap-1.5"><Brain className="h-5 w-5 text-primary"/>Editor's Expert Analysis & Directives for AI</Label>
+                <Textarea
+                  id="expertAnalysisNotes"
+                  value={expertAnalysisNotes}
+                  onChange={(e) => setExpertAnalysisNotes(e.target.value)}
+                  placeholder="Enter your comprehensive analysis, interpretations, and directives here. The AI will use this as the primary basis for generating the report."
+                  rows={8}
+                  className="text-sm"
+                  disabled={isAnalysisDisabled}
+                />
+                 <Button 
+                      onClick={handleGenerateWithExpertAnalysis} 
+                      disabled={isAnalysisDisabled || !expertAnalysisNotes.trim()} 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2 py-3 text-base"
+                      title="AI will use your analysis above to generate a new report version."
+                  >
+                      {isOperationInProgress && expertAnalysisNotes.trim() && !generatedReportPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                      Generate Report using My Analysis
+                  </Button>
+              </div>
+
+              {generatedReportPreview && (
+                <div className="space-y-2 border-t pt-6">
+                  <Label className="font-semibold text-green-700 flex items-center gap-1.5 text-lg"><FileCheck2 className="h-5 w-5"/>AI-Generated Report (Based on Your Analysis):</Label>
+                  <ScrollArea className="h-[200px] w-full rounded-md border p-4 bg-green-50/50 text-sm shadow-inner">
+                    {generatedReportPreview.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
+                      <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
+                    ))}
+                  </ScrollArea>
+                  <Button 
+                    onClick={handleFinalApproveForCustomer} 
+                    disabled={isAnalysisDisabled}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white mt-2 py-3 text-base"
+                  >
+                    {isOperationInProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                    Confirm & Approve This Version
+                  </Button>
+                </div>
               )}
           </div>
-
-          <div className="space-y-2 border-t pt-6">
-            <Label htmlFor="expertAnalysisNotes" className="text-md font-medium flex items-center gap-1.5"><Brain className="h-5 w-5 text-primary"/>Editor's Expert Analysis & Directives for AI</Label>
-            <Textarea
-              id="expertAnalysisNotes"
-              value={expertAnalysisNotes}
-              onChange={(e) => setExpertAnalysisNotes(e.target.value)}
-              placeholder="Enter your comprehensive analysis, interpretations, and directives here. The AI will use this as the primary basis for generating the report."
-              rows={8}
-              className="text-sm"
-              disabled={isOperationInProgress}
-            />
-             <Button
-                  onClick={handleGenerateWithExpertAnalysis}
-                  disabled={isOperationInProgress || !expertAnalysisNotes.trim()}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2 py-3 text-base"
-                  title="AI will use your analysis above to generate a new report version."
-              >
-                  {isOperationInProgress && expertAnalysisNotes.trim() && !generatedReportPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                  Generate Report using My Analysis
-              </Button>
-          </div>
-
-          {generatedReportPreview && (
-            <div className="space-y-2 border-t pt-6">
-              <Label className="font-semibold text-green-700 flex items-center gap-1.5 text-lg"><FileCheck2 className="h-5 w-5"/>AI-Generated Report (Based on Your Analysis):</Label>
-              <ScrollArea className="h-[200px] w-full rounded-md border p-4 bg-green-50/50 text-sm shadow-inner">
-                {generatedReportPreview.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
-                  <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
-                ))}
-              </ScrollArea>
-              <Button
-                onClick={handleFinalApproveForCustomer}
-                disabled={isOperationInProgress}
-                className="w-full bg-green-600 hover:bg-green-700 text-white mt-2 py-3 text-base"
-              >
-                {isOperationInProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                Confirm & Approve This Version
-              </Button>
-            </div>
-          )}
         </CardContent>
         <CardFooter className="border-t pt-6 flex flex-col sm:flex-row justify-end gap-3">
-            <Button
-                onClick={handleApproveOriginalAsIs}
-                variant="secondary"
-                disabled={isOperationInProgress || !!generatedReportPreview}
+            <Button 
+                onClick={handleApproveOriginalAsIs} 
+                variant="secondary" 
+                disabled={isAnalysisDisabled || !!generatedReportPreview} 
                 title={generatedReportPreview ? "A new version based on your analysis exists. Approve that or clear it first." : "Approve the initial AI report (from user submission) without your direct analysis."}
                 className="w-full sm:w-auto py-3 text-base"
             >
