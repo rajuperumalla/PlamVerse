@@ -15,6 +15,7 @@ import { Loader2, CheckCircle, AlertTriangle, Send, Sparkles, FileCheck2, Messag
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { generatePalmReading } from '@/ai/flows/generate-palm-reading';
 import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 
 export default function EditorReviewReportPage() {
   const { reportId } = useParams() as { reportId: string };
