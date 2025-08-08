@@ -92,7 +92,7 @@ const AuthOptions = () => {
             <Button onClick={handleShowEditorLogin} variant="ghost" className="w-full text-sm py-3 border border-primary/50 hover:bg-primary/10 text-primary">
                 <Edit className="mr-2 h-5 w-5" /> Editor Login
             </Button>
-             <Button onClick={handleShowAdminLogin} variant="ghost" className="w-full text-sm py-3 border border-accent/70 hover:bg-accent/10 text-accent col-span-full sm:col-span-1">
+             <Button onClick={handleShowAdminLogin} variant="ghost" className="w-full text-sm py-3 border border-accent/70 hover:bg-accent/10 text-accent">
                 <ShieldCheck className="mr-2 h-5 w-5" /> Admin Login
             </Button>
         </div>
