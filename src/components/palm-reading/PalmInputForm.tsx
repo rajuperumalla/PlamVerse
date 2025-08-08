@@ -172,7 +172,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                             <SelectItem value="Right">Right</SelectItem>
                         </SelectContent>
                         </Select>
-                        <p className="text-xs text-muted-foreground pt-1">Hand that you use most for writing.</p>
+                        <p className="text-xs text-muted-foreground pt-1">This is the hand that you use most for writing.</p>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
@@ -231,7 +231,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                     <Textarea id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country" disabled={isOperationInProgress} required />
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
                         <Info className="h-3.5 w-3.5" />
-                        Place and Time of Birth are used for integrating future astrological calculations.
+                        Your Date, Time, and Place of Birth are used for integrating future astrological calculations.
                     </p>
                 </div>
                 
