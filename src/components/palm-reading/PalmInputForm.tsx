@@ -77,7 +77,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
     setDateOfBirth(date);
     setIsCalendarOpen(false); // Close the popover
     // Focus the next input field
-    if (date && timeOfBirthRef.current) {
+    if (date && timeOfBirthRef.current && !isTimeOfBirthUnknown) {
         timeOfBirthRef.current.focus();
     }
   };
@@ -353,3 +353,5 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
 };
 
 export default PalmInputForm;
+
+    
