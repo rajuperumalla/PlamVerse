@@ -166,10 +166,9 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                   <Hand className="h-10 w-10 text-primary" />
               </div>
               <CardTitle className="font-headline text-3xl">Palm Reading: {category || "Select Category"}</CardTitle>
-              <CardDescription>
+              <CardDescription className="px-6">
                 {categoryDescription ? (
-                  <span className="block mt-1 text-sm text-accent flex items-start justify-center gap-1.5">
-                    <Info className="h-4 w-4 mt-0.5 shrink-0"/>
+                  <span className="block mt-1 text-sm text-accent">
                     {categoryDescription}
                   </span>
                 ) : (
@@ -355,5 +354,3 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
 };
 
 export default PalmInputForm;
-
-    
