@@ -220,7 +220,7 @@ export default function EditorReviewReportPage() {
 
       <Card className={cn("transition-opacity", isAnalysisDisabled && "opacity-50 pointer-events-none")}>
         <CardHeader>
-            <CardTitle>Step 2: Expert Analysis & Report Generation</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-lg"><Brain className="h-5 w-5"/>Step 2: Expert Analysis & Report Generation</CardTitle>
             <CardDescription>Use the tools below to refine and approve the final report.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
