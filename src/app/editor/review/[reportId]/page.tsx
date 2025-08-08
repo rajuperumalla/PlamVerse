@@ -11,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { Loader2, CheckCircle, AlertTriangle, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, Brain, Eye } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, Brain, Eye, User, CalendarDays, Clock, Briefcase, Camera } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { generatePalmReading } from '@/ai/flows/generate-palm-reading';
 import { generateBusinessNumerologyReport } from '@/ai/flows/generate-business-numerology-report';
@@ -53,7 +53,6 @@ export default function EditorReviewReportPage() {
       } else {
         const foundReport = getReportById(reportId);
         setReport(foundReport);
-        // For numerology reports where there's no image, we can consider quality confirmed by default.
         if (foundReport?.reportType === 'numerology') {
             setImageQualityConfirmed(true);
         }
@@ -71,7 +70,6 @@ export default function EditorReviewReportPage() {
     setGeneratedReportPreview(null);
     try {
       let result;
-      // Branching logic based on report type and category
       if (report.reportType === 'palmistry') {
         result = await generatePalmReading({
           ...(report.inputDetails as ReportPalmInputDetails),
@@ -97,7 +95,6 @@ export default function EditorReviewReportPage() {
                     expertAnalysis: expertAnalysisNotes,
                  });
                  break;
-              // Add other numerology service cases here
               default:
                   throw new Error(`Unsupported numerology category: ${report.category}`);
           }
@@ -172,142 +169,183 @@ export default function EditorReviewReportPage() {
 
   const isAnalysisDisabled = report.reportType === 'palmistry' ? !imageQualityConfirmed || isOperationInProgress : isOperationInProgress;
 
+  const renderUserDetails = () => (
+     <div className="space-y-4 text-sm">
+        <div className="flex items-center gap-3">
+          <User className="h-5 w-5 text-muted-foreground" />
+          <p><strong>User:</strong> {report.userName || 'N/A'}</p>
+        </div>
+         <div className="flex items-center gap-3">
+          <CalendarDays className="h-5 w-5 text-muted-foreground" />
+          <p><strong>Submitted:</strong> {new Date(report.submissionDate).toLocaleString()}</p>
+        </div>
+        
+        {palmInputDetails && (
+          <>
+            <div className="flex items-center gap-3">
+              <User className="h-5 w-5 text-muted-foreground" />
+              <p><strong>Dominant Hand:</strong> {palmInputDetails.dominantHand}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <CalendarDays className="h-5 w-5 text-muted-foreground" />
+              <p><strong>DOB:</strong> {new Date(palmInputDetails.dateOfBirth).toLocaleDateString()}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-muted-foreground" />
+              <p><strong>TOB:</strong> {palmInputDetails.timeOfBirth}</p>
+            </div>
+          </>
+        )}
+        {businessNumerologyDetails && (
+          <>
+              <p><strong>Business Name:</strong> {businessNumerologyDetails.businessName}</p>
+              {businessNumerologyDetails.additionalBusinessNames && <p><strong>Other Names:</strong> {businessNumerologyDetails.additionalBusinessNames}</p>}
+              <p><strong>Founder Name:</strong> {businessNumerologyDetails.founderFullName}</p>
+              <p><strong>Founder DOB:</strong> {new Date(businessNumerologyDetails.founderDOB).toLocaleDateString()}</p>
+              {businessNumerologyDetails.founderTOB && <p><strong>Founder TOB:</strong> {businessNumerologyDetails.founderTOB}</p>}
+          </>
+        )}
+        {personalReportDetails && (
+          <>
+            <p><strong>Full Name:</strong> {personalReportDetails.fullName}</p>
+            <p><strong>Date of Birth:</strong> {new Date(personalReportDetails.dateOfBirth).toLocaleDateString()}</p>
+            {personalReportDetails.timeOfBirth && <p><strong>Time of Birth:</strong> {personalReportDetails.timeOfBirth}</p>}
+          </>
+        )}
+        {babyNameDetails && (
+            <>
+              <div><strong>Proposed Names:</strong>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                      {babyNameDetails.proposedNames.map((name, i) => <Badge key={i} variant="secondary">{name}</Badge>)}
+                  </div>
+              </div>
+              <p><strong>Child's DOB:</strong> {new Date(babyNameDetails.childDOB).toLocaleDateString()}</p>
+              {babyNameDetails.childTOB && <p><strong>Child's TOB:</strong> {babyNameDetails.childTOB}</p>}
+              {babyNameDetails.parent1FullName && <p><strong>Parent 1:</strong> {babyNameDetails.parent1FullName} (DOB: {babyNameDetails.parent1DOB ? new Date(babyNameDetails.parent1DOB).toLocaleDateString() : 'N/A'})</p>}
+              {babyNameDetails.parent2FullName && <p><strong>Parent 2:</strong> {babyNameDetails.parent2FullName} (DOB: {babyNameDetails.parent2DOB ? new Date(babyNameDetails.parent2DOB).toLocaleDateString() : 'N/A'})</p>}
+            </>
+        )}
+     </div>
+  )
+
   return (
-    <div className="container mx-auto py-8 space-y-6 max-w-4xl">
-      <Button onClick={() => router.push('/editor/workflow')} variant="outline">
+    <div className="container mx-auto py-8">
+      <Button onClick={() => router.push('/editor/workflow')} variant="outline" className="mb-6">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Workflow
       </Button>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-headline">Review Report: {report.id.substring(0,10)}...</CardTitle>
+              <CardDescription>
+                Category: {report.category}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+                {renderUserDetails()}
+            </CardContent>
+          </Card>
+          
+          {report.reportType === 'palmistry' && (
+            <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-800">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-lg"><Eye className="h-5 w-5"/>Step 1: Image Quality Verification</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-3 rounded-md border border-amber-400/50 bg-amber-100/50 dark:bg-amber-900/30 p-4">
+                    <Checkbox id="image-quality-confirm" 
+                      onCheckedChange={(checked) => setImageQualityConfirmed(checked as boolean)}
+                      checked={imageQualityConfirmed}
+                    />
+                    <label
+                      htmlFor="image-quality-confirm"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-amber-900 dark:text-amber-200"
+                    >
+                      I confirm the submitted images are clear, well-lit, and suitable for analysis.
+                    </label>
+                  </div>
+                </CardContent>
+            </Card>
+          )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-headline">Review Report: {report.id.substring(0,10)}...</CardTitle>
-          <CardDescription>
-            Category: {report.category} | Submitted by: {report.userName || 'N/A'} on {report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          <Card className={cn("transition-opacity", isAnalysisDisabled && "opacity-50 pointer-events-none")}>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg"><Brain className="h-5 w-5"/>Step 2: Expert Analysis & Report Generation</CardTitle>
+                <CardDescription>Provide your expert directives below. The AI will generate the report based on your notes.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="space-y-2 pt-6 border-t">
+                  <Label htmlFor="expertAnalysisNotes" className="text-md font-medium flex items-center gap-1.5"><Brain className="h-5 w-5 text-primary"/>Editor's Expert Analysis & Directives for AI</Label>
+                  <Textarea
+                    id="expertAnalysisNotes"
+                    value={expertAnalysisNotes}
+                    onChange={(e) => setExpertAnalysisNotes(e.target.value)}
+                    placeholder="Enter your comprehensive analysis, interpretations, and directives here. The AI will use this as the primary basis for generating the report."
+                    rows={12}
+                    className="text-sm"
+                    disabled={isAnalysisDisabled}
+                  />
+                   <Button 
+                        onClick={handleGenerateWithExpertAnalysis} 
+                        disabled={isAnalysisDisabled || !expertAnalysisNotes.trim()} 
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2"
+                        title="AI will use your analysis above to generate a new report version."
+                    >
+                        {isOperationInProgress && expertAnalysisNotes.trim() && !generatedReportPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                        Generate Report using My Analysis
+                    </Button>
+                </div>
+
+                {generatedReportPreview && (
+                  <div className="space-y-2 border-t pt-6">
+                    <Label className="font-semibold text-green-700 flex items-center gap-1.5 text-lg"><FileCheck2 className="h-5 w-5"/>AI-Generated Report (Based on Your Analysis):</Label>
+                    <ScrollArea className="h-[200px] w-full rounded-md border p-4 bg-green-50/50 text-sm shadow-inner">
+                      {generatedReportPreview.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
+                        <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
+                      ))}
+                    </ScrollArea>
+                    <Button 
+                      onClick={handleFinalApproveForCustomer} 
+                      disabled={isAnalysisDisabled}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white mt-2"
+                    >
+                      {isOperationInProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+                      Confirm & Approve This Version
+                    </Button>
+                  </div>
+                )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column */}
+        <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-24 h-fit">
           {palmInputDetails && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
-                {palmInputDetails.frontPalmDataUri && 
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Camera className="h-5 w-5"/>Submitted Images</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                 {palmInputDetails.frontPalmDataUri && 
                   <div className="text-center">
                     <Image src={palmInputDetails.frontPalmDataUri} alt={`Front of ${palmInputDetails.dominantHand} Palm`} width={300} height={225} className="rounded-md border mx-auto shadow" data-ai-hint="palm hand front"/>
-                    <p className="text-xs text-muted-foreground mt-1">Front of {palmInputDetails.dominantHand} Palm</p>
+                    <p className="text-sm text-muted-foreground mt-2">Front of {palmInputDetails.dominantHand} Palm</p>
                   </div>
                 }
                 {palmInputDetails.sidePalmDataUri && 
                   <div className="text-center">
                     <Image src={palmInputDetails.sidePalmDataUri} alt={`Side of ${palmInputDetails.dominantHand} Palm`} width={300} height={225} className="rounded-md border mx-auto shadow" data-ai-hint="palm hand side"/>
-                    <p className="text-xs text-muted-foreground mt-1">Side of {palmInputDetails.dominantHand} Palm</p>
+                    <p className="text-sm text-muted-foreground mt-2">Side of {palmInputDetails.dominantHand} Palm</p>
                   </div>
                 }
-              </div>
-           )}
-            {businessNumerologyDetails && (
-                <div className="space-y-4 my-4 text-sm p-4 border rounded-md bg-muted/30">
-                    <h3 className="font-semibold text-base">Submitted Business Numerology Details</h3>
-                    <p><strong>Business Name:</strong> {businessNumerologyDetails.businessName}</p>
-                    {businessNumerologyDetails.additionalBusinessNames && <p><strong>Other Names:</strong> {businessNumerologyDetails.additionalBusinessNames}</p>}
-                    <p><strong>Founder Name:</strong> {businessNumerologyDetails.founderFullName}</p>
-                    <p><strong>Founder DOB:</strong> {new Date(businessNumerologyDetails.founderDOB).toLocaleDateString()}</p>
-                    {businessNumerologyDetails.founderTOB && <p><strong>Founder TOB:</strong> {businessNumerologyDetails.founderTOB}</p>}
-                </div>
-            )}
-            {personalReportDetails && (
-                 <div className="space-y-4 my-4 text-sm p-4 border rounded-md bg-muted/30">
-                    <h3 className="font-semibold text-base">Submitted Personal Report Details</h3>
-                    <p><strong>Full Name:</strong> {personalReportDetails.fullName}</p>
-                    <p><strong>Date of Birth:</strong> {new Date(personalReportDetails.dateOfBirth).toLocaleDateString()}</p>
-                    {personalReportDetails.timeOfBirth && <p><strong>Time of Birth:</strong> {personalReportDetails.timeOfBirth}</p>}
-                </div>
-            )}
-             {babyNameDetails && (
-                 <div className="space-y-4 my-4 text-sm p-4 border rounded-md bg-muted/30">
-                    <h3 className="font-semibold text-base">Submitted Baby Name Details</h3>
-                    <div><strong>Proposed Names:</strong>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                            {babyNameDetails.proposedNames.map((name, i) => <Badge key={i} variant="secondary">{name}</Badge>)}
-                        </div>
-                    </div>
-                    <p><strong>Child's DOB:</strong> {new Date(babyNameDetails.childDOB).toLocaleDateString()}</p>
-                    {babyNameDetails.childTOB && <p><strong>Child's TOB:</strong> {babyNameDetails.childTOB}</p>}
-                    {babyNameDetails.parent1FullName && <p><strong>Parent 1:</strong> {babyNameDetails.parent1FullName} (DOB: {babyNameDetails.parent1DOB ? new Date(babyNameDetails.parent1DOB).toLocaleDateString() : 'N/A'})</p>}
-                    {babyNameDetails.parent2FullName && <p><strong>Parent 2:</strong> {babyNameDetails.parent2FullName} (DOB: {babyNameDetails.parent2DOB ? new Date(babyNameDetails.parent2DOB).toLocaleDateString() : 'N/A'})</p>}
-                </div>
-            )}
-        </CardContent>
-      </Card>
-      
-      {report.reportType === 'palmistry' && (
-        <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-lg"><Eye className="h-5 w-5"/>Step 1: Image Quality Verification</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-3 rounded-md border border-amber-400/50 bg-amber-100/50 dark:bg-amber-900/30 p-4">
-                <Checkbox id="image-quality-confirm" 
-                  onCheckedChange={(checked) => setImageQualityConfirmed(checked as boolean)}
-                  checked={imageQualityConfirmed}
-                />
-                <label
-                  htmlFor="image-quality-confirm"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-amber-900 dark:text-amber-200"
-                >
-                  I confirm the palm images are clear, well-lit, and suitable for analysis.
-                </label>
-              </div>
-            </CardContent>
-        </Card>
-      )}
-
-
-      <Card className={cn("transition-opacity", isAnalysisDisabled && "opacity-50 pointer-events-none")}>
-        <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg"><Brain className="h-5 w-5"/>Step 2: Expert Analysis & Report Generation</CardTitle>
-            <CardDescription>Provide your expert directives below. The AI will generate the report based on your notes.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-            <div className="space-y-2 border-t pt-6">
-              <Label htmlFor="expertAnalysisNotes" className="text-md font-medium flex items-center gap-1.5"><Brain className="h-5 w-5 text-primary"/>Editor's Expert Analysis & Directives for AI</Label>
-              <Textarea
-                id="expertAnalysisNotes"
-                value={expertAnalysisNotes}
-                onChange={(e) => setExpertAnalysisNotes(e.target.value)}
-                placeholder="Enter your comprehensive analysis, interpretations, and directives here. The AI will use this as the primary basis for generating the report."
-                rows={12}
-                className="text-sm"
-                disabled={isAnalysisDisabled}
-              />
-               <Button 
-                    onClick={handleGenerateWithExpertAnalysis} 
-                    disabled={isAnalysisDisabled || !expertAnalysisNotes.trim()} 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2"
-                    title="AI will use your analysis above to generate a new report version."
-                >
-                    {isOperationInProgress && expertAnalysisNotes.trim() && !generatedReportPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                    Generate Report using My Analysis
-                </Button>
-            </div>
-
-            {generatedReportPreview && (
-              <div className="space-y-2 border-t pt-6">
-                <Label className="font-semibold text-green-700 flex items-center gap-1.5 text-lg"><FileCheck2 className="h-5 w-5"/>AI-Generated Report (Based on Your Analysis):</Label>
-                <ScrollArea className="h-[200px] w-full rounded-md border p-4 bg-green-50/50 text-sm shadow-inner">
-                  {generatedReportPreview.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
-                    <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
-                  ))}
-                </ScrollArea>
-                <Button 
-                  onClick={handleFinalApproveForCustomer} 
-                  disabled={isAnalysisDisabled}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white mt-2"
-                >
-                  {isOperationInProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                  Confirm & Approve This Version
-                </Button>
-              </div>
-            )}
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
