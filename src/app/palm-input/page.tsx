@@ -88,7 +88,7 @@ function PalmInputPageComponent() {
         description: "Your request has been sent for expert review. Your report will be available in 'My Reading' shortly.",
         duration: 5000
       });
-      router.push('/');
+      router.push('/'); // REDIRECT TO HOME PAGE
     } catch (error) {
       console.error("Error generating palm reading:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during generation.";
@@ -122,42 +122,50 @@ function PalmInputPageComponent() {
   };
 
   const attemptAutoSubmitAfterPayment = useCallback(async () => {
-    if (searchParams && searchParams.get('payment_success') === 'true' && hasPaid && userName) {
-      const persistedFormDataJson = sessionStorage.getItem('palmVerseCheckoutForm');
-      
-      const newParams = new URLSearchParams(searchParams.toString());
-      newParams.delete('payment_success');
-      router.replace(`/palm-input?${newParams.toString()}`, { scroll: false });
+    const paymentSuccess = searchParams?.get('payment_success') === 'true';
 
-      if (persistedFormDataJson) {
-        const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
+    if (paymentSuccess && hasPaid && userName) {
+        const persistedFormDataJson = sessionStorage.getItem('palmVerseCheckoutForm');
         
-        const canAutoSubmit = persistedData.frontPalmDataUri &&
-                              persistedData.sidePalmDataUri &&
-                              persistedData.dateOfBirth &&
-                              persistedData.placeOfBirth &&
-                              persistedData.dominantHand &&
-                              persistedData.category &&
-                              (persistedData.timeOfBirth || persistedData.isTimeOfBirthUnknown);
+        // Clean up the URL immediately
+        const newParams = new URLSearchParams(searchParams.toString());
+        newParams.delete('payment_success');
+        router.replace(`/palm-input?${newParams.toString()}`, { scroll: false });
 
-        if (canAutoSubmit) {
-          await handlePaidSubmission(persistedData);
+        if (persistedFormDataJson) {
+            try {
+                const persistedData = JSON.parse(persistedFormDataJson) as ReportPalmInputDetails;
+                const canAutoSubmit = persistedData.frontPalmDataUri &&
+                                      persistedData.sidePalmDataUri &&
+                                      persistedData.dateOfBirth &&
+                                      persistedData.placeOfBirth &&
+                                      persistedData.dominantHand &&
+                                      persistedData.category &&
+                                      (persistedData.timeOfBirth || persistedData.isTimeOfBirthUnknown);
+
+                if (canAutoSubmit) {
+                    await handlePaidSubmission(persistedData);
+                } else {
+                    toast({
+                        title: "Payment Successful",
+                        description: "Please complete your details on the form and submit when ready.",
+                        duration: 5000
+                    });
+                }
+            } catch (e) {
+                console.error("Error parsing form data for auto-submit:", e);
+                toast({ title: "Error", description: "Could not retrieve your form data. Please fill out the form again.", variant: "destructive" });
+            }
         } else {
-          toast({
-            title: "Payment Successful",
-            description: "Please complete your details on the form and submit when ready.",
-            duration: 5000
-          });
+            toast({
+                title: "Payment Successful",
+                description: "We couldn't find your form data. Please fill out the form again to submit.",
+                duration: 5000
+            });
         }
-      } else {
-        toast({
-          title: "Payment Successful",
-          description: "We couldn't find your form data. Please fill out the form again to submit.",
-          duration: 5000
-        });
-      }
     }
   }, [searchParams, hasPaid, userName, router, toast, handlePaidSubmission]);
+
 
   useEffect(() => {
     if (authCheckComplete) {
