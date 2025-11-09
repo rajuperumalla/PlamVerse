@@ -11,9 +11,9 @@ import Link from 'next/link';
 
 
 const productCategories = [
-  { name: "Crystal Bracelets", description: "Harness the energy of natural crystals for balance and healing.", imageUrl: "https://placehold.co/400x300.png", imageHint: "crystal bracelet", link: "#shop/bracelets" },
-  { name: "Sacred Gemstones", description: "Discover the power of authentic gemstones for well-being.", imageUrl: "https://placehold.co/400x300.png", imageHint: "gemstone collection", link: "#shop/gemstones" },
-  { name: "Energized Yantras", description: "Invite prosperity and protection with sacred geometric yantras.", imageUrl: "https://placehold.co/400x300.png", imageHint: "sacred yantra", link: "#shop/yantras" },
+  { name: "Crystal Bracelets", description: "Harness the energy of natural crystals for balance and healing.", imageUrl: "https://picsum.photos/seed/bracelets/400/300", imageHint: "crystal bracelet", link: "#shop/bracelets" },
+  { name: "Sacred Gemstones", description: "Discover the power of authentic gemstones for well-being.", imageUrl: "https://picsum.photos/seed/gemstones/400/300", imageHint: "gemstone collection", link: "#shop/gemstones" },
+  { name: "Energized Yantras", description: "Invite prosperity and protection with sacred geometric yantras.", imageUrl: "https://picsum.photos/seed/yantras/400/300", imageHint: "sacred yantra", link: "#shop/yantras" },
 ];
 
 const palmLines = [
@@ -62,7 +62,7 @@ export default function HomePage() {
     <div className="relative flex flex-col items-center py-8 md:py-12 space-y-12 min-h-full">
       <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
         <Image
-          src="https://placehold.co/1920x1080.png"
+          src="https://picsum.photos/seed/bg-pattern/1920/1080"
           alt="Sacred Geometry Page Background"
           fill
           className="object-cover"
@@ -74,7 +74,7 @@ export default function HomePage() {
       {/* Left Decorative Image */}
       <div className="hidden lg:block absolute left-4 top-1/4 w-40 h-auto z-0 opacity-20 pointer-events-none">
         <Image 
-          src="https://placehold.co/300x600.png" 
+          src="https://picsum.photos/seed/deco-left/300/600" 
           alt="Left Sacred Geometry Decoration" 
           width={300} 
           height={600} 
@@ -85,7 +85,7 @@ export default function HomePage() {
       {/* Right Decorative Image */}
       <div className="hidden lg:block absolute right-4 top-1/4 w-40 h-auto z-0 opacity-20 pointer-events-none">
         <Image 
-          src="https://placehold.co/300x600.png" 
+          src="https://picsum.photos/seed/deco-right/300/600" 
           alt="Right Sacred Geometry Decoration" 
           width={300} 
           height={600} 
