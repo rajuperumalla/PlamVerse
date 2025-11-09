@@ -18,11 +18,11 @@ import { cn } from '@/lib/utils';
 import { Checkbox } from '../ui/checkbox';
 
 const readingCategories = [
-  { value: "General Personality", label: "General Personality" },
-  { value: "Career & Finance", label: "Career & Finance" },
-  { value: "Health & Wellness", label: "Health & Wellness" },
-  { value: "Marriage & Relationships", label: "Marriage & Relationships" },
-  { value: "Comprehensive Analysis", label: "Comprehensive Analysis" },
+  { value: "General Personality", label: "General Personality", description: "Understand your core traits, strengths, and challenges." },
+  { value: "Career & Finance", label: "Career & Finance", description: "Gain insights into suitable career paths and financial tendencies." },
+  { value: "Health & Wellness", label: "Health & Wellness", description: "Discover indications about your vitality and well-being." },
+  { value: "Marriage & Relationships", label: "Marriage & Relationships", description: "Explore your emotional style in partnerships and connections." },
+  { value: "Comprehensive Analysis", label: "Comprehensive Analysis", description: "A holistic view combining all major areas of life." },
 ];
 
 interface PalmInputFormProps {
@@ -206,6 +206,11 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                             ))}
                         </SelectContent>
                         </Select>
+                        {category && (
+                            <p className="text-xs text-muted-foreground pt-1">
+                                {readingCategories.find(rc => rc.value === category)?.description}
+                            </p>
+                        )}
                     </div>
                 </div>
 
@@ -354,3 +359,5 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
 };
 
 export default PalmInputForm;
+
+    
