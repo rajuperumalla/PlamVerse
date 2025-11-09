@@ -107,7 +107,7 @@ const Header = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
               <Button variant="ghost" className={getDropdownTriggerClassName(activeStates.isProductsPageActive)}>
-              <ShoppingBag className="mr-1.5 h-4 w-4" /> Products <ChevronDown className="ml-1 h-3 w-3" />
+              <ShoppingBag className="mr-1.5 h-4 w-4" /> Shop <ChevronDown className="ml-1 h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="bg-primary border-primary-foreground/20 text-primary-foreground">
@@ -260,7 +260,7 @@ const Header = () => {
                       {readingTypes.map(item => <DropdownMenuItem key={item.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href={`/palm-input?category=${encodeURIComponent(item.query)}`}>{item.name}</Link></DropdownMenuItem>)}
                       <DropdownMenuSeparator className="bg-primary-foreground/20"/>
                       {isAuthenticated && <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/report">My Reading</Link></DropdownMenuItem>}
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/products">Products</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/products">Shop</Link></DropdownMenuItem>
                     </>
                   )}
                 </ClientOnly>
