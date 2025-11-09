@@ -130,12 +130,12 @@ export default function HomePage() {
             <CardContent className="p-6">
               <div className="w-full max-w-md mx-auto mb-6">
                 <Image
-                  src="https://placehold.co/600x400.png"
-                  alt="Annotated Palm Lines"
+                  src="https://picsum.photos/seed/srichakra/600/400"
+                  alt="Sri Chakra"
                   width={600}
                   height={400}
                   className="rounded-lg shadow-lg border border-border object-cover"
-                  data-ai-hint="palmistry chart"
+                  data-ai-hint="Sri Chakra"
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">

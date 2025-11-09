@@ -17,14 +17,18 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   serverActions: {
     bodySizeLimit: '2mb', // Default is 1mb, increased for potentially larger image data URIs
     // Increase timeout for potentially long-running AI operations
-    serverActions: {
-        timeout: 120, // 2 minutes
-    },
+    timeout: 120, // 2 minutes
   },
 };
 
