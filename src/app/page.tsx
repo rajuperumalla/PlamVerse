@@ -100,7 +100,7 @@ export default function HomePage() {
           <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-10 lg:gap-16 w-full">
             {/* Left side: Hero Text */}
             <div className="relative z-10 w-full max-w-xl text-center lg:text-left">
-              <h1 className="font-headline text-4xl md:text-5xl font-bold text-primary mb-4">
+              <h1 className="font-headline text-4xl font-bold text-primary mb-4 whitespace-nowrap">
                 Your Destiny in Your Hands
               </h1>
               <p className="text-muted-foreground text-lg md:text-xl mb-8">
@@ -203,5 +203,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
