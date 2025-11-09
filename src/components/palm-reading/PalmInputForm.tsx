@@ -248,7 +248,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                      <div className="space-y-2">
                         <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth *</Label>
                         <Input id="tob" ref={timeOfBirthRef} type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} disabled={isOperationInProgress || isTimeOfBirthUnknown} required={!isTimeOfBirthUnknown}/>
-                         <div className="flex items-center space-x-2 pt-2">
+                         <div className="flex items-center space-x-2 pt-1">
                             <Checkbox id="unknown-tob" checked={isTimeOfBirthUnknown} onCheckedChange={(checked) => setIsTimeOfBirthUnknown(checked as boolean)} />
                             <label
                                 htmlFor="unknown-tob"
@@ -257,6 +257,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                                 I don't know my time of birth
                             </label>
                         </div>
+                        <p className="text-xs text-muted-foreground pt-1">If known, providing time of birth can enhance report accuracy.</p>
                     </div>
                 </div>
                  <div className="space-y-2">
