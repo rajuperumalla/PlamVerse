@@ -6,7 +6,7 @@ import AuthOptions from '@/components/auth/AuthOptions';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Hand, BookOpen, LifeBuoy, Brain, Heart, Star, WandSparkles } from 'lucide-react';
+import { Sparkles, ArrowRight, Hand, BookOpen, LifeBuoy, Brain, Heart, Star } from 'lucide-react';
 import Link from 'next/link';
 
 
@@ -59,7 +59,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="relative flex flex-col items-center py-8 md:py-12 space-y-12 min-h-full">
+    <div className="relative flex flex-col items-center justify-center py-8 md:py-12 space-y-12 min-h-[calc(100vh_-_var(--header-height)_-_var(--footer-height)_-_1rem)]">
       <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none">
         <Image
           src="https://picsum.photos/seed/bg-pattern/1920/1080"
@@ -93,13 +93,13 @@ export default function HomePage() {
         />
       </div>
       
-      <div className="relative z-10 w-full max-w-5xl px-4 space-y-12">
+      <div className="relative z-10 w-full max-w-5xl px-4">
         {isAuthenticated ? (
           renderAuthenticatedView()
         ) : (
           <div className="flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-10 lg:gap-16 w-full">
             {/* Left side: Hero Text */}
-            <div className="relative z-10 w-full max-w-md text-center lg:text-left">
+            <div className="relative z-10 w-full max-w-lg text-center lg:text-left">
               <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-4">
                 Your Destiny in Your Hands
               </h1>
@@ -118,14 +118,14 @@ export default function HomePage() {
             </div>
 
             {/* Right side: Auth Form */}
-            <div className="w-full lg:w-2/5 flex-shrink-0">
+            <div className="w-full lg:max-w-md flex-shrink-0">
               <AuthOptions />
             </div>
           </div>
         )}
 
-        {/* Common Sections */}
-        <section id="learn-palmistry" className="scroll-mt-20">
+        {/* Common Sections - added margin top to create space */}
+        <section id="learn-palmistry" className="scroll-mt-20 mt-16">
           <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-border overflow-hidden">
             <CardContent className="p-6">
               <div className="w-full max-w-md mx-auto mb-6">
@@ -153,7 +153,7 @@ export default function HomePage() {
           </Card>
         </section>
 
-        <section id="spiritual-products">
+        <section id="spiritual-products" className="mt-12">
           <Card className="shadow-lg bg-card/90 backdrop-blur-sm border border-border">
             <CardHeader>
               <CardTitle className="font-headline text-2xl md:text-3xl text-foreground">Curated Spiritual Products</CardTitle>
@@ -203,5 +203,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
