@@ -145,13 +145,13 @@ const ReportDisplay = ({ report }: ReportDisplayProps) => {
             <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
                 <ShieldCheck className="h-10 w-10 text-primary" />
             </div>
-            <CardTitle className="font-headline text-3xl">Your Approved Palm Reading</CardTitle>
+            <CardTitle className="font-headline text-3xl">Your Approved Palm-Astro Reading</CardTitle>
             <CardDescription>Insights from your hands, reviewed by our experts. Report ID: <span className="font-mono text-xs">{report.id.substring(0,10)}...</span></CardDescription>
             </CardHeader>
             <CardContent>
             <ScrollArea className="h-[400px] w-full rounded-md border p-0 bg-background shadow-inner">
                 <div id="report-content-area-for-pdf" className="p-6 bg-white text-black"> {/* Force white background & black text for PDF */}
-                <h2 className="text-xl font-bold font-headline mb-2 text-gray-800">Palm Reading Report</h2>
+                <h2 className="text-xl font-bold font-headline mb-2 text-gray-800">Palm-Astro Correlation Report</h2>
                 <p className="text-sm text-gray-600 mb-1">For: {report.userName || "Valued User"}</p>
                 <p className="text-sm text-gray-600 mb-1">Category: {report.category}</p>
                 <p className="text-sm text-gray-600 mb-4">Date: {report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}</p>

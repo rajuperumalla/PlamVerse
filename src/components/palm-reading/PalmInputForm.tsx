@@ -165,14 +165,14 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
               <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
                   <Hand className="h-10 w-10 text-primary" />
               </div>
-              <CardTitle className="font-headline text-3xl">Palm Reading: {category || "Select Category"}</CardTitle>
+              <CardTitle className="font-headline text-3xl">Palm-Astro Reading: {category || "Select Category"}</CardTitle>
               <CardDescription className="px-6">
                 {categoryDescription ? (
                   <span className="block mt-1 text-sm text-muted-foreground">
                     {categoryDescription}
                   </span>
                 ) : (
-                  "Provide your information to generate a personalized palm reading."
+                  "Provide your information to generate a personalized Palm-Astro reading."
                 )}
               </CardDescription>
             </CardHeader>
@@ -277,7 +277,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                     </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
                         <Info className="h-3.5 w-3.5" />
-                        Your Date, Time, and Place of Birth are used for integrating future astrological calculations.
+                        Your Date, Time, and Place of Birth are crucial for accurate astrological correlation.
                     </p>
                 </div>
                 
@@ -332,7 +332,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                     {isOperationInProgress ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                     ) : hasPaid ? (
-                    <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm Reading</>
+                    <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm-Astro Reading</>
                     ) : (
                     <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
                     )}
@@ -349,7 +349,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                     </div>
                 </div>
                 <p className="text-xs text-muted-foreground text-center w-full pt-2">
-                    Your information is used solely for generating your palm reading. Payment may be required.
+                    Your information is used solely for generating your reading. Payment may be required.
                 </p>
             </CardFooter>
         </div>

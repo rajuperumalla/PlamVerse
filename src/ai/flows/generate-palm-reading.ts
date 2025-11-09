@@ -47,36 +47,44 @@ const prompt = ai.definePrompt({
   name: 'generatePalmReadingPrompt',
   input: {schema: GeneratePalmReadingInputSchema},
   output: {schema: GeneratePalmReadingOutputSchema},
-  prompt: `You are an expert palm reader.
-  {{#if expertAnalysis}}
-  A human expert palm reader has provided the following analysis and directives. Use this as the PRIMARY basis for your report. Integrate the user's details and palm images as supporting information or for aspects not explicitly covered by the expert. The user has provided a front and a side view of their dominant hand. Pay special attention to the side view for analyzing lines related to relationships and children.
+  prompt: `You are an expert in both Vedic Astrology and Palmistry. Your task is to provide an integrated Palm-Astro Correlation report.
 
-  Expert Analysis & Directives:
-  {{{expertAnalysis}}}
+You must analyze the user's palm images and their astrological details (Date of Birth, Time of Birth, Place of Birth) to create a comprehensive analysis. Correlate the findings from the palm lines (Life, Head, Heart, Fate, etc.) with planetary positions, dasha/antardasha cycles, and overall astrological influences from their birth chart.
 
-  User Details for context:
-  Front of Dominant Palm: {{media url=frontPalmDataUri}}
-  Side of Dominant Palm: {{media url=sidePalmDataUri}}
-  Date of Birth: {{{dateOfBirth}}}
-  Place of Birth: {{{placeOfBirth}}} (Lat: {{latitude}}, Lon: {{longitude}})
-  Time of Birth: {{{timeOfBirth}}}
-  Dominant Hand: {{{dominantHand}}}
-  Category: {{{category}}}
+The user has provided a front and a side view of their dominant hand. Pay special attention to the side view for analyzing lines related to relationships and children.
 
-  Generate a comprehensive palm reading report based PRIMARILY on the expert's analysis. Ensure it aligns with the specified category and incorporates the user's details where relevant and not contradictory to the expert's input. The final report should be well-structured, insightful, and directly address the user.
-  {{else}}
-  Analyze the user's dominant palm and provide a detailed report based on the information provided. The user has provided a front and a side view of their dominant hand. Pay special attention to the side view for analyzing lines related to relationships and children.
+{{#if expertAnalysis}}
+A human expert has provided the following analysis and directives. Use this as the PRIMARY basis for your report. Your role is to expand on the expert's notes, providing detailed explanations and ensuring the palmistry and astrological correlations are clear and well-integrated.
 
-  Front of Dominant Palm: {{media url=frontPalmDataUri}}
-  Side of Dominant Palm: {{media url=sidePalmDataUri}}
-  Date of Birth: {{{dateOfBirth}}}
-  Place of Birth: {{{placeOfBirth}}} (Lat: {{latitude}}, Lon: {{longitude}})
-  Time of Birth: {{{timeOfBirth}}}
-  Dominant Hand: {{{dominantHand}}}
-  Category: {{{category}}}
+Expert Analysis & Directives:
+{{{expertAnalysis}}}
 
-  Based on the palm images and the provided information, generate a comprehensive palm reading report, focusing on the specified category. The report should be detailed and insightful.
-  {{/if}}
+User Details for context:
+Front of Dominant Palm: {{media url=frontPalmDataUri}}
+Side of Dominant Palm: {{media url=sidePalmDataUri}}
+Date of Birth: {{{dateOfBirth}}}
+Time of Birth: {{{timeOfBirth}}}
+Place of Birth: {{{placeOfBirth}}} (Lat: {{latitude}}, Lon: {{longitude}})
+Dominant Hand: {{{dominantHand}}}
+Category: {{{category}}}
+
+Generate a comprehensive Palm-Astro Correlation report based PRIMARILY on the expert's analysis. Ensure it aligns with the specified category and incorporates the user's details where relevant and not contradictory to the expert's input. The final report should be well-structured, insightful, and directly address the user.
+{{else}}
+Analyze the user's dominant palm and their birth details to provide a detailed Palm-Astro Correlation report.
+
+Front of Dominant Palm: {{media url=frontPalmDataUri}}
+Side of Dominant Palm: {{media url=sidePalmDataUri}}
+Date of Birth: {{{dateOfBirth}}}
+Time of Birth: {{{timeOfBirth}}}
+Place of Birth: {{{placeOfBirth}}} (Lat: {{latitude}}, Lon: {{longitude}})
+Dominant Hand: {{{dominantHand}}}
+Category: {{{category}}}
+
+Based on the palm images and the provided birth information, generate a comprehensive report focusing on the specified category.
+1.  Analyze the major palm lines (Life, Head, Heart, Fate) and mounts.
+2.  Correlate these palmistry findings with the user's astrological chart based on their birth data. Discuss how planetary strengths/weaknesses or current dasha periods might be reflected in the palm lines.
+3.  The report should be detailed, insightful, and blend both disciplines seamlessly.
+{{/if}}
   `,
 });
 

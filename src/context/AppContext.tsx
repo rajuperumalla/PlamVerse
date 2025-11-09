@@ -261,7 +261,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
     const newReport: ReportData = {
       id: newReportId,
-      content: "Palmistry report submitted for expert review...",
+      content: "Palm-Astro Correlation report submitted for expert review...",
       status: 'pending_review',
       userName: userName,
       submissionDate: currentDate,
@@ -429,5 +429,3 @@ export const useAppContext = () => {
   }
   return context;
 };
-
-    

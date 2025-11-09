@@ -24,7 +24,7 @@ const palmLines = [
 ];
 
 const coreServices = [
-  { name: "Palmistry", icon: Hand, description: "Delve into the mysteries of your hands. Explore palm lines and understand their meanings.", link: "/palm-input", cta: "Get Palm Reading" },
+  { name: "Palm-Astro Reading", icon: Hand, description: "An integrated analysis correlating your palm lines with your astrological chart for a comprehensive life overview.", link: "/palm-input", cta: "Get Your Palm-Astro Reading" },
 ];
 
 export default function HomePage() {
@@ -101,10 +101,10 @@ export default function HomePage() {
             {/* Left side: Hero Text */}
             <div className="relative z-10 w-full max-w-md text-center lg:text-left">
               <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-4">
-                Unlock the Secrets of Your Palm
+                Your Destiny in Your Hands
               </h1>
               <p className="text-muted-foreground text-lg md:text-xl mb-8">
-                Discover your destiny, understand your personality, and unlock insights into your future.
+                Discover your life's path through a unique correlation of palmistry and astrology.
               </p>
               <Button
                 asChild
@@ -112,7 +112,7 @@ export default function HomePage() {
                 className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg md:text-xl py-3 md:py-4 px-6 md:px-8 shadow-lg animate-pulse-subtle"
               >
                 <Link href="/palm-input?category=Comprehensive%20Analysis">
-                  <Sparkles className="mr-2 h-5 w-5" /> Get your Palm Reading
+                  <Sparkles className="mr-2 h-5 w-5" /> Get your Palm-Astro Reading
                 </Link>
               </Button>
             </div>
