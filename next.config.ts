@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -17,6 +18,13 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  serverActions: {
+    bodySizeLimit: '2mb', // Default is 1mb, increased for potentially larger image data URIs
+    // Increase timeout for potentially long-running AI operations
+    serverActions: {
+        timeout: 120, // 2 minutes
+    },
   },
 };
 
