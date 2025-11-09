@@ -1,7 +1,7 @@
 
 "use client";
 import Link from 'next/link';
-import { Hand, LogOut, Edit, ShieldCheck, BookOpen, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap, Handshake, LayoutDashboard, ListChecks, FileCheck2 } from 'lucide-react';
+import { Hand, LogOut, Edit, ShieldCheck, BookOpen, ShoppingBag, ChevronDown, UserCircle, HomeIcon, Zap, Handshake, LayoutDashboard, ListChecks, FileCheck2, ShoppingCart } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -42,6 +42,7 @@ const Header = () => {
     isPalmInputPageActive: false,
     isReportPageActive: false,
     isProductsPageActive: false,
+    isCartPageActive: false,
     isEditorDashboardActive: false,
     isEditorWorkflowPageActive: false,
     isEditorApprovedPageActive: false,
@@ -55,6 +56,7 @@ const Header = () => {
       isPalmInputPageActive: pathname === '/palm-input' && !!readingTypes.find(rt => rt.query === palmCategoryFromQuery),
       isReportPageActive: pathname === '/report',
       isProductsPageActive: pathname.startsWith('/products'),
+      isCartPageActive: pathname.startsWith('/cart'),
       isEditorDashboardActive: pathname === '/editor',
       isEditorWorkflowPageActive: pathname === '/editor/workflow' || pathname.startsWith('/editor/review'),
       isEditorApprovedPageActive: pathname === '/editor/approved',
@@ -122,6 +124,10 @@ const Header = () => {
             <DropdownMenuItem disabled className="opacity-70 italic">More coming soon!</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        
+        <Link href="/cart" className={getLinkClassName(activeStates.isCartPageActive)}>
+          <ShoppingCart className="mr-1.5 h-4 w-4" /> Cart
+        </Link>
 
         <Link href="#remedies" className={getLinkClassName(false) + " opacity-70 cursor-not-allowed"} onClick={(e) => e.preventDefault()}>
           <Zap className="mr-1.5 h-4 w-4" /> Remedies
@@ -261,6 +267,7 @@ const Header = () => {
                       <DropdownMenuSeparator className="bg-primary-foreground/20"/>
                       {isAuthenticated && <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/report">My Reading</Link></DropdownMenuItem>}
                       <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/products">Shop</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/cart">Cart</Link></DropdownMenuItem>
                     </>
                   )}
                 </ClientOnly>
@@ -273,3 +280,5 @@ const Header = () => {
 };
 
 export default Header;
+
+    
