@@ -257,7 +257,6 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                                 I don't know my time of birth
                             </label>
                         </div>
-                        <p className="text-xs text-muted-foreground pt-1">If known, providing time of birth can enhance report accuracy.</p>
                     </div>
                 </div>
                  <div className="space-y-2">
@@ -360,5 +359,3 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
 };
 
 export default PalmInputForm;
-
-    
