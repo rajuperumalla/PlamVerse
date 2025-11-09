@@ -5,6 +5,7 @@ import { AppProvider } from '@/context/AppContext';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 // Removed SubHeaderNavigation import
 
 export const metadata: Metadata = {
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.React.ReactNode;
 }>) {
   return (
     <html lang="en">
@@ -26,18 +27,18 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased flex flex-col min-h-screen">
-        <AppProvider>
-          <Header />
-          {/* SubHeaderNavigation component removed from here */}
-          <main className="flex-grow container mx-auto px-4 py-8">
-            {children}
-          </main>
-          <Footer />
-          <Toaster />
-        </AppProvider>
+        <FirebaseClientProvider>
+          <AppProvider>
+            <Header />
+            {/* SubHeaderNavigation component removed from here */}
+            <main className="flex-grow container mx-auto px-4 py-8">
+              {children}
+            </main>
+            <Footer />
+            <Toaster />
+          </AppProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );
 }
-
-    

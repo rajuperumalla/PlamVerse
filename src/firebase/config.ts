@@ -1,3 +1,4 @@
+
 export const firebaseConfig = {
   "projectId": "palmverse-cu6pq",
   "appId": "1:744289946810:web:2ae7b18897ffa0b441c683",
