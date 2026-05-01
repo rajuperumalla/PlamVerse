@@ -1,4 +1,3 @@
-
 "use client";
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -10,9 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { suggestReportImprovements } from '@/ai/flows/suggest-report-improvements';
-import { Loader2, CheckCircle, AlertTriangle, Send, Sparkles, FileCheck2, MessageCircleQuestion, ArrowLeft, Brain, Eye, User, CalendarDays, Clock, Briefcase, Camera } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, CheckCircle, AlertTriangle, Send, FileCheck2, ArrowLeft, Brain, User, CalendarDays, Clock, Camera } from 'lucide-react';
 import { generatePalmReading } from '@/ai/flows/generate-palm-reading';
 import { generateBusinessNumerologyReport } from '@/ai/flows/generate-business-numerology-report';
 import { generatePersonalLifePathReport } from '@/ai/flows/generate-personal-life-path-report';
@@ -167,7 +164,8 @@ export default function EditorReviewReportPage() {
   const personalReportDetails = report.reportType === 'numerology' && report.category === 'life-path-report' ? report.inputDetails as ReportNumerologyInputDetails_PersonalReport : null;
   const babyNameDetails = report.reportType === 'numerology' && report.category === 'baby-name-numerology' ? report.inputDetails as ReportNumerologyInputDetails_BabyName : null;
 
-  const isAnalysisDisabled = report.reportType === 'palmistry' ? !imageQualityConfirmed || isOperationInProgress : isOperationInProgress;
+  // Generation is disabled if images aren't verified for palmistry or if operation is in progress
+  const isGenerationDisabled = (report.reportType === 'palmistry' && !imageQualityConfirmed) || isOperationInProgress;
 
   const renderUserDetails = () => (
      <div className="space-y-4 text-sm">
@@ -252,7 +250,7 @@ export default function EditorReviewReportPage() {
           {report.reportType === 'palmistry' && (
             <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-800">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-lg"><Eye className="h-5 w-5"/>Step 1: Image Quality Verification</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-300 text-lg"><Camera className="h-5 w-5"/>Step 1: Image Quality Verification</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-3 rounded-md border border-amber-400/50 bg-amber-100/50 dark:bg-amber-900/30 p-4">
@@ -271,7 +269,7 @@ export default function EditorReviewReportPage() {
             </Card>
           )}
 
-          <Card className={cn("transition-opacity", isAnalysisDisabled && "opacity-50 pointer-events-none")}>
+          <Card className="transition-opacity">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg"><Brain className="h-5 w-5"/>Step 2: Expert Analysis & Report Generation</CardTitle>
                 <CardDescription>Provide your expert directives below. The AI will generate the report based on your notes.</CardDescription>
@@ -286,17 +284,22 @@ export default function EditorReviewReportPage() {
                     placeholder="Enter your comprehensive analysis, interpretations, and directives here. The AI will use this as the primary basis for generating the report."
                     rows={12}
                     className="text-sm"
-                    disabled={isAnalysisDisabled}
+                    disabled={isOperationInProgress}
                   />
                    <Button 
                         onClick={handleGenerateWithExpertAnalysis} 
-                        disabled={isAnalysisDisabled || !expertAnalysisNotes.trim()} 
+                        disabled={isGenerationDisabled || !expertAnalysisNotes.trim()} 
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2"
-                        title="AI will use your analysis above to generate a new report version."
+                        title={report.reportType === 'palmistry' && !imageQualityConfirmed ? "Please confirm image quality in Step 1 first." : "AI will use your analysis above to generate a new report version."}
                     >
                         {isOperationInProgress && expertAnalysisNotes.trim() && !generatedReportPreview ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                         Generate Report using My Analysis
                     </Button>
+                    {report.reportType === 'palmistry' && !imageQualityConfirmed && (
+                      <p className="text-xs text-amber-600 flex items-center gap-1 mt-1 justify-center">
+                        <AlertTriangle className="h-3 w-3" /> Please verify images in Step 1 to enable report generation.
+                      </p>
+                    )}
                 </div>
 
                 {generatedReportPreview && (
@@ -309,7 +312,7 @@ export default function EditorReviewReportPage() {
                     </ScrollArea>
                     <Button 
                       onClick={handleFinalApproveForCustomer} 
-                      disabled={isAnalysisDisabled}
+                      disabled={isOperationInProgress}
                       className="w-full bg-green-600 hover:bg-green-700 text-white mt-2"
                     >
                       {isOperationInProgress ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
@@ -349,5 +352,3 @@ export default function EditorReviewReportPage() {
     </div>
   );
 }
-
-    
