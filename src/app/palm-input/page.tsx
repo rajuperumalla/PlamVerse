@@ -68,10 +68,10 @@ function PalmInputPageComponent() {
       
       toast({
         title: "Request Submitted for Review",
-        description: "Your request has been sent for expert review. Your report will be available in 'My Reading' shortly.",
+        description: "Your request has been sent for expert review. Redirecting to My Reading page...",
         duration: 5000
       });
-      router.push('/'); 
+      router.push('/report'); 
     } catch (error) {
       console.error("Error creating palm reading placeholder:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during submission.";
@@ -275,5 +275,3 @@ export default function PalmInputPage() {
     </Suspense>
   );
 }
-
-    

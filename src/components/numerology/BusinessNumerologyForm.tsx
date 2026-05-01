@@ -66,8 +66,8 @@ const BusinessNumerologyForm = ({ serviceDescription }: BusinessNumerologyFormPr
     startOperation();
     try {
       createInitialNumerologyReportPlaceholder(reportInputDetails, SERVICE_QUERY);
-      toast({ title: "Numerology Request Received", description: "Your report is being prepared and will be available under 'My Reading'. Redirecting to Home...", duration: 5000 });
-      router.push('/');
+      toast({ title: "Numerology Request Received", description: "Your report is being prepared. Redirecting to My Reading page...", duration: 5000 });
+      router.push('/report');
     } catch (error) {
       console.error("Error creating numerology report placeholder:", error);
       toast({ title: "Request Error", description: "Failed to submit your numerology request. Please try again.", variant: "destructive" });
