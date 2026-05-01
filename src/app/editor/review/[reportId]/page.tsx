@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle, AlertTriangle, Send, FileCheck2, ArrowLeft, Brain, User, CalendarDays, Clock, Camera } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, Send, FileCheck2, ArrowLeft, Brain, User, CalendarDays, Clock, Camera, ExternalLink } from 'lucide-react';
 import { generatePalmReading } from '@/ai/flows/generate-palm-reading';
 import { generateBusinessNumerologyReport } from '@/ai/flows/generate-business-numerology-report';
 import { generatePersonalLifePathReport } from '@/ai/flows/generate-personal-life-path-report';
@@ -57,6 +57,21 @@ export default function EditorReviewReportPage() {
       setAuthCheckComplete(true);
     }
   }, [isAuthenticated, isEditor, reportId, getReportById, router, toast, isInitializing]);
+
+  const handleOpenImage = (dataUri: string) => {
+    const win = window.open();
+    if (win) {
+      win.document.write(`
+        <html>
+          <head><title>Palm Image View</title></head>
+          <body style="margin:0; display:flex; justify-content:center; align-items:center; background:#000;">
+            <img src="${dataUri}" style="max-width:100%; max-height:100vh; object-fit:contain;" />
+          </body>
+        </html>
+      `);
+      win.document.close();
+    }
+  };
 
   const handleGenerateWithExpertAnalysis = async () => {
     if (!report || !expertAnalysisNotes.trim()) {
@@ -164,7 +179,6 @@ export default function EditorReviewReportPage() {
   const personalReportDetails = report.reportType === 'numerology' && report.category === 'life-path-report' ? report.inputDetails as ReportNumerologyInputDetails_PersonalReport : null;
   const babyNameDetails = report.reportType === 'numerology' && report.category === 'baby-name-numerology' ? report.inputDetails as ReportNumerologyInputDetails_BabyName : null;
 
-  // Generation is disabled if images aren't verified for palmistry or if operation is in progress
   const isGenerationDisabled = (report.reportType === 'palmistry' && !imageQualityConfirmed) || isOperationInProgress;
 
   const renderUserDetails = () => (
@@ -233,7 +247,7 @@ export default function EditorReviewReportPage() {
       </Button>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* Left Column */}
+        {/* Left Column - Workflow Steps */}
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
@@ -269,7 +283,7 @@ export default function EditorReviewReportPage() {
             </Card>
           )}
 
-          <Card className="transition-opacity">
+          <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg"><Brain className="h-5 w-5"/>Step 2: Expert Analysis & Report Generation</CardTitle>
                 <CardDescription>Provide your expert directives below. The AI will generate the report based on your notes.</CardDescription>
@@ -282,8 +296,8 @@ export default function EditorReviewReportPage() {
                     value={expertAnalysisNotes}
                     onChange={(e) => setExpertAnalysisNotes(e.target.value)}
                     placeholder="Enter your comprehensive analysis, interpretations, and directives here. The AI will use this as the primary basis for generating the report."
-                    rows={12}
-                    className="text-sm"
+                    rows={15}
+                    className="text-sm focus:ring-primary"
                     disabled={isOperationInProgress}
                   />
                    <Button 
@@ -305,7 +319,7 @@ export default function EditorReviewReportPage() {
                 {generatedReportPreview && (
                   <div className="space-y-2 border-t pt-6">
                     <Label className="font-semibold text-green-700 flex items-center gap-1.5 text-lg"><FileCheck2 className="h-5 w-5"/>AI-Generated Report (Based on Your Analysis):</Label>
-                    <ScrollArea className="h-[200px] w-full rounded-md border p-4 bg-green-50/50 text-sm shadow-inner">
+                    <ScrollArea className="h-[250px] w-full rounded-md border p-4 bg-green-50/50 text-sm shadow-inner">
                       {generatedReportPreview.split('\n').filter(p => p.trim() !== '').map((paragraph, index) => (
                         <p key={index} className="mb-2 leading-relaxed">{paragraph}</p>
                       ))}
@@ -324,29 +338,80 @@ export default function EditorReviewReportPage() {
           </Card>
         </div>
 
-        {/* Right Column */}
+        {/* Right Column - Sticky Images Side-by-Side */}
         <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-24 h-fit">
           {palmInputDetails && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Camera className="h-5 w-5"/>Submitted Images</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-lg"><Camera className="h-5 w-5"/>Submitted Images</CardTitle>
+                <CardDescription>Hover and click the icon to view full size.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                  {palmInputDetails.frontPalmDataUri && 
-                  <div className="text-center">
-                    <Image src={palmInputDetails.frontPalmDataUri} alt={`Front of ${palmInputDetails.dominantHand} Palm`} width={300} height={225} className="rounded-md border mx-auto shadow" data-ai-hint="palm hand front"/>
-                    <p className="text-sm text-muted-foreground mt-2">Front of {palmInputDetails.dominantHand} Palm</p>
+                  <div className="text-center group relative">
+                    <div className="relative overflow-hidden rounded-md border shadow">
+                       <Image 
+                         src={palmInputDetails.frontPalmDataUri} 
+                         alt={`Front of ${palmInputDetails.dominantHand} Palm`} 
+                         width={400} 
+                         height={300} 
+                         className="object-cover w-full h-auto" 
+                         data-ai-hint="palm hand front"
+                       />
+                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Button 
+                            variant="secondary" 
+                            size="sm" 
+                            onClick={() => handleOpenImage(palmInputDetails.frontPalmDataUri!)}
+                            className="gap-2"
+                          >
+                            <ExternalLink className="h-4 w-4" /> View Full Image
+                          </Button>
+                       </div>
+                    </div>
+                    <p className="text-sm font-medium mt-2">Front of {palmInputDetails.dominantHand} Palm</p>
                   </div>
                 }
                 {palmInputDetails.sidePalmDataUri && 
-                  <div className="text-center">
-                    <Image src={palmInputDetails.sidePalmDataUri} alt={`Side of ${palmInputDetails.dominantHand} Palm`} width={300} height={225} className="rounded-md border mx-auto shadow" data-ai-hint="palm hand side"/>
-                    <p className="text-sm text-muted-foreground mt-2">Side of {palmInputDetails.dominantHand} Palm</p>
+                  <div className="text-center group relative">
+                    <div className="relative overflow-hidden rounded-md border shadow">
+                       <Image 
+                         src={palmInputDetails.sidePalmDataUri} 
+                         alt={`Side of ${palmInputDetails.dominantHand} Palm`} 
+                         width={400} 
+                         height={300} 
+                         className="object-cover w-full h-auto" 
+                         data-ai-hint="palm hand side"
+                       />
+                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Button 
+                            variant="secondary" 
+                            size="sm" 
+                            onClick={() => handleOpenImage(palmInputDetails.sidePalmDataUri!)}
+                            className="gap-2"
+                          >
+                            <ExternalLink className="h-4 w-4" /> View Full Image
+                          </Button>
+                       </div>
+                    </div>
+                    <p className="text-sm font-medium mt-2">Side of {palmInputDetails.dominantHand} Palm</p>
                   </div>
                 }
               </CardContent>
             </Card>
           )}
+          
+          {/* Helpful Tips for Editor */}
+          <Card className="bg-primary/5 border-primary/20">
+            <CardHeader className="p-4">
+              <CardTitle className="text-sm font-semibold">Editor Guidelines</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 text-xs text-muted-foreground space-y-2">
+              <p>• Verify palm lines are sharp and clear before proceeding.</p>
+              <p>• Incorporate specific dasha periods in your analysis if possible.</p>
+              <p>• Ensure tone remains empathetic and professional.</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
