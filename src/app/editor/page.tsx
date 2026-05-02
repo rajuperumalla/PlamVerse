@@ -1,0 +1,163 @@
+
+"use client";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useAppContext } from '@/context/AppContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, AlertTriangle, LogIn, ListTodo, FileCheck2, Edit, ServerCrash } from 'lucide-react';
+
+export default function EditorDashboardPage() {
+  const {
+    isAuthenticated,
+    isEditor,
+    reports,
+    isInitializing,
+  } = useAppContext();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const [authCheckComplete, setAuthCheckComplete] = useState(false);
+
+  useEffect(() => {
+    if (!isInitializing) {
+        if (!isAuthenticated) {
+            router.push('/');
+        } else if (!isEditor) {
+            toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
+            router.push('/');
+        }
+        setAuthCheckComplete(true);
+    }
+  }, [isAuthenticated, isEditor, router, toast, isInitializing]);
+
+  const pendingReviewReports = reports.filter(report => report.status === 'pending_review');
+  const approvedReports = reports.filter(report => report.status === 'approved');
+  const generationFailedReports = reports.filter(report => report.status === 'generation_failed');
+
+  if (isInitializing || !authCheckComplete) {
+    return (
+        <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+            <p>Loading dashboard data...</p>
+        </div>
+    );
+  }
+
+  if (!isAuthenticated || !isEditor) {
+    return (
+        <div className="flex flex-col justify-center items-center min-h-[calc(100vh-var(--header-height)-var(--footer-height)-100px)]">
+             <Card className="w-full max-w-md text-center p-6">
+                <CardHeader>
+                    <div className="mx-auto bg-destructive/10 p-3 rounded-full w-fit mb-4">
+                        <AlertTriangle className="h-10 w-10 text-destructive" />
+                    </div>
+                    <CardTitle>Access Denied</CardTitle>
+                    <CardDescription>You do not have permission to view this page.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button onClick={() => router.push('/')}><LogIn className="mr-2"/> Go to Login</Button>
+                </CardContent>
+            </Card>
+        </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-semibold">Editor Dashboard</h1>
+        </div>
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+             <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+                    <ListTodo className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{pendingReviewReports.length}</div>
+                     <Link href="/editor/workflow" className="text-xs text-primary hover:underline">
+                        Go to Workflow
+                    </Link>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Approved Reports</CardTitle>
+                    <FileCheck2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{approvedReports.length}</div>
+                     <Link href="/editor/approved" className="text-xs text-primary hover:underline">
+                        View Approved
+                    </Link>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Generation Failed</CardTitle>
+                    <ServerCrash className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{generationFailedReports.length}</div>
+                     <p className="text-xs text-muted-foreground">
+                        AI failed to generate these.
+                    </p>
+                </CardContent>
+            </Card>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Pending Reports</CardTitle>
+            <CardDescription>
+              The most recent reports waiting for your expert review.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Submitted On</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingReviewReports.length > 0 ? (
+                  pendingReviewReports.slice(0, 5).map((report) => (
+                    <TableRow key={report.id}>
+                      <TableCell>{report.userName}</TableCell>
+                      <TableCell>{report.category}</TableCell>
+                      <TableCell>
+                        {new Date(report.submissionDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/editor/review/${report.id}`}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Review
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                      No pending reports. Great job!
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+    </div>
+  );
+}

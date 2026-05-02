@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm Spiritual Theme */
+    --background: 40 100% 97%; /* Very Light Warm Peach/Cream */
+    --foreground: 30 30% 25%; /* Dark Warm Brown for text */
+
+    --card: 40 80% 95%; /* Light Warm Peach */
+    --card-foreground: 30 30% 25%;
+
+    --popover: 40 80% 95%;
+    --popover-foreground: 30 30% 25%;
+
+    --primary: 25 85% 55%; /* Richer, more readable burnt orange */
+    --primary-foreground: 30 100% 98%; /* Very Light Warm Cream */
+
+    --secondary: 35 65% 75%; /* Lighter Warm Orange/Peach */
+    --secondary-foreground: 30 40% 30%; /* Darker Warm Brown for text on secondary */
+
+    --muted: 40 70% 93%; /* Muted Warm Peach */
+    --muted-foreground: 30 25% 50%; /* Muted Warm Brown/Gray text */
+
+    --accent: 45 80% 65%; /* Warm Gold/Amber */
+    --accent-foreground: 30 30% 20%; /* Dark Warm Brown */
+
+    --destructive: 0 70% 60%; /* Standard Red */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 35 50% 88%; /* Light Warm Peach/Gray border */
+    --input: 40 90% 95%; /* Light Warm Peach input background */
+    --ring: 25 85% 55%; /* Richer, more readable burnt orange for rings */
+
+    --chart-1: 25 85% 55%; /* Richer, more readable burnt orange */
+    --chart-2: 45 80% 65%; /* Gold */
+    --chart-3: 20 70% 65%; /* Warm Coral */
+    --chart-4: 50 70% 70%; /* Light Gold */
+    --chart-5: 35 60% 80%; /* Pale Peach */
+    
+    --radius: 0.5rem;
+
+    /* Sidebar variables (consistent with warm theme) */
+    --sidebar-background: 30 25% 28%; /* Dark Warm Brown for sidebar */
+    --sidebar-foreground: 40 100% 97%; /* Light Warm Peach text on sidebar */
+    --sidebar-primary: 25 85% 55%; /* Richer, more readable burnt orange */
+    --sidebar-primary-foreground: 30 100% 98%;
+    --sidebar-accent: 45 80% 65%; /* Warm Gold */
+    --sidebar-accent-foreground: 30 30% 20%;
+    --sidebar-border: 30 20% 40%;
+    --sidebar-ring: 25 85% 55%;
+  }
+
+  .dark {
+    /* Dark Mode: Complementary to the new warm theme */
+    --background: 30 15% 15%; /* Very Dark Warm Brown */
+    --foreground: 40 80% 90%; /* Light Warm Peach text */
+
+    --card: 30 18% 20%; /* Darker Warm Brown for cards */
+    --card-foreground: 40 80% 90%;
+
+    --popover: 30 18% 20%;
+    --popover-foreground: 40 80% 90%;
+
+    --primary: 25 75% 65%; /* Adjusted rich orange for dark mode */
+    --primary-foreground: 30 15% 10%; /* Very Dark Warm Brown text on primary */
+
+    --secondary: 30 25% 35%; /* Darker shade of secondary warm brown */
+    --secondary-foreground: 40 70% 85%;
+
+    --muted: 30 15% 28%;
+    --muted-foreground: 40 60% 70%;
+
+    --accent: 45 70% 75%; /* Adjusted Warm Gold for dark mode */
+    --accent-foreground: 45 15% 15%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 15% 35%;
+    --input: 30 15% 25%;
+    --ring: 25 75% 65%;
+
+    --chart-1: 25 75% 65%;
+    --chart-2: 45 70% 75%;
+    --chart-3: 20 60% 70%;
+    --chart-4: 50 60% 75%;
+    --chart-5: 35 50% 80%;
+    
+    --sidebar-background: 30 15% 15%;
+    --sidebar-foreground: 40 80% 90%;
+    --sidebar-primary: 25 75% 65%;
+    --sidebar-primary-foreground: 30 15% 10%;
+    --sidebar-accent: 45 70% 75%;
+    --sidebar-accent-foreground: 45 15% 15%;
+    --sidebar-border: 30 15% 35%;
+    --sidebar-ring: 25 75% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-body;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  main {
+    flex-grow: 1;
+  }
+}
