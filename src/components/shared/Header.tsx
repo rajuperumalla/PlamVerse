@@ -64,11 +64,11 @@ const Header = () => {
   }, [pathname, searchParams]);
 
   const getLinkClassName = (isActive: boolean) => {
-    return `transition-colors px-2 py-1.5 rounded-md text-sm flex items-center hover:bg-primary/80 focus:bg-primary/80 ${isActive ? 'bg-primary/70 font-semibold' : 'hover:bg-primary/60'}`;
+    return `transition-all px-2 py-1.5 rounded-md text-sm flex items-center hover:text-cyan-400 focus:text-cyan-400 ${isActive ? 'text-cyan-300 font-semibold drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]' : 'text-gray-300'}`;
   };
 
   const getDropdownTriggerClassName = (isActive: boolean) => {
-    return `transition-colors px-2 py-1.5 rounded-md text-sm flex items-center hover:bg-primary/80 focus:bg-primary/80 ${isActive ? 'bg-primary/70 font-semibold' : 'hover:bg-primary/60'}`;
+    return `transition-all px-2 py-1.5 rounded-md text-sm flex items-center hover:text-cyan-400 focus:text-cyan-400 ${isActive ? 'text-cyan-300 font-semibold drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]' : 'text-gray-300'}`;
   }
 
   const renderUserHeader = () => (
@@ -172,7 +172,7 @@ const Header = () => {
   );
   
   return (
-    <header className="bg-primary text-primary-foreground shadow-md sticky top-0 z-40">
+    <header className="bg-black/40 backdrop-blur-md border-b border-white/10 text-white shadow-md sticky top-0 z-40">
       <div className="container px-4 py-3 flex items-center">
         <ClientOnly>
           {isEditor ? renderEditorHeader() :
@@ -234,45 +234,7 @@ const Header = () => {
               </DropdownMenu>
             )}
           </ClientOnly>
-          {/* Mobile Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="md:hidden h-9 w-9 p-0 sm:h-10 sm:w-10 hover:bg-primary/80">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-primary border-primary-foreground/20 text-primary-foreground md:hidden w-56">
-                <ClientOnly>
-                  {isEditor ? (
-                    <>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor">Dashboard</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor/workflow">Pending Reviews</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/editor/approved">Approved Reports</Link></DropdownMenuItem>
-                    </>
-                  ) : isAdmin ? (
-                     <>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/admin">Dashboard</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/admin/workflow">Report Workflow</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/admin/products">Products</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/admin/orders">Orders</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/admin/settings">Settings</Link></DropdownMenuItem>
-                     </>
-                  ) : (
-                    <>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/">Home</Link></DropdownMenuItem>
-                      <DropdownMenuSeparator className="bg-primary-foreground/20"/>
-                      <DropdownMenuLabel>Palmistry</DropdownMenuLabel>
-                      {readingTypes.map(item => <DropdownMenuItem key={item.query} asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href={`/palm-input?category=${encodeURIComponent(item.query)}`}>{item.name}</Link></DropdownMenuItem>)}
-                      <DropdownMenuSeparator className="bg-primary-foreground/20"/>
-                      {isAuthenticated && <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/report">My Reading</Link></DropdownMenuItem>}
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/products">Shop</Link></DropdownMenuItem>
-                      <DropdownMenuItem asChild className="cursor-pointer hover:!bg-primary-foreground/20 focus:!bg-primary-foreground/20"><Link href="/cart">Cart</Link></DropdownMenuItem>
-                    </>
-                  )}
-                </ClientOnly>
-            </DropdownMenuContent>
-          </DropdownMenu>
+
         </div>
       </div>
     </header>

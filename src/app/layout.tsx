@@ -5,8 +5,8 @@ import { AppProvider } from '@/context/AppContext';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
+import MobileNav from '@/components/shared/MobileNav';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
-// Removed SubHeaderNavigation import
 
 export const metadata: Metadata = {
   title: 'PalmVerse - AI Palm Reading',
@@ -26,15 +26,15 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased flex flex-col min-h-screen">
+      <body className="font-body antialiased flex flex-col min-h-screen pb-20 md:pb-0">
         <FirebaseClientProvider>
           <AppProvider>
             <Header />
-            {/* SubHeaderNavigation component removed from here */}
             <main className="flex-grow container mx-auto px-4 py-8">
               {children}
             </main>
             <Footer />
+            <MobileNav />
             <Toaster />
           </AppProvider>
         </FirebaseClientProvider>

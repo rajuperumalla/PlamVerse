@@ -4,98 +4,86 @@
 
 @layer base {
   :root {
-    /* Warm Spiritual Theme */
-    --background: 40 100% 97%; /* Very Light Warm Peach/Cream */
-    --foreground: 30 30% 25%; /* Dark Warm Brown for text */
+    /* Dark Cosmic Theme as default */
+    --background: 260 50% 5%; /* Very deep purple/black */
+    --foreground: 260 20% 90%; /* Light purple-gray text */
 
-    --card: 40 80% 95%; /* Light Warm Peach */
-    --card-foreground: 30 30% 25%;
+    --card: 260 40% 8%; /* Dark purple/black card */
+    --card-foreground: 260 20% 90%;
 
-    --popover: 40 80% 95%;
-    --popover-foreground: 30 30% 25%;
+    --popover: 260 40% 8%;
+    --popover-foreground: 260 20% 90%;
 
-    --primary: 25 85% 55%; /* Richer, more readable burnt orange */
-    --primary-foreground: 30 100% 98%; /* Very Light Warm Cream */
+    --primary: 280 80% 60%; /* Neon purple */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 35 65% 75%; /* Lighter Warm Orange/Peach */
-    --secondary-foreground: 30 40% 30%; /* Darker Warm Brown for text on secondary */
+    --secondary: 190 90% 50%; /* Neon cyan */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 40 70% 93%; /* Muted Warm Peach */
-    --muted-foreground: 30 25% 50%; /* Muted Warm Brown/Gray text */
+    --muted: 260 30% 15%;
+    --muted-foreground: 260 20% 70%;
 
-    --accent: 45 80% 65%; /* Warm Gold/Amber */
-    --accent-foreground: 30 30% 20%; /* Dark Warm Brown */
+    --accent: 280 80% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 60%; /* Standard Red */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 35 50% 88%; /* Light Warm Peach/Gray border */
-    --input: 40 90% 95%; /* Light Warm Peach input background */
-    --ring: 25 85% 55%; /* Richer, more readable burnt orange for rings */
+    --border: 260 30% 20%;
+    --input: 260 30% 15%;
+    --ring: 280 80% 60%;
 
-    --chart-1: 25 85% 55%; /* Richer, more readable burnt orange */
-    --chart-2: 45 80% 65%; /* Gold */
-    --chart-3: 20 70% 65%; /* Warm Coral */
-    --chart-4: 50 70% 70%; /* Light Gold */
-    --chart-5: 35 60% 80%; /* Pale Peach */
+    --chart-1: 280 80% 60%;
+    --chart-2: 190 90% 50%;
+    --chart-3: 320 80% 60%; /* Neon pink */
+    --chart-4: 240 80% 60%; /* Bright blue */
+    --chart-5: 260 50% 70%;
     
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    /* Sidebar variables (consistent with warm theme) */
-    --sidebar-background: 30 25% 28%; /* Dark Warm Brown for sidebar */
-    --sidebar-foreground: 40 100% 97%; /* Light Warm Peach text on sidebar */
-    --sidebar-primary: 25 85% 55%; /* Richer, more readable burnt orange */
-    --sidebar-primary-foreground: 30 100% 98%;
-    --sidebar-accent: 45 80% 65%; /* Warm Gold */
-    --sidebar-accent-foreground: 30 30% 20%;
-    --sidebar-border: 30 20% 40%;
-    --sidebar-ring: 25 85% 55%;
+    --sidebar-background: 260 50% 5%;
+    --sidebar-foreground: 260 20% 90%;
+    --sidebar-primary: 280 80% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 190 90% 50%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 260 30% 20%;
+    --sidebar-ring: 280 80% 60%;
   }
 
   .dark {
-    /* Dark Mode: Complementary to the new warm theme */
-    --background: 30 15% 15%; /* Very Dark Warm Brown */
-    --foreground: 40 80% 90%; /* Light Warm Peach text */
+    /* Dark Mode is same as default since it's a dark cosmic theme */
+    --background: 260 50% 3%;
+    --foreground: 260 20% 95%;
 
-    --card: 30 18% 20%; /* Darker Warm Brown for cards */
-    --card-foreground: 40 80% 90%;
+    --card: 260 40% 6%;
+    --card-foreground: 260 20% 95%;
 
-    --popover: 30 18% 20%;
-    --popover-foreground: 40 80% 90%;
+    --popover: 260 40% 6%;
+    --popover-foreground: 260 20% 95%;
 
-    --primary: 25 75% 65%; /* Adjusted rich orange for dark mode */
-    --primary-foreground: 30 15% 10%; /* Very Dark Warm Brown text on primary */
+    --primary: 280 90% 65%; 
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 25% 35%; /* Darker shade of secondary warm brown */
-    --secondary-foreground: 40 70% 85%;
+    --secondary: 190 95% 55%; 
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 30 15% 28%;
-    --muted-foreground: 40 60% 70%;
+    --muted: 260 30% 12%;
+    --muted-foreground: 260 20% 65%;
 
-    --accent: 45 70% 75%; /* Adjusted Warm Gold for dark mode */
-    --accent-foreground: 45 15% 15%;
+    --accent: 280 90% 65%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 65% 55%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 15% 35%;
-    --input: 30 15% 25%;
-    --ring: 25 75% 65%;
+    --border: 260 40% 15%;
+    --input: 260 40% 10%;
+    --ring: 280 90% 65%;
 
-    --chart-1: 25 75% 65%;
-    --chart-2: 45 70% 75%;
-    --chart-3: 20 60% 70%;
-    --chart-4: 50 60% 75%;
-    --chart-5: 35 50% 80%;
-    
-    --sidebar-background: 30 15% 15%;
-    --sidebar-foreground: 40 80% 90%;
-    --sidebar-primary: 25 75% 65%;
-    --sidebar-primary-foreground: 30 15% 10%;
-    --sidebar-accent: 45 70% 75%;
-    --sidebar-accent-foreground: 45 15% 15%;
-    --sidebar-border: 30 15% 35%;
-    --sidebar-ring: 25 75% 65%;
+    --sidebar-background: 260 50% 3%;
+    --sidebar-foreground: 260 20% 95%;
+    --sidebar-border: 260 40% 15%;
   }
 }
 
@@ -104,12 +92,60 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply text-foreground font-body;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    /* Stunning Nebula Background matching reference */
+    background-color: #050814;
+    background-image: 
+      radial-gradient(circle at 20% 40%, rgba(179, 18, 120, 0.4) 0%, transparent 50%), /* Deep Magenta */
+      radial-gradient(circle at 80% 20%, rgba(255, 138, 0, 0.25) 0%, transparent 40%), /* Glowing Orange */
+      radial-gradient(circle at 60% 70%, rgba(0, 168, 255, 0.3) 0%, transparent 60%), /* Bright Cyan */
+      radial-gradient(circle at 40% 60%, rgba(70, 20, 150, 0.3) 0%, transparent 50%), /* Deep Purple */
+      radial-gradient(circle at 50% 50%, rgba(5, 8, 20, 0.8) 0%, #050814 100%);
+    background-attachment: fixed;
   }
   main {
     flex-grow: 1;
   }
 }
+
+@layer utilities {
+  .glassmorphism {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_0_15px_rgba(150,50,250,0.2)];
+  }
+  .neon-text {
+    text-shadow: 0 0 10px rgba(0, 168, 255, 0.8), 0 0 20px rgba(0, 168, 255, 0.5);
+  }
+  .neon-border {
+    box-shadow: 0 0 10px rgba(0, 168, 255, 0.5), inset 0 0 10px rgba(0, 168, 255, 0.5);
+    border: 1px solid rgba(0, 168, 255, 0.8);
+  }
+  
+  /* Neumorphic Dark Cosmic Nebula Theme Utilities */
+  .neumorphic {
+    background: linear-gradient(145deg, #0a1128, #080f22);
+    box-shadow: 10px 10px 20px #040711, -10px -10px 20px #0e1939;
+    border: 1px solid rgba(255,255,255,0.03);
+    border-radius: 1.5rem;
+  }
+  
+  .neumorphic-pressed {
+    background: #091025;
+    box-shadow: inset 8px 8px 16px #040711, inset -8px -8px 16px #0e1939;
+    border: 1px solid rgba(0,0,0,0.5);
+    border-radius: 1.5rem;
+  }
+
+  .neumorphic-glow {
+    background: linear-gradient(145deg, #0a1128, #080f22);
+    box-shadow: 
+      8px 8px 16px #040711, 
+      -8px -8px 16px #0e1939,
+      0 0 25px rgba(0, 168, 255, 0.3); /* Cyan glow */
+    border: 1px solid rgba(0, 168, 255, 0.2);
+    border-radius: 1.5rem;
+  }
+}
+
