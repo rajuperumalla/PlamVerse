@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "PalmVerse",
+    "slug": "palmverse",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "palmverse",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0420"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.palmverse.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "PalmVerse needs camera access to capture your palm images.",
+        "NSPhotoLibraryUsageDescription": "PalmVerse needs photo library access to upload palm images.",
+        "NSLocationWhenInUseUsageDescription": "PalmVerse uses location for accurate astrological calculations."
+      }
+    },
+    "android": {
+      "package": "com.palmverse.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0420"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "web": { "favicon": "./assets/favicon.png" },
+    "plugins": [
+      "expo-camera",
+      "expo-location",
+      "expo-notifications",
+      "expo-secure-store",
+      [
+        "@stripe/stripe-react-native",
+        { "merchantIdentifier": "merchant.com.palmverse" }
+      ]
+    ],
+    "extra": {
+      "apiBaseUrl": "https://api.palmverse.example.com",
+      "googleMapsApiKey": "REPLACE_ME",
+      "razorpayKeyId": "REPLACE_ME",
+      "stripePublishableKey": "REPLACE_ME"
+    }
+  }
+}
