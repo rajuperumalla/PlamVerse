@@ -10,12 +10,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Textarea } from '@/components/ui/textarea';
 import { useAppContext, type ReportPalmInputDetails } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info, Camera, Sun, Focus, Maximize, MoveHorizontal, Globe, CheckSquare } from 'lucide-react';
+import { Hand, UploadCloud, CalendarDays, MapPin, Clock, UserCircle, ListChecks, Loader2, Sparkles, CreditCard, Info, Camera, Sun, Focus, Maximize, MoveHorizontal, Globe, CheckSquare, Navigation } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '../ui/checkbox';
+import { RoundClockPicker } from './RoundClockPicker';
 
 const readingCategories = [
   { value: "General Personality", label: "General Personality", description: "Understand your core traits, strengths, and challenges." },
@@ -46,6 +47,11 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
   const [isTimeOfBirthUnknown, setIsTimeOfBirthUnknown] = useState(false);
   const [dominantHand, setDominantHand] = useState('');
   const [category, setCategory] = useState(categoryFromQuery || '');
+  
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
   const { isOperationInProgress } = useAppContext();
   const { toast } = useToast();
@@ -140,6 +146,73 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
     }
   }, [categoryFromQuery]);
 
+  useEffect(() => {
+    if (placeOfBirth.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    
+    const timeoutId = setTimeout(async () => {
+      // Check if the current input exactly matches one of our suggestions to avoid re-fetching on select
+      if (suggestions.some(s => s.display_name === placeOfBirth)) return;
+
+      setIsSearching(true);
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeOfBirth)}&addressdetails=1&limit=5`);
+        const data = await response.json();
+        setSuggestions(data);
+      } catch (error) {
+        console.error("Error fetching places:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(timeoutId);
+  }, [placeOfBirth]);
+
+  const handleSelectPlace = (place: any) => {
+    setPlaceOfBirth(place.display_name);
+    setLatitude(place.lat);
+    setLongitude(place.lon);
+    setShowSuggestions(false);
+  };
+
+  const handleGpsLocation = () => {
+    if (!navigator.geolocation) {
+      toast({ title: "Error", description: "Geolocation is not supported by your browser.", variant: "destructive" });
+      return;
+    }
+    
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude.toString();
+        const lon = position.coords.longitude.toString();
+        setLatitude(lat);
+        setLongitude(lon);
+        
+        try {
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+          const data = await response.json();
+          if (data && data.display_name) {
+             setPlaceOfBirth(data.display_name);
+          } else {
+             setPlaceOfBirth("Current Location");
+          }
+        } catch (error) {
+           console.error("Reverse geocoding error:", error);
+           setPlaceOfBirth("Current Location");
+        } finally {
+           setIsLocating(false);
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        toast({ title: "Location Error", description: "Could not get your location. Please check permissions.", variant: "destructive" });
+      }
+    );
+  };
 
   const renderImagePreview = (previewUrl: string | null, palmName: string, dataAiHint: string) => (
     <div className="w-full h-48 border-2 border-dashed border-primary/50 rounded-lg flex items-center justify-center bg-muted/50 relative overflow-hidden">
@@ -256,7 +329,25 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth *</Label>
-                        <Input id="tob" ref={timeOfBirthRef} type="time" value={timeOfBirth} onChange={(e) => setTimeOfBirth(e.target.value)} disabled={isOperationInProgress || isTimeOfBirthUnknown} required={!isTimeOfBirthUnknown}/>
+                        <div className="block md:hidden">
+                            <RoundClockPicker 
+                                value={timeOfBirth} 
+                                onChange={setTimeOfBirth} 
+                                disabled={isOperationInProgress || isTimeOfBirthUnknown} 
+                            />
+                        </div>
+                        <div className="hidden md:block">
+                            <Input 
+                                id="tob" 
+                                ref={timeOfBirthRef} 
+                                type="time" 
+                                step="1"
+                                value={timeOfBirth} 
+                                onChange={(e) => setTimeOfBirth(e.target.value)} 
+                                disabled={isOperationInProgress || isTimeOfBirthUnknown} 
+                                required={!isTimeOfBirthUnknown}
+                            />
+                        </div>
                          <div className="flex items-center space-x-2 pt-1">
                             <Checkbox id="unknown-tob" checked={isTimeOfBirthUnknown} onCheckedChange={(checked) => setIsTimeOfBirthUnknown(checked as boolean)} />
                             <label
@@ -272,17 +363,50 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                     <Label htmlFor="pob" className="text-base flex items-center gap-2"><MapPin className="h-5 w-5 text-primary"/>Place of Birth *</Label>
                     <div className="relative">
                         <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                        <Input id="pob" value={placeOfBirth} onChange={(e) => setPlaceOfBirth(e.target.value)} placeholder="e.g., City, Country (Autocomplete coming soon!)" disabled={isOperationInProgress} required className="pl-10" />
+                        <Input 
+                            id="pob" 
+                            value={placeOfBirth} 
+                            onChange={(e) => { setPlaceOfBirth(e.target.value); setShowSuggestions(true); }} 
+                            onFocus={() => setShowSuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                            placeholder="e.g., City, Country, or Pincode" 
+                            disabled={isOperationInProgress} 
+                            required 
+                            className="pl-10 pr-10" 
+                            autoComplete="off"
+                        />
+                        {isSearching && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            </div>
+                        )}
+                        {showSuggestions && suggestions.length > 0 && (
+                            <div className="absolute z-50 w-full mt-1 bg-card border rounded-md shadow-lg max-h-60 overflow-auto">
+                                {suggestions.map((place, idx) => (
+                                    <div 
+                                        key={idx} 
+                                        className="p-3 hover:bg-muted cursor-pointer text-sm border-b last:border-0 truncate" 
+                                        onMouseDown={(e) => {
+                                            e.preventDefault(); // Prevents input from losing focus immediately
+                                            handleSelectPlace(place);
+                                        }}
+                                    >
+                                        {place.display_name}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                     <div className="grid grid-cols-2 gap-4 pt-2">
-                        <div className="space-y-1">
-                            <Label htmlFor="latitude" className="text-xs">Latitude</Label>
-                            <Input id="latitude" value={latitude} onChange={e => setLatitude(e.target.value)} placeholder="e.g., 17.3850" disabled readOnly className="bg-muted/70 cursor-not-allowed"/>
-                        </div>
-                         <div className="space-y-1">
-                            <Label htmlFor="longitude" className="text-xs">Longitude</Label>
-                            <Input id="longitude" value={longitude} onChange={e => setLongitude(e.target.value)} placeholder="e.g., 78.4867" disabled readOnly className="bg-muted/70 cursor-not-allowed"/>
-                        </div>
+                    <div className="flex justify-end pt-1">
+                       <button 
+                           type="button" 
+                           onClick={handleGpsLocation} 
+                           disabled={isLocating || isOperationInProgress} 
+                           className="text-xs text-primary font-medium flex items-center gap-1.5 hover:underline disabled:opacity-50"
+                       >
+                          {isLocating ? <Loader2 className="h-3.5 w-3.5 animate-spin"/> : <Navigation className="h-3.5 w-3.5"/>}
+                          Use Current Location
+                       </button>
                     </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
                         <Info className="h-3.5 w-3.5" />
