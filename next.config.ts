@@ -27,8 +27,6 @@ const nextConfig: NextConfig = {
   },
   serverActions: {
     bodySizeLimit: '2mb', // Default is 1mb, increased for potentially larger image data URIs
-    // Increase timeout for potentially long-running AI operations
-    timeout: 120, // 2 minutes
   },
 };
 
