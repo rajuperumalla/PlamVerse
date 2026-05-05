@@ -2,106 +2,199 @@
 "use client";
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogIn, Smartphone, Mail, UserPlus, Edit, ShieldCheck, Briefcase } from 'lucide-react';
-import OtpForm from './OtpForm';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { KeyRound } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
 const AuthOptions = () => {
-  const [showOtpForm, setShowOtpForm] = useState(false);
-  const [otpMode, setOtpMode] = useState<'login' | 'register' | 'editor' | 'admin'>('login');
+  const [view, setView] = useState<'register' | 'login' | 'otp'>('register');
+  const [isLoading, setIsLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  
+  // Form fields
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [email, setEmail] = useState('');
+  
+  // Login fields
+  const [identifier, setIdentifier] = useState('');
+  const [otp, setOtp] = useState('');
+  
   const { login } = useAppContext();
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleGoogleLogin = () => {
-    login("GoogleUser"); 
-    toast({ title: "Login Successful (Simulated)", description: "Welcome via Google!" });
-    router.push('/palm-input');
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firstName || !lastName || !mobile || !email) {
+      toast({ title: "Validation Error", description: "All fields are required.", variant: "destructive" });
+      return;
+    }
+    setIsLoading(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setOtpSent(true);
+    setView('otp');
+    setIsLoading(false);
+    toast({ title: "OTP Sent", description: "An OTP has been sent to your mobile/email (simulated: 123456)." });
   };
 
-  const handleShowOtpLogin = () => {
-    setOtpMode('login');
-    setShowOtpForm(true);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!identifier) {
+      toast({ title: "Validation Error", description: "Identifier is required.", variant: "destructive" });
+      return;
+    }
+    setIsLoading(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setOtpSent(true);
+    setView('otp');
+    setIsLoading(false);
+    toast({ title: "OTP Sent", description: "An OTP has been sent (simulated: 123456)." });
   };
 
-  const handleShowOtpRegister = () => {
-    setOtpMode('register');
-    setShowOtpForm(true);
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (otp === '123456') {
+      login(identifier || mobile);
+      toast({ title: "Success", description: "Welcome to PalmVerse!" });
+      const redirectPath = sessionStorage.getItem('palmverse_redirectAfterLogin') || '/palm-input';
+      sessionStorage.removeItem('palmverse_redirectAfterLogin');
+      router.push(redirectPath);
+    } else {
+      toast({ title: "Invalid OTP", description: "The OTP you entered is incorrect.", variant: "destructive" });
+    }
+    setIsLoading(false);
   };
 
-  const handleShowEditorLogin = () => {
-    setOtpMode('editor');
-    setShowOtpForm(true);
-  };
-
-  const handleShowAdminLogin = () => {
-    setOtpMode('admin');
-    setShowOtpForm(true);
-  };
-
-  if (showOtpForm) {
+  if (view === 'otp') {
     return (
-      <OtpForm
-        onBack={() => setShowOtpForm(false)}
-        mode={otpMode}
-      />
+      <Card className="w-full max-w-md shadow-xl animate-fade-in flex-shrink-0 bg-card/95 backdrop-blur-sm">
+        <CardHeader className="text-center">
+          <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-4">
+            <KeyRound className="h-10 w-10 text-primary" />
+          </div>
+          <CardTitle className="font-headline text-3xl">Verify OTP</CardTitle>
+          <CardDescription>Enter the 6-digit code sent to you.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleVerifyOtp} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="otp">OTP Code</Label>
+              <Input
+                id="otp"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="Enter 6-digit OTP"
+                required
+                maxLength={6}
+                className="text-center text-xl tracking-[0.5em]"
+              />
+            </div>
+            <Button type="submit" className="w-full py-6 text-lg" disabled={isLoading}>
+              {isLoading ? 'Verifying...' : 'Verify & Continue'}
+            </Button>
+            <Button variant="link" onClick={() => { setView('login'); setOtp(''); }} className="w-full">
+              Back to Login
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     );
   }
 
+  if (view === 'login') {
+    return (
+      <Card className="w-full max-w-md shadow-xl animate-fade-in flex-shrink-0 bg-card/95 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="font-headline text-3xl text-center">
+            Welcome Back
+          </CardTitle>
+          <CardDescription className="text-center">
+            Login using your mobile number or email ID via OTP.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="identifier">
+                Mobile Number or Email ID
+              </Label>
+              <Input
+                id="identifier"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="Enter Mobile or Email"
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full py-6 text-lg" disabled={isLoading}>
+              {isLoading ? 'Sending OTP...' : 'Send OTP'}
+            </Button>
+          </form>
+          
+          <div className="mt-6 text-center text-sm">
+            <span className="text-muted-foreground">New to PalmVerse? </span>
+            <button onClick={() => setView('register')} className="text-primary hover:underline font-medium">
+              Create an account
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // default register view
   return (
     <Card className="w-full max-w-md shadow-xl animate-fade-in flex-shrink-0 bg-card/95 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="font-headline text-2xl md:text-3xl">Login / Register for Palm Reading</CardTitle>
-        <CardDescription>to access your AI Palm Reading.</CardDescription>
+      <CardHeader className="text-center">
+        <CardTitle className="font-headline text-3xl md:text-4xl text-primary leading-tight">
+          Know Your Future
+        </CardTitle>
+        <CardDescription className="italic text-base mt-2">
+          "Discover your destiny in a few simple steps..."
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <Button onClick={handleShowOtpLogin} className="w-full text-base sm:text-lg py-3 sm:py-4">
-          <Smartphone className="mr-2 h-5 w-5" /> Login with Mobile
-        </Button>
-        <Button onClick={handleGoogleLogin} variant="outline" className="w-full text-base sm:text-lg py-3 sm:py-4">
-          <Mail className="mr-2 h-5 w-5" /> Continue with Google
-        </Button>
-         <div className="relative my-3">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
+      <CardContent>
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input id="firstName" value={firstName} onChange={e=>setFirstName(e.target.value)} placeholder="First Name" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input id="lastName" value={lastName} onChange={e=>setLastName(e.target.value)} placeholder="Last Name" required />
+            </div>
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">
-              Or
-            </span>
+          <div className="space-y-2">
+            <Label htmlFor="mobile">Mobile Number</Label>
+            <Input id="mobile" type="tel" value={mobile} onChange={e=>setMobile(e.target.value)} placeholder="10-digit Mobile Number" required />
           </div>
-        </div>
-        <Button onClick={handleShowOtpRegister} variant="secondary" className="w-full text-base sm:text-lg py-3 sm:py-4">
-          <UserPlus className="mr-2 h-5 w-5" /> Create New Account
-        </Button>
-
-        <div className="relative my-3 pt-2">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
+          <div className="space-y-2">
+            <Label htmlFor="email">Email ID</Label>
+            <Input id="email" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email Address" required />
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">
-              Special Access
-            </span>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <Button onClick={handleShowEditorLogin} variant="ghost" className="w-full text-sm py-3 border border-primary/50 hover:bg-primary/10 text-primary">
-                <Edit className="mr-2 h-5 w-5" /> Editor Login
-            </Button>
-             <Button onClick={handleShowAdminLogin} variant="ghost" className="w-full text-sm py-3 border border-accent/70 hover:bg-accent/10 text-accent">
-                <ShieldCheck className="mr-2 h-5 w-5" /> Admin Login
-            </Button>
+          <Button type="submit" className="w-full py-6 text-lg mt-2 font-semibold" disabled={isLoading}>
+            {isLoading ? 'Processing...' : 'Sign Up'}
+          </Button>
+        </form>
+        <div className="mt-6 text-center text-sm">
+          <span className="text-muted-foreground">Already registered? </span>
+          <button onClick={() => setView('login')} className="text-primary hover:underline font-medium text-base">
+            Login here
+          </button>
         </div>
       </CardContent>
-      <CardFooter className="mt-2">
-        <p className="text-xs text-muted-foreground text-center w-full">
-            Your journey to self-discovery starts here.
-        </p>
-      </CardFooter>
     </Card>
   );
 };

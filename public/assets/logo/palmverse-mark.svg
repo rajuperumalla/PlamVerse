@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <defs>
+    <linearGradient id="pvm-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc"></stop>
+      <stop offset="100%" stop-color="#22d3ee"></stop>
+    </linearGradient>
+    <radialGradient id="pvm-bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1a0f3a"></stop>
+      <stop offset="100%" stop-color="#050814"></stop>
+    </radialGradient>
+  </defs>
+  <circle cx="40" cy="40" r="38" fill="url(#pvm-bg)" stroke="url(#pvm-grad)" stroke-width="1.5" opacity="0.9"></circle>
+  <g transform="translate(16 14)" stroke="url(#pvm-grad)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M8 38 Q6 24 10 16 Q14 10 20 12 L20 32"></path>
+    <path d="M20 32 Q20 12 24 6 Q28 2 32 4 L32 30"></path>
+    <path d="M32 30 Q32 8 36 4 Q40 0 44 4 L42 30"></path>
+    <path d="M42 30 Q42 12 46 8 Q50 6 52 12 L50 34"></path>
+    <path d="M8 38 Q16 50 32 50 Q48 50 50 34"></path>
+    <path d="M30 22 L30.8 27 L35 28 L30.8 29 L30 34 L29.2 29 L25 28 L29.2 27 Z" fill="url(#pvm-grad)" stroke="none"></path>
+  </g>
+</svg>

@@ -127,7 +127,7 @@ function PalmInputPageComponent() {
                 } else {
                     toast({
                         title: "Payment Successful",
-                        description: "Please complete your details on the form and submit when ready.",
+                        description: "Please upload your palm images to continue.",
                         duration: 5000
                     });
                 }

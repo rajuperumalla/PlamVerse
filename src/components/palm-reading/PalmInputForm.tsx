@@ -85,15 +85,22 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
-    if (!frontPalmPreview || !sidePalmPreview || !dateOfBirth || !placeOfBirth || !dominantHand || !category || (!timeOfBirth && !isTimeOfBirthUnknown)) {
-      toast({ title: "Missing Information", description: "Please complete all required fields and upload both images.", variant: "destructive" });
-      return;
+    if (!hasPaid) {
+      if (!dateOfBirth || !placeOfBirth || !dominantHand || !category || (!timeOfBirth && !isTimeOfBirthUnknown)) {
+        toast({ title: "Missing Information", description: "Please complete all personal details.", variant: "destructive" });
+        return;
+      }
+    } else {
+      if (!frontPalmPreview || !sidePalmPreview) {
+        toast({ title: "Missing Images", description: "Please upload both images.", variant: "destructive" });
+        return;
+      }
     }
 
     const reportInputDetails: ReportPalmInputDetails = {
-      frontPalmDataUri: frontPalmPreview,
-      sidePalmDataUri: sidePalmPreview,
-      dateOfBirth: format(dateOfBirth, 'yyyy-MM-dd'),
+      frontPalmDataUri: frontPalmPreview || "",
+      sidePalmDataUri: sidePalmPreview || "",
+      dateOfBirth: dateOfBirth ? format(dateOfBirth, 'yyyy-MM-dd') : "",
       placeOfBirth,
       latitude: latitude || "Not specified",
       longitude: longitude || "Not specified",
@@ -178,6 +185,8 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
             </CardHeader>
             <CardContent>
             <form onSubmit={handleSubmit} className="space-y-8">
+                {!hasPaid ? (
+                  <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="dominantHand" className="text-base flex items-center gap-2">
@@ -280,7 +289,9 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                         Your Date, Time, and Place of Birth are crucial for accurate astrological correlation.
                     </p>
                 </div>
-                
+                  </>
+                ) : (
+                  <>
                  <Card className="bg-primary/5 border-primary/20 p-4">
                     <CardHeader className="p-2 text-left">
                         <CardTitle className="text-lg flex items-center gap-2"><Camera className="h-5 w-5 text-primary"/>Photo Guide</CardTitle>
@@ -323,6 +334,8 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                         </div>
                     </div>
                 </div>
+                  </>
+                )}
 
                 <Button
                     type="submit"
@@ -334,7 +347,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                     ) : hasPaid ? (
                     <><Sparkles className="mr-2 h-5 w-5" /> Generate Palm-Astro Reading</>
                     ) : (
-                    <><CreditCard className="mr-2 h-5 w-5" /> Proceed to Payment</>
+                    <><CreditCard className="mr-2 h-5 w-5" /> Submit</>
                     )}
                 </Button>
 

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <defs>
+    <linearGradient id="pv-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c084fc"></stop>
+      <stop offset="50%" stop-color="#22d3ee"></stop>
+      <stop offset="100%" stop-color="#c084fc"></stop>
+    </linearGradient>
+    <filter id="pv-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2"></feGaussianBlur>
+      <feMerge><feMergeNode></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+    </filter>
+  </defs>
+  
+  <g transform="translate(8 12)" stroke="url(#pv-grad)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#pv-glow)">
+    <path d="M16 44 Q14 30 18 22 Q22 14 28 16 L28 38"></path>
+    <path d="M28 38 Q28 18 32 12 Q36 6 40 8 L40 36"></path>
+    <path d="M40 36 Q40 14 44 8 Q48 2 52 6 L50 36"></path>
+    <path d="M50 36 Q50 16 54 12 Q58 8 60 14 L58 40"></path>
+    <path d="M16 44 Q24 56 40 56 Q56 56 58 40"></path>
+    <circle cx="38" cy="36" r="2.4" fill="url(#pv-grad)" stroke="none"></circle>
+    <path d="M38 28 L38.8 33 L43 34 L38.8 35 L38 40 L37.2 35 L33 34 L37.2 33 Z" fill="url(#pv-grad)" stroke="none" opacity="0.9"></path>
+  </g>
+  
+  <text x="86" y="52" font-family="Playfair Display, Georgia, serif" font-weight="700" font-size="34" fill="url(#pv-grad)" letter-spacing="0.5">PalmVerse</text>
+</svg>
