@@ -7,6 +7,7 @@ import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import MobileNav from '@/components/shared/MobileNav';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'PalmVerse - AI Palm Reading',
@@ -27,12 +28,16 @@ export default function RootLayout({
       <body className="font-body antialiased flex flex-col min-h-screen pb-20 md:pb-0">
         <FirebaseClientProvider>
           <AppProvider>
-            <Header />
+            <Suspense fallback={null}>
+              <Header />
+            </Suspense>
             <main className="flex-grow container mx-auto px-4 py-8">
               {children}
             </main>
             <Footer />
-            <MobileNav />
+            <Suspense fallback={null}>
+              <MobileNav />
+            </Suspense>
             <Toaster />
           </AppProvider>
         </FirebaseClientProvider>
