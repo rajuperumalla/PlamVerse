@@ -1,11 +1,15 @@
 
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { KeyRound } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { KeyRound, Search, ChevronDown } from 'lucide-react';
+import { countries } from '@/lib/countries';
 import { useAppContext } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +18,50 @@ const AuthOptions = () => {
   const [view, setView] = useState<'register' | 'login' | 'otp'>('register');
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  
+  const [countryCode, setCountryCode] = useState('+91');
+  const [searchCountry, setSearchCountry] = useState('');
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [authCategory, setAuthCategory] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const storedCat = sessionStorage.getItem('palmverse_authCategory');
+    if (storedCat) setAuthCategory(storedCat);
+
+    const handleUpdateCategory = (e: any) => {
+      setAuthCategory(e.detail);
+    };
+    window.addEventListener('update-auth-category', handleUpdateCategory);
+    return () => window.removeEventListener('update-auth-category', handleUpdateCategory);
+  }, []);
+  
+  useEffect(() => {
+    const fetchCountryCode = async () => {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.country_calling_code) {
+            setCountryCode(data.country_calling_code);
+            return;
+          }
+        }
+        
+        // Fallback
+        const fallback = await fetch('https://ipinfo.io/json');
+        if (fallback.ok) {
+          const data = await fallback.json();
+          if (data.country) {
+            const matchedCountry = countries.find(c => c.iso === data.country);
+            if (matchedCountry) setCountryCode(matchedCountry.code);
+          }
+        }
+      } catch (error) {
+        console.log("Auto-detect country code failed silently", error);
+      }
+    };
+    fetchCountryCode();
+  }, []);
   
   // Form fields
   const [firstName, setFirstName] = useState('');
@@ -31,8 +79,8 @@ const AuthOptions = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName || !lastName || !mobile || !email) {
-      toast({ title: "Validation Error", description: "All fields are required.", variant: "destructive" });
+    if (!firstName || !lastName || !mobile) {
+      toast({ title: "Validation Error", description: "First name, last name, and mobile number are required.", variant: "destructive" });
       return;
     }
     setIsLoading(true);
@@ -69,6 +117,7 @@ const AuthOptions = () => {
       toast({ title: "Success", description: "Welcome to PalmVerse!" });
       const redirectPath = sessionStorage.getItem('palmverse_redirectAfterLogin') || '/palm-input';
       sessionStorage.removeItem('palmverse_redirectAfterLogin');
+      sessionStorage.removeItem('palmverse_authCategory');
       router.push(redirectPath);
     } else {
       toast({ title: "Invalid OTP", description: "The OTP you entered is incorrect.", variant: "destructive" });
@@ -155,10 +204,10 @@ const AuthOptions = () => {
 
   // default register view
   return (
-    <Card className="w-full max-w-md shadow-xl animate-fade-in flex-shrink-0 bg-card/95 backdrop-blur-sm">
+    <Card className="w-full max-w-md shadow-xl animate-fade-in flex-shrink-0 bg-card/95 backdrop-blur-sm" id="auth-form-card">
       <CardHeader className="text-center">
         <CardTitle className="font-headline text-3xl md:text-4xl text-primary leading-tight">
-          Know Your Future
+          {authCategory ? `Know Your ${authCategory}` : "Know Your Future"}
         </CardTitle>
         <CardDescription className="italic text-base mt-2">
           "Discover your destiny in a few simple steps..."
@@ -178,11 +227,55 @@ const AuthOptions = () => {
           </div>
           <div className="space-y-2">
             <Label htmlFor="mobile">Mobile Number</Label>
-            <Input id="mobile" type="tel" value={mobile} onChange={e=>setMobile(e.target.value)} placeholder="10-digit Mobile Number" required />
+            <div className="flex">
+              <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" role="combobox" aria-expanded={countryOpen} className="w-[100px] justify-between rounded-r-none border-r-0 bg-muted/30 px-3 text-sm font-normal hover:bg-muted/50">
+                    {countryCode}
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[280px] p-0" align="start">
+                  <div className="flex items-center border-b px-3">
+                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                    <Input
+                      placeholder="Search country..."
+                      value={searchCountry}
+                      onChange={(e) => setSearchCountry(e.target.value)}
+                      className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none border-none focus-visible:ring-0 shadow-none"
+                    />
+                  </div>
+                  <ScrollArea className="h-64">
+                    <div className="p-1">
+                      {countries
+                        .filter(c => c.name.toLowerCase().includes(searchCountry.toLowerCase()) || c.code.includes(searchCountry))
+                        .map(c => (
+                        <div
+                          key={c.iso}
+                          className="relative flex w-full cursor-pointer select-none items-center rounded-sm py-2 px-3 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                          onClick={() => {
+                            setCountryCode(c.code);
+                            setCountryOpen(false);
+                            setSearchCountry('');
+                          }}
+                        >
+                          <span className="flex-1 truncate">{c.name}</span>
+                          <span className="text-muted-foreground ml-2">{c.code}</span>
+                        </div>
+                      ))}
+                      {countries.filter(c => c.name.toLowerCase().includes(searchCountry.toLowerCase()) || c.code.includes(searchCountry)).length === 0 && (
+                        <div className="py-6 text-center text-sm text-muted-foreground">No country found.</div>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
+              <Input id="mobile" type="tel" value={mobile} onChange={e=>setMobile(e.target.value)} placeholder="10-digit Mobile Number" className="rounded-l-none focus-visible:ring-1" required />
+            </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Email ID</Label>
-            <Input id="email" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email Address" required />
+            <Label htmlFor="email">Email ID <span className="text-muted-foreground font-normal text-xs">(Optional)</span></Label>
+            <Input id="email" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email Address" />
           </div>
           <Button type="submit" className="w-full py-6 text-lg mt-2 font-semibold" disabled={isLoading}>
             {isLoading ? 'Processing...' : 'Sign Up'}

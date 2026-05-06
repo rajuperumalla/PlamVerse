@@ -16,7 +16,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '../ui/checkbox';
-import { RoundClockPicker } from './RoundClockPicker';
 
 const readingCategories = [
   { value: "General Personality", label: "General Personality", description: "Understand your core traits, strengths, and challenges." },
@@ -261,7 +260,7 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                 {!hasPaid ? (
                   <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
+                    <div className={cn("space-y-2", categoryFromQuery ? "md:col-span-2 max-w-md mx-auto w-full md:mx-0" : "")}>
                         <Label htmlFor="dominantHand" className="text-base flex items-center gap-2">
                             <UserCircle className="h-5 w-5 text-primary"/>Dominant Hand *
                         </Label>
@@ -276,7 +275,8 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                         </Select>
                         <p className="text-xs text-muted-foreground pt-1">This is the hand that you use most for writing.</p>
                     </div>
-                    <div className="space-y-2">
+                    
+                    <div className={cn("space-y-2", categoryFromQuery ? "hidden" : "")}>
                         <Label htmlFor="category" className="text-base flex items-center gap-2"><ListChecks className="h-5 w-5 text-primary"/>Reading Category *</Label>
                         <Select onValueChange={setCategory} value={category} disabled={isOperationInProgress} required>
                         <SelectTrigger id="category">
@@ -321,22 +321,19 @@ const PalmInputForm = ({ categoryFromQuery, categoryDescription, onSubmit, hasPa
                                   initialFocus
                                   captionLayout="dropdown-buttons"
                                   fromYear={1920}
-                                  toYear={new Date().getFullYear()}
-                                  disabled={isOperationInProgress}
+                                  toYear={new Date().getFullYear() - 1}
+                                  disabled={(date) => {
+                                      const maxDate = new Date();
+                                      maxDate.setFullYear(maxDate.getFullYear() - 1);
+                                      return date > maxDate || isOperationInProgress;
+                                  }}
                               />
                           </PopoverContent>
                       </Popover>
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="tob" className="text-base flex items-center gap-2"><Clock className="h-5 w-5 text-primary"/>Time of Birth *</Label>
-                        <div className="block md:hidden">
-                            <RoundClockPicker 
-                                value={timeOfBirth} 
-                                onChange={setTimeOfBirth} 
-                                disabled={isOperationInProgress || isTimeOfBirthUnknown} 
-                            />
-                        </div>
-                        <div className="hidden md:block">
+                        <div>
                             <Input 
                                 id="tob" 
                                 ref={timeOfBirthRef} 

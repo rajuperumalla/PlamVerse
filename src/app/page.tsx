@@ -67,7 +67,7 @@ export default function HomePage() {
               </CardContent>
               <CardFooter className="justify-center">
                  <Button asChild className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white border-0 shadow-[0_0_15px_rgba(6,182,212,0.5)]">
-                    <Link href={`${service.link}?category=Comprehensive%20Analysis`}>{service.cta}</Link>
+                    <Link href={service.link}>{service.cta}</Link>
                 </Button>
               </CardFooter>
             </Card>
@@ -78,11 +78,11 @@ export default function HomePage() {
   );
 
   return (
-    <div className="relative flex flex-col items-center justify-center py-8 md:py-12 space-y-12 min-h-[calc(100vh_-_var(--header-height)_-_var(--footer-height)_-_1rem)] overflow-hidden">
+    <div className="relative flex flex-col items-center justify-center h-[calc(100vh_-_var(--header-height)_-_1rem)] overflow-hidden">
       <ParticlesBackground />
       <SunAndPlanets />
       
-      <div className="relative z-10 w-full max-w-5xl px-4 mt-8">
+      <div className="relative z-10 w-full max-w-6xl px-4">
         {isAuthenticated ? (
           renderAuthenticatedView()
         ) : (
@@ -90,12 +90,12 @@ export default function HomePage() {
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
-            className="flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-10 lg:gap-16 w-full"
+            className="flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-6 lg:gap-8 w-full"
           >
             {/* Left side: Hero Text */}
-            <motion.div variants={fadeInUp} className="relative z-10 w-full max-w-xl text-center lg:text-left">
+            <motion.div variants={fadeInUp} className="relative z-10 w-full max-w-2xl text-center lg:text-left">
               <motion.h1 
-                className="font-headline text-5xl md:text-6xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-cyan-400 to-purple-400 neon-text"
+                className="font-headline text-4xl sm:text-5xl md:text-6xl font-bold mb-4 lg:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-cyan-400 to-purple-400 neon-text"
                 animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
                 transition={{ duration: 5, ease: "linear", repeat: Infinity }}
                 style={{ backgroundSize: "200% 200%" }}
@@ -110,7 +110,7 @@ export default function HomePage() {
                 size="lg"
                 className="bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white text-lg py-6 px-8 rounded-full border border-cyan-400/50 shadow-[0_0_20px_rgba(6,182,212,0.6)] hover:shadow-[0_0_30px_rgba(168,85,247,0.8)] transition-all duration-300"
               >
-                <Link href="/palm-input?category=Comprehensive%20Analysis">
+                <Link href="/palm-input">
                   <Sparkles className="mr-3 h-6 w-6 animate-pulse" /> Get Your Astro-Palm Reading
                 </Link>
               </Button>
