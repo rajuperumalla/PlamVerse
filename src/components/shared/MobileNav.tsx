@@ -4,7 +4,7 @@ import { Home, Hand, ShoppingBag, ShoppingCart, MoreHorizontal, LogOut, BookOpen
 import { useAppContext } from '@/context/AppContext';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import ClientOnly from '@/components/shared/ClientOnly';
 
 const readingTypes = [
@@ -41,12 +41,17 @@ const MobileNav = () => {
     { name: 'More', href: '#', icon: MoreHorizontal },
   ];
 
-  // Sync activeTabId with the current route
-  useEffect(() => {
+  const resetActiveTab = useCallback(() => {
     if (pathname.startsWith('/palm-input')) setActiveTabId('Palmistry');
     else if (pathname.startsWith('/products')) setActiveTabId('Shop');
     else if (pathname === '/') setActiveTabId('Home');
+    else setActiveTabId('');
   }, [pathname]);
+
+  // Sync activeTabId with the current route
+  useEffect(() => {
+    resetActiveTab();
+  }, [resetActiveTab]);
 
   // Close menu if clicked outside
   useEffect(() => {
@@ -55,13 +60,14 @@ const MobileNav = () => {
         setIsPalmistryOpen(false);
         setIsShopOpen(false);
         setIsMoreOpen(false);
+        resetActiveTab();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [resetActiveTab]);
 
   // Handle hide/show on scroll
   useEffect(() => {
@@ -74,6 +80,7 @@ const MobileNav = () => {
         setIsPalmistryOpen(false);
         setIsShopOpen(false);
         setIsMoreOpen(false);
+        resetActiveTab();
       } else if (currentScrollY < lastScrollY && (lastScrollY - currentScrollY > 10)) {
         setIsVisible(true);
       }
@@ -83,7 +90,7 @@ const MobileNav = () => {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  }, [lastScrollY, resetActiveTab]);
 
   const moreItems = [
     { name: "Cart", href: "/cart", icon: ShoppingCart, color: "text-cyan-400" },
@@ -146,6 +153,7 @@ const MobileNav = () => {
                     href={isAuthenticated ? `/palm-input?category=${encodeURIComponent(type.query)}` : '#'}
                     onClick={(e) => {
                       setIsPalmistryOpen(false);
+                      resetActiveTab();
                       if (!isAuthenticated) {
                         e.preventDefault();
                         sessionStorage.setItem('palmverse_redirectAfterLogin', `/palm-input?category=${encodeURIComponent(type.query)}`);
@@ -219,7 +227,7 @@ const MobileNav = () => {
                 >
                   <Link 
                     href={item.link}
-                    onClick={() => setIsShopOpen(false)}
+                    onClick={() => { setIsShopOpen(false); resetActiveTab(); }}
                     className="flex items-center gap-3 neumorphic-glow bg-[#0a1128]/90 p-2 rounded-2xl w-full transition-all duration-300 hover:scale-105 active:scale-95 border-purple-500/30 overflow-hidden whitespace-nowrap"
                   >
                     <div className="w-10 h-10 shrink-0 rounded-xl neumorphic-pressed flex items-center justify-center text-purple-400">
@@ -270,6 +278,7 @@ const MobileNav = () => {
                     {...props}
                     onClick={(e) => {
                       setIsMoreOpen(false);
+                      resetActiveTab();
                       if (item.action && !item.href) {
                         e.preventDefault();
                         item.action();
@@ -300,19 +309,28 @@ const MobileNav = () => {
             const isOpen = isPalmistryBtn ? isPalmistryOpen : isShopBtn ? isShopOpen : isMoreOpen;
             
             const handleBtnClick = () => {
-              setActiveTabId(item.name);
-              if (isPalmistryBtn) {
-                setIsPalmistryOpen(!isPalmistryOpen);
-                setIsShopOpen(false);
-                setIsMoreOpen(false);
-              } else if (isShopBtn) {
-                setIsShopOpen(!isShopOpen);
-                setIsPalmistryOpen(false);
-                setIsMoreOpen(false);
-              } else if (isMoreBtn) {
-                setIsMoreOpen(!isMoreOpen);
+              if (isOpen) {
+                // Close menu
                 setIsPalmistryOpen(false);
                 setIsShopOpen(false);
+                setIsMoreOpen(false);
+                resetActiveTab();
+              } else {
+                // Open menu
+                setActiveTabId(item.name);
+                if (isPalmistryBtn) {
+                  setIsPalmistryOpen(true);
+                  setIsShopOpen(false);
+                  setIsMoreOpen(false);
+                } else if (isShopBtn) {
+                  setIsShopOpen(true);
+                  setIsPalmistryOpen(false);
+                  setIsMoreOpen(false);
+                } else if (isMoreBtn) {
+                  setIsMoreOpen(true);
+                  setIsPalmistryOpen(false);
+                  setIsShopOpen(false);
+                }
               }
             };
 
