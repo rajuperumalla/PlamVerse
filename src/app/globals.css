@@ -6,86 +6,85 @@
 
 @layer base {
   :root {
-    /* Dark Cosmic Theme as default */
-    --background: 260 50% 5%; /* Very deep purple/black */
-    --foreground: 260 20% 90%; /* Light purple-gray text */
+    /* Mystic Gold & Deep Indigo Theme */
+    --background: 240 40% 4%; /* Deep midnight indigo */
+    --foreground: 40 30% 88%; /* Warm ivory text */
 
-    --card: 260 40% 8%; /* Dark purple/black card */
-    --card-foreground: 260 20% 90%;
+    --card: 240 35% 7%; /* Dark indigo card */
+    --card-foreground: 40 30% 88%;
 
-    --popover: 260 40% 8%;
-    --popover-foreground: 260 20% 90%;
+    --popover: 240 35% 7%;
+    --popover-foreground: 40 30% 88%;
 
-    --primary: 280 80% 60%; /* Neon purple */
-    --primary-foreground: 0 0% 100%;
+    --primary: 42 85% 55%; /* Rich gold */
+    --primary-foreground: 240 40% 6%;
 
-    --secondary: 190 90% 50%; /* Neon cyan */
+    --secondary: 15 70% 55%; /* Warm copper/rose */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 260 30% 15%;
-    --muted-foreground: 260 20% 70%;
+    --muted: 240 25% 14%;
+    --muted-foreground: 40 15% 65%;
 
-    --accent: 280 80% 60%;
+    --accent: 30 80% 50%; /* Amber */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 260 30% 20%;
-    --input: 260 30% 15%;
-    --ring: 280 80% 60%;
+    --border: 240 25% 18%;
+    --input: 240 25% 14%;
+    --ring: 42 85% 55%;
 
-    --chart-1: 280 80% 60%;
-    --chart-2: 190 90% 50%;
-    --chart-3: 320 80% 60%; /* Neon pink */
-    --chart-4: 240 80% 60%; /* Bright blue */
-    --chart-5: 260 50% 70%;
-    
+    --chart-1: 42 85% 55%;
+    --chart-2: 15 70% 55%;
+    --chart-3: 350 65% 55%; /* Soft rose */
+    --chart-4: 25 90% 55%; /* Warm amber */
+    --chart-5: 50 60% 60%;
+
     --radius: 0.75rem;
 
-    --sidebar-background: 260 50% 5%;
-    --sidebar-foreground: 260 20% 90%;
-    --sidebar-primary: 280 80% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 190 90% 50%;
+    --sidebar-background: 240 40% 4%;
+    --sidebar-foreground: 40 30% 88%;
+    --sidebar-primary: 42 85% 55%;
+    --sidebar-primary-foreground: 240 40% 6%;
+    --sidebar-accent: 30 80% 50%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 260 30% 20%;
-    --sidebar-ring: 280 80% 60%;
+    --sidebar-border: 240 25% 18%;
+    --sidebar-ring: 42 85% 55%;
   }
 
   .dark {
-    /* Dark Mode is same as default since it's a dark cosmic theme */
-    --background: 260 50% 3%;
-    --foreground: 260 20% 95%;
+    --background: 240 45% 3%;
+    --foreground: 40 30% 92%;
 
-    --card: 260 40% 6%;
-    --card-foreground: 260 20% 95%;
+    --card: 240 35% 5%;
+    --card-foreground: 40 30% 92%;
 
-    --popover: 260 40% 6%;
-    --popover-foreground: 260 20% 95%;
+    --popover: 240 35% 5%;
+    --popover-foreground: 40 30% 92%;
 
-    --primary: 280 90% 65%; 
-    --primary-foreground: 0 0% 100%;
+    --primary: 42 90% 58%;
+    --primary-foreground: 240 40% 6%;
 
-    --secondary: 190 95% 55%; 
+    --secondary: 15 75% 58%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 260 30% 12%;
-    --muted-foreground: 260 20% 65%;
+    --muted: 240 25% 11%;
+    --muted-foreground: 40 15% 60%;
 
-    --accent: 280 90% 65%;
+    --accent: 30 85% 52%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 260 40% 15%;
-    --input: 260 40% 10%;
-    --ring: 280 90% 65%;
+    --border: 240 30% 14%;
+    --input: 240 30% 9%;
+    --ring: 42 90% 58%;
 
-    --sidebar-background: 260 50% 3%;
-    --sidebar-foreground: 260 20% 95%;
-    --sidebar-border: 260 40% 15%;
+    --sidebar-background: 240 45% 3%;
+    --sidebar-foreground: 40 30% 92%;
+    --sidebar-border: 240 30% 14%;
   }
 }
 
@@ -99,13 +98,13 @@
     display: flex;
     flex-direction: column;
     /* Stunning Nebula Background matching reference */
-    background-color: #050814;
-    background-image: 
-      radial-gradient(circle at 20% 40%, rgba(179, 18, 120, 0.4) 0%, transparent 50%), /* Deep Magenta */
-      radial-gradient(circle at 80% 20%, rgba(255, 138, 0, 0.25) 0%, transparent 40%), /* Glowing Orange */
-      radial-gradient(circle at 60% 70%, rgba(0, 168, 255, 0.3) 0%, transparent 60%), /* Bright Cyan */
-      radial-gradient(circle at 40% 60%, rgba(70, 20, 150, 0.3) 0%, transparent 50%), /* Deep Purple */
-      radial-gradient(circle at 50% 50%, rgba(5, 8, 20, 0.8) 0%, #050814 100%);
+    background-color: #06060F;
+    background-image:
+      radial-gradient(circle at 20% 40%, rgba(180, 120, 40, 0.25) 0%, transparent 50%), /* Warm Gold */
+      radial-gradient(circle at 80% 20%, rgba(200, 100, 60, 0.2) 0%, transparent 40%), /* Copper Glow */
+      radial-gradient(circle at 60% 70%, rgba(160, 90, 30, 0.2) 0%, transparent 60%), /* Deep Amber */
+      radial-gradient(circle at 40% 60%, rgba(40, 20, 80, 0.25) 0%, transparent 50%), /* Subtle Indigo */
+      radial-gradient(circle at 50% 50%, rgba(6, 6, 15, 0.85) 0%, #06060F 100%);
     background-attachment: fixed;
   }
   main {
@@ -115,38 +114,38 @@
 
 @layer utilities {
   .glassmorphism {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_0_15px_rgba(150,50,250,0.2)];
+    @apply bg-white/5 backdrop-blur-xl border border-amber-400/10 shadow-[0_0_15px_rgba(180,130,50,0.15)];
   }
   .neon-text {
-    text-shadow: 0 0 10px rgba(0, 168, 255, 0.8), 0 0 20px rgba(0, 168, 255, 0.5);
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.6), 0 0 25px rgba(212, 175, 55, 0.3);
   }
   .neon-border {
-    box-shadow: 0 0 10px rgba(0, 168, 255, 0.5), inset 0 0 10px rgba(0, 168, 255, 0.5);
-    border: 1px solid rgba(0, 168, 255, 0.8);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4), inset 0 0 10px rgba(212, 175, 55, 0.3);
+    border: 1px solid rgba(212, 175, 55, 0.6);
   }
-  
-  /* Neumorphic Dark Cosmic Nebula Theme Utilities */
+
+  /* Neumorphic Mystic Gold Theme Utilities */
   .neumorphic {
-    background: linear-gradient(145deg, #0a1128, #080f22);
-    box-shadow: 10px 10px 20px #040711, -10px -10px 20px #0e1939;
-    border: 1px solid rgba(255,255,255,0.03);
+    background: linear-gradient(145deg, #0d0d1a, #0a0a16);
+    box-shadow: 10px 10px 20px #040408, -10px -10px 20px #121228;
+    border: 1px solid rgba(212, 175, 55, 0.06);
     border-radius: 1.5rem;
   }
-  
+
   .neumorphic-pressed {
-    background: #091025;
-    box-shadow: inset 8px 8px 16px #040711, inset -8px -8px 16px #0e1939;
+    background: #0b0b18;
+    box-shadow: inset 8px 8px 16px #040408, inset -8px -8px 16px #121228;
     border: 1px solid rgba(0,0,0,0.5);
     border-radius: 1.5rem;
   }
 
   .neumorphic-glow {
-    background: linear-gradient(145deg, #0a1128, #080f22);
-    box-shadow: 
-      8px 8px 16px #040711, 
-      -8px -8px 16px #0e1939,
-      0 0 25px rgba(0, 168, 255, 0.3); /* Cyan glow */
-    border: 1px solid rgba(0, 168, 255, 0.2);
+    background: linear-gradient(145deg, #0d0d1a, #0a0a16);
+    box-shadow:
+      8px 8px 16px #040408,
+      -8px -8px 16px #121228,
+      0 0 25px rgba(212, 175, 55, 0.2);
+    border: 1px solid rgba(212, 175, 55, 0.15);
     border-radius: 1.5rem;
   }
 }

@@ -1,7 +1,7 @@
 
 const Footer = () => {
   return (
-    <footer className="bg-secondary/30 text-center py-6 mt-auto border-t border-primary/20">
+    <footer className="bg-amber-950/20 text-center py-6 mt-auto border-t border-amber-400/10">
       <p className="text-sm text-muted-foreground">
         &copy; {new Date().getFullYear()} PalmVerse. All rights reserved.
       </p>

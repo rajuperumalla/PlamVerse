@@ -162,7 +162,7 @@ function PalmInputPageComponent() {
   }
 
   return (
-    <div className="relative space-y-8 md:space-y-10">
+    <div className="container mx-auto px-4 py-8 relative space-y-8 md:space-y-10">
       <div className="relative z-10">
         {isValidCategorySelected ? (
           <>

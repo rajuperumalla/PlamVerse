@@ -93,11 +93,11 @@ const MobileNav = () => {
   }, [lastScrollY, resetActiveTab]);
 
   const moreItems = [
-    { name: "Cart", href: "/cart", icon: ShoppingCart, color: "text-cyan-400" },
+    { name: "Cart", href: "/cart", icon: ShoppingCart, color: "text-amber-400" },
     { name: "Remedies", href: "/products#remedies", icon: Flame, color: "text-orange-400" },
   ];
   if (isAuthenticated && !isEditor && !isAdmin) {
-    moreItems.push({ name: "My Reading", href: "/report", icon: BookOpen, color: "text-purple-400" });
+    moreItems.push({ name: "My Reading", href: "/report", icon: BookOpen, color: "text-amber-300" });
   }
   if (isAuthenticated) {
     moreItems.push({ name: "Logout", href: "", action: logout, icon: LogOut, color: "text-red-400" });
@@ -172,9 +172,9 @@ const MobileNav = () => {
                         }
                       }
                     }}
-                    className="flex items-center gap-3 neumorphic-glow bg-[#0a1128]/90 p-2 rounded-2xl w-full transition-all duration-300 hover:scale-105 active:scale-95 border-cyan-500/30 overflow-hidden whitespace-nowrap"
+                    className="flex items-center gap-3 neumorphic-glow bg-[#0a0a16]/90 p-2 rounded-2xl w-full transition-all duration-300 hover:scale-105 active:scale-95 border-amber-500/30 overflow-hidden whitespace-nowrap"
                   >
-                    <div className="w-10 h-10 shrink-0 rounded-xl neumorphic-pressed flex items-center justify-center text-cyan-400">
+                    <div className="w-10 h-10 shrink-0 rounded-xl neumorphic-pressed flex items-center justify-center text-amber-400">
                       <type.icon size={18} />
                     </div>
                     <span className="text-xs font-semibold text-white drop-shadow-md truncate">{type.name}</span>
@@ -228,9 +228,9 @@ const MobileNav = () => {
                   <Link 
                     href={item.link}
                     onClick={() => { setIsShopOpen(false); resetActiveTab(); }}
-                    className="flex items-center gap-3 neumorphic-glow bg-[#0a1128]/90 p-2 rounded-2xl w-full transition-all duration-300 hover:scale-105 active:scale-95 border-purple-500/30 overflow-hidden whitespace-nowrap"
+                    className="flex items-center gap-3 neumorphic-glow bg-[#0a0a16]/90 p-2 rounded-2xl w-full transition-all duration-300 hover:scale-105 active:scale-95 border-orange-500/30 overflow-hidden whitespace-nowrap"
                   >
-                    <div className="w-10 h-10 shrink-0 rounded-xl neumorphic-pressed flex items-center justify-center text-purple-400">
+                    <div className="w-10 h-10 shrink-0 rounded-xl neumorphic-pressed flex items-center justify-center text-orange-400">
                       <item.icon size={18} />
                     </div>
                     <span className="text-xs font-semibold text-white drop-shadow-md truncate">{item.name}</span>
@@ -284,7 +284,7 @@ const MobileNav = () => {
                         item.action();
                       }
                     }}
-                    className="flex items-center gap-3 neumorphic-glow bg-[#0a1128]/90 p-2 rounded-2xl w-full transition-all duration-300 hover:scale-105 active:scale-95 border-blue-500/30 overflow-hidden whitespace-nowrap"
+                    className="flex items-center gap-3 neumorphic-glow bg-[#0a0a16]/90 p-2 rounded-2xl w-full transition-all duration-300 hover:scale-105 active:scale-95 border-blue-500/30 overflow-hidden whitespace-nowrap"
                   >
                     <div className="w-10 h-10 shrink-0 rounded-xl neumorphic-pressed flex items-center justify-center">
                       <item.icon size={18} className={item.color} />
@@ -298,7 +298,7 @@ const MobileNav = () => {
           )}
         </AnimatePresence>
 
-        <div className="neumorphic rounded-[2rem] p-2 flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.5),_0_0_15px_rgba(200,100,255,0.2)] relative z-10 bg-[#050814]/80 backdrop-blur-md">
+        <div className="neumorphic rounded-[2rem] p-2 flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.5),_0_0_15px_rgba(212,175,55,0.15)] relative z-10 bg-[#06060F]/85 backdrop-blur-md">
           {navItems.map((item) => {
             const isTabActive = activeTabId === item.name;
             const isPalmistryBtn = item.name === 'Palmistry';
@@ -344,12 +344,12 @@ const MobileNav = () => {
                   {isTabActive && (
                     <motion.div
                       layoutId="active-pill"
-                      className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-3xl -z-10 shadow-[inset_0_0_10px_rgba(255,255,255,0.2)]"
+                      className="absolute inset-0 bg-gradient-to-r from-amber-600 to-orange-600 rounded-3xl -z-10 shadow-[inset_0_0_10px_rgba(255,255,255,0.2)]"
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
-                  <item.icon className={`w-5 h-5 mb-1 transition-all duration-300 z-10 ${isOpen ? 'text-cyan-400 scale-90' : isTabActive ? 'text-white' : 'text-gray-400'}`} />
-                  <span className={`text-[10px] font-medium transition-all duration-300 z-10 ${isOpen ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]' : isTabActive ? 'text-white drop-shadow-md' : 'text-gray-400'}`}>
+                  <item.icon className={`w-5 h-5 mb-1 transition-all duration-300 z-10 ${isOpen ? 'text-amber-400 scale-90' : isTabActive ? 'text-white' : 'text-gray-400'}`} />
+                  <span className={`text-[10px] font-medium transition-all duration-300 z-10 ${isOpen ? 'text-amber-400 drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]' : isTabActive ? 'text-white drop-shadow-md' : 'text-gray-400'}`}>
                     {item.name}
                   </span>
                 </div>
@@ -364,7 +364,7 @@ const MobileNav = () => {
                 {isTabActive && (
                   <motion.div
                     layoutId="active-pill"
-                    className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-3xl -z-10 shadow-[inset_0_0_10px_rgba(255,255,255,0.2)]"
+                    className="absolute inset-0 bg-gradient-to-r from-amber-600 to-orange-600 rounded-3xl -z-10 shadow-[inset_0_0_10px_rgba(255,255,255,0.2)]"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}

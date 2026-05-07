@@ -64,11 +64,11 @@ const Header = () => {
   }, [pathname, searchParams]);
 
   const getLinkClassName = (isActive: boolean) => {
-    return `transition-all px-2 py-1.5 rounded-md text-sm flex items-center hover:text-cyan-400 focus:text-cyan-400 ${isActive ? 'text-cyan-300 font-semibold drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]' : 'text-gray-300'}`;
+    return `transition-all px-2 py-1.5 rounded-md text-sm flex items-center hover:text-amber-400 focus:text-amber-400 ${isActive ? 'text-amber-300 font-semibold drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]' : 'text-amber-100/70'}`;
   };
 
   const getDropdownTriggerClassName = (isActive: boolean) => {
-    return `transition-all px-2 py-1.5 rounded-md text-sm flex items-center hover:text-cyan-400 focus:text-cyan-400 ${isActive ? 'text-cyan-300 font-semibold drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]' : 'text-gray-300'}`;
+    return `transition-all px-2 py-1.5 rounded-md text-sm flex items-center hover:text-amber-400 focus:text-amber-400 ${isActive ? 'text-amber-300 font-semibold drop-shadow-[0_0_8px_rgba(212,175,55,0.8)]' : 'text-amber-100/70'}`;
   }
 
   const renderUserHeader = () => (
