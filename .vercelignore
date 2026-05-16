@@ -1,0 +1,7 @@
+# Exclude the standalone React Native (Expo) app — it is not part of the
+# Next.js web deployment and would only slow the Vercel build.
+palmverse-mobile
+
+# Local-only artifacts
+.claude
+*.log

@@ -26,7 +26,9 @@ const nextConfig: NextConfig = {
     ],
   },
   serverActions: {
-    bodySizeLimit: '2mb', // Default is 1mb, increased for potentially larger image data URIs
+    // Two base64-encoded palm photos can be several MB; keep under Vercel's
+    // ~4.5MB serverless request body cap.
+    bodySizeLimit: '4mb',
   },
 };
 

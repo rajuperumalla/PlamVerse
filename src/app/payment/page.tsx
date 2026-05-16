@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAppContext } from '@/context/AppContext';
 import { CreditCard, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
 
-export default function PaymentPage() {
+function PaymentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setHasPaid, hasPaid } = useAppContext();
@@ -96,5 +97,20 @@ export default function PaymentPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] py-12">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">Loading payment...</p>
+        </div>
+      }
+    >
+      <PaymentPageContent />
+    </Suspense>
   );
 }
