@@ -106,6 +106,32 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </SidebarMenuItem>
               
               <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith('/admin/workflow') || pathname.startsWith('/admin/review')}
+                  tooltip={{ children: 'Report Approvals', side: 'right', className: "md:block hidden" }}
+                >
+                  <Link href="/admin/workflow">
+                    <ShieldCheck />
+                    <span className="group-data-[collapsible=icon]:hidden">Report Approvals</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith('/admin/approved')}
+                  tooltip={{ children: 'Published Reports', side: 'right', className: "md:block hidden" }}
+                >
+                  <Link href="/admin/approved">
+                    <FileText />
+                    <span className="group-data-[collapsible=icon]:hidden">Published Reports</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
                 <Accordion type="single" collapsible className="w-full" defaultValue={ecommerceSubmenuActive ? "ecommerce-menu" : undefined}>
                   <AccordionItem value="ecommerce-menu" className="border-none">
                     <SidebarMenuButton 

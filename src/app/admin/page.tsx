@@ -1,17 +1,54 @@
 
 "use client";
 
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingCart, Users, BarChart3, Settings } from "lucide-react";
+import { ShoppingCart, Users, Settings, ClipboardCheck, FileCheck2 } from "lucide-react";
+import { useAppContext } from "@/context/AppContext";
 
 export default function AdminDashboardPage() {
-  // This page is now for the new "Admin" role (Ecommerce focus)
-  // It's a placeholder for now.
+  const { reports } = useAppContext();
+  const awaitingApproval = reports.filter(r => r.status === 'pending_admin_approval').length;
+  const inEditorRevision = reports.filter(r => r.status === 'admin_revision').length;
+  const publishedReports = reports.filter(r => r.status === 'approved').length;
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold font-headline">Admin Dashboard</h1>
-      <CardDescription>Overview of your Ecommerce operations and application settings.</CardDescription>
+      <CardDescription>Report approval pipeline and Ecommerce operations overview.</CardDescription>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="border-amber-300 dark:border-amber-800">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Awaiting Final Approval</CardTitle>
+            <ClipboardCheck className="h-5 w-5 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{awaitingApproval}</div>
+            <Link href="/admin/workflow" className="text-xs text-primary hover:underline">Go to Approval Workflow</Link>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Returned to Editor</CardTitle>
+            <Users className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{inEditorRevision}</div>
+            <p className="text-xs text-muted-foreground">Sent back for revision.</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Published Reports</CardTitle>
+            <FileCheck2 className="h-5 w-5 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{publishedReports}</div>
+            <Link href="/admin/approved" className="text-xs text-primary hover:underline">View Published</Link>
+          </CardContent>
+        </Card>
+      </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>

@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertTriangle, LogIn, Edit, Archive, Columns } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export default function EditorWorkflowPage() {
   const {
@@ -37,7 +38,9 @@ export default function EditorWorkflowPage() {
     }
   }, [isAuthenticated, isEditor, router, toast, isInitializing]);
 
-  const pendingReviewReports = reports.filter(report => report.status === 'pending_review');
+  const pendingReviewReports = reports
+    .filter(report => report.status === 'pending_review' || report.status === 'admin_revision')
+    .sort((a, b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime());
 
   if (isInitializing || !authCheckComplete) {
     return (
@@ -76,7 +79,7 @@ export default function EditorWorkflowPage() {
                 <Columns className="h-6 w-6 text-amber-500" />
                 Reports Pending Review ({pendingReviewReports.length})
                 </CardTitle>
-                <CardDescription>Select a report to review and process.</CardDescription>
+                <CardDescription>New submissions and reports returned by Admin for revision.</CardDescription>
             </CardHeader>
             <CardContent className="p-0 flex-1 flex flex-col">
                 {pendingReviewReports.length === 0 ? (
@@ -96,6 +99,7 @@ export default function EditorWorkflowPage() {
                         <TableHead className="w-[100px]">Report ID</TableHead>
                         <TableHead>User</TableHead>
                         <TableHead>Category</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead>Submitted</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -106,6 +110,11 @@ export default function EditorWorkflowPage() {
                             <TableCell className="font-medium text-xs">{report.id.substring(0, 8)}...</TableCell>
                             <TableCell className="text-xs">{report.userName || 'N/A'}</TableCell>
                             <TableCell className="text-xs">{report.category}</TableCell>
+                            <TableCell className="text-xs">
+                              {report.status === 'admin_revision'
+                                ? <Badge variant="destructive">Admin Revision</Badge>
+                                : <Badge variant="secondary">New</Badge>}
+                            </TableCell>
                             <TableCell className="text-xs">
                             {report.submissionDate && !isNaN(new Date(report.submissionDate).getTime()) ? new Date(report.submissionDate).toLocaleDateString() : 'N/A'}
                             </TableCell>

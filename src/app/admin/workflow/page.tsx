@@ -37,7 +37,9 @@ export default function AdminWorkflowPage() {
     }
   }, [isAuthenticated, isAdmin, router, toast, isInitializing]);
 
-  const pendingReviewReports = reports.filter(report => report.status === 'pending_review');
+  const pendingReviewReports = reports
+    .filter(report => report.status === 'pending_admin_approval')
+    .sort((a, b) => new Date(b.lastUpdateDate).getTime() - new Date(a.lastUpdateDate).getTime());
 
   if (isInitializing || !authCheckComplete) {
     return (
@@ -69,14 +71,14 @@ export default function AdminWorkflowPage() {
 
   return (
     <div className="space-y-6">
-        <h1 className="text-2xl font-semibold">Pending Reviews Workflow</h1>
+        <h1 className="text-2xl font-semibold">Final Approval Workflow</h1>
         <Card className="flex flex-col h-full">
             <CardHeader className="px-4 py-4 border-b">
                 <CardTitle className="text-xl flex items-center gap-2 font-headline">
                 <Columns className="h-6 w-6 text-amber-500" />
-                Reports Pending Review ({pendingReviewReports.length})
+                Awaiting Final Approval ({pendingReviewReports.length})
                 </CardTitle>
-                <CardDescription>Select a report to review and process.</CardDescription>
+                <CardDescription>Reports submitted by editors, pending your final approval before publishing to the customer.</CardDescription>
             </CardHeader>
             <CardContent className="p-0 flex-1 flex flex-col">
                 {pendingReviewReports.length === 0 ? (

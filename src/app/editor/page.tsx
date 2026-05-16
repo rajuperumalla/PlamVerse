@@ -34,9 +34,9 @@ export default function EditorDashboardPage() {
     }
   }, [isAuthenticated, isEditor, router, toast, isInitializing]);
 
-  const pendingReviewReports = reports.filter(report => report.status === 'pending_review');
+  const pendingReviewReports = reports.filter(report => report.status === 'pending_review' || report.status === 'admin_revision');
+  const awaitingAdminReports = reports.filter(report => report.status === 'pending_admin_approval');
   const approvedReports = reports.filter(report => report.status === 'approved');
-  const generationFailedReports = reports.filter(report => report.status === 'generation_failed');
 
   if (isInitializing || !authCheckComplete) {
     return (
@@ -99,13 +99,13 @@ export default function EditorDashboardPage() {
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Generation Failed</CardTitle>
+                    <CardTitle className="text-sm font-medium">Awaiting Admin Approval</CardTitle>
                     <ServerCrash className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{generationFailedReports.length}</div>
+                    <div className="text-2xl font-bold">{awaitingAdminReports.length}</div>
                      <p className="text-xs text-muted-foreground">
-                        AI failed to generate these.
+                        Submitted by you, pending Admin review.
                     </p>
                 </CardContent>
             </Card>
