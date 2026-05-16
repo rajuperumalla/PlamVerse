@@ -32,10 +32,10 @@ export default function EditorApprovedReportsPage() {
   useEffect(() => {
     if (!isInitializing) {
         if (!isAuthenticated) {
-            router.push('/');
+            router.push('/editor-login');
         } else if (!isEditor) {
             toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
-            router.push('/');
+            router.push('/editor-login');
         }
         setAuthCheckComplete(true);
     }
@@ -71,7 +71,7 @@ export default function EditorApprovedReportsPage() {
                     <DialogDesc>You do not have permission to view this page.</DialogDesc>
                 </CardHeader>
                 <CardContent>
-                    <Button onClick={() => router.push('/')}><LogIn className="mr-2"/> Go to Login</Button>
+                    <Button onClick={() => router.push('/editor-login')}><LogIn className="mr-2"/> Go to Login</Button>
                 </CardContent>
             </Card>
         </div>

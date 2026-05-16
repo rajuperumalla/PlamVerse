@@ -52,10 +52,10 @@ export default function EditorReviewReportPage() {
   useEffect(() => {
     if (!isInitializing) {
       if (!isAuthenticated) {
-        router.push('/');
+        router.push('/editor-login');
       } else if (!isEditor) {
         toast({ title: "Access Denied", description: "You do not have permission to view this page.", variant: "destructive" });
-        router.push('/');
+        router.push('/editor-login');
       } else {
         const foundReport = getReportById(reportId);
         setReport(foundReport);
