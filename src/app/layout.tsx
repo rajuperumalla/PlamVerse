@@ -1,5 +1,5 @@
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AppProvider } from '@/context/AppContext';
 import { Toaster } from '@/components/ui/toaster';
@@ -12,8 +12,24 @@ import { Suspense } from 'react';
 export const metadata: Metadata = {
   title: 'PalmVerse - AI Palm Reading',
   description: 'Discover your destiny with AI-powered palm readings.',
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "PalmVerse",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#050814",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 export default function RootLayout({
   children,
 }: Readonly<{
